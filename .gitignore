@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+.ipynb_checkpoints/
+
+# ข้อมูลลับ — ห้าม commit
+data/panel_clean.csv
+data/panel_scored.csv
+data/firm_key_CONFIDENTIAL.csv
+data/unit_overrides.csv
+*_CONFIDENTIAL*

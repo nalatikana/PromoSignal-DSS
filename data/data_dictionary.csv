@@ -1,0 +1,40 @@
+﻿variable,คำอธิบาย,กลุ่ม
+ticker,ตัวย่อหลักทรัพย์,id
+year,ปี ค.ศ.,id
+promotion,คะแนน LIWC ด้าน Promotion focus (มุ่งโอกาส/การเติบโต),LIWC
+prevention,คะแนน LIWC ด้าน Prevention focus (มุ่งความปลอดภัย/หลีกเลี่ยงความเสี่ยง),LIWC
+reg_focus_ratio,(Promotion − Prevention)/(Promotion + Prevention) ช่วง −1 ถึง 1,LIWC
+word_count,จำนวนคำในสารผู้บริหาร,LIWC
+n_product,จำนวนนวัตกรรมด้านผลิตภัณฑ์,Innovation
+n_service,จำนวนนวัตกรรมด้านบริการ,Innovation
+n_process,จำนวนนวัตกรรมด้านกระบวนการ,Innovation
+n_partners,จำนวนพันธมิตรเชิงกลยุทธ์,Innovation
+innov_total,นวัตกรรมรวม 4 ประเภท,Innovation
+innov_breadth,ความหลากหลายของนวัตกรรม (0–4 ประเภท),Innovation
+pct_female_board,สัดส่วนกรรมการหญิง,Board
+female_critical_mass,มีกรรมการหญิง ≥ 3 คน (critical mass),Board
+peps_bod,จำนวนกรรมการที่เป็นบุคคลที่มีสถานภาพทางการเมือง (PEPs),Board
+pct_peps_board,สัดส่วนกรรมการ PEPs ต่อขนาดบอร์ด,Board
+security_bod,จำนวนกรรมการที่มาจากสายความมั่นคง/ทหาร-ตำรวจ,Board
+board_independence,สัดส่วนกรรมการอิสระ,Board
+board_size,ขนาดคณะกรรมการ,Board
+board_diversity,ดัชนีความหลากหลายของบอร์ด,Board
+family_bod,สัดส่วนกรรมการที่เป็นครอบครัวเดียวกัน,Board
+wa_board_tenure,อายุการดำรงตำแหน่งเฉลี่ยถ่วงน้ำหนักของบอร์ด (ปี),Board
+ceo_duality,CEO ควบตำแหน่งประธานกรรมการ (1/0),CEO
+ceo_on_board,CEO เป็นกรรมการบริษัท (1/0),CEO
+ceo_age,อายุ CEO,CEO
+ceo_tenure,อายุงานในตำแหน่ง CEO (ปี),CEO
+female_ceo,CEO เป็นผู้หญิง (1/0),CEO
+roa,ผลตอบแทนต่อสินทรัพย์ (%),Performance
+roe,ผลตอบแทนต่อส่วนของผู้ถือหุ้น (%),Performance
+ros,ผลตอบแทนต่อยอดขาย (%),Performance
+roa_excess,ROA − ค่ามัธยฐานอุตสาหกรรมในปีเดียวกัน,Performance
+roa_lead1,ROA ของปีถัดไป (ตัวแปรตามในการพยากรณ์),Performance
+de_ratio,อัตราส่วนหนี้สินต่อทุน,Financial
+current_ratio,อัตราส่วนสภาพคล่อง,Financial
+total_assets,สินทรัพย์รวม (บาท),Financial
+firm_age,อายุบริษัท (ปี),Firm
+match_type,การจับคู่คำพูด-การกระทำ: Walk the talk / Talk only / Quiet doer / Conservative,Matching
+an_score,คะแนนประเมินหุ้น 0–100 (โมดูล AN),Score
+rc_score,คะแนนประเมิน CEO/บอร์ด 0–100 (โมดูล RC),Score
