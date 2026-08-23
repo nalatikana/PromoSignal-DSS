@@ -720,7 +720,8 @@ function renderUploadGuide() {
   const fromInvest = S.addReportFlow === "invest";
   box.innerHTML = `
     ${fromInvest ? `<div class="uploadHint"><b>กำลังเพิ่มหุ้นจากรายงานประจำปี</b><br>
-      ทำ 3 ขั้นตอนนี้แล้วระบบจะพากลับไปหน้าคัดหุ้นลงทุนอัตโนมัติ: อัปโหลดรายงาน → ตรวจค่าบอร์ดในโมเดล → กด “เก็บเข้ารายการคัดหุ้น”</div>` : ""}
+      ทำ 3 ขั้นตอนนี้แล้วระบบจะพากลับไปหน้าคัดหุ้นลงทุนอัตโนมัติ: อัปโหลดรายงาน → ตรวจค่าบอร์ดในโมเดล → กด “เก็บเข้ารายการคัดหุ้น”
+      <div class="btnrow" style="margin-top:10px"><button class="btn s" id="btnBackInvest">กลับไปหน้าคัดหุ้น</button></div></div>` : ""}
     <div class="uploadGuide">
       <div><b>1 · อัปโหลดรายงาน</b><span>เลือก PDF, DOCX หรือ TXT ของบริษัทที่ต้องการเพิ่ม</span></div>
       <div><b>2 · ตรวจโมเดล</b><span>ระบบอ่านสารผู้บริหารและเติมค่าตั้งต้น จากนั้นตรวจ/ปรับตัวแปรบอร์ด</span></div>
@@ -728,6 +729,13 @@ function renderUploadGuide() {
     </div>`;
   const save = $("#btnSaveCand");
   if (save) save.textContent = fromInvest ? "＋ เก็บเข้ารายการคัดหุ้น" : "＋ เก็บเป็นผู้สมัคร";
+  const back = $("#btnBackInvest");
+  if (back) back.onclick = () => {
+    S.addReportFlow = null;
+    renderUploadGuide();
+    setMode("inv", true);
+    go("iv");
+  };
 }
 
 /* ---------------------------------------------------------------- โครงหน้าใหม่ */
@@ -746,7 +754,7 @@ const PANES_V2 = `
   <div class="card" style="margin-bottom:14px">
     <div class="btnrow">
       <button class="btn p" id="btnSeedInv">＋ โหลดตัวอย่างคะแนน</button>
-      <button class="btn s" id="btnGoUp">เพิ่มหุ้นจากรายงานประจำปี</button>
+      <button class="btn s" id="btnGoUp">เพิ่มหุ้นจากรายงาน (3 ขั้นตอน)</button>
       <button class="btn s" id="btnInvCsv">ส่งออกตารางเรตติ้ง (CSV)</button>
       <button class="btn s" id="btnClearInv">ล้างรายการ</button>
       <div style="flex:1"></div>
@@ -1123,6 +1131,10 @@ function bootV2() {
   $("#btnSeedInv").onclick = seedInvest;
   $("#btnGoUp").onclick = () => {
     S.addReportFlow = "invest";
+    const invEngine = modeEngine("inv");
+    S.engineByMode.org = invEngine;
+    S.engine = invEngine;
+    try { localStorage.setItem("ps_engine_org", invEngine); } catch (e) { }
     renderUploadGuide();
     setMode("org", true);
     go("up");
