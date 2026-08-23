@@ -2093,7 +2093,7 @@ boot();
 /* ---------------------------------------------------------------- โหมด */
 const MODES = {
   org: { lab: "เพิ่มรายงาน", sub: "อัปโหลดรายงาน → ตรวจโมเดล → เก็บเข้ารายการ", tabs: ["up", "mo", "db"] },
-  inv: { lab: "คัดหุ้นลงทุน", sub: "ให้เรตติ้ง → backtest ผลตอบแทน → Top 5 ล่าสุด", tabs: ["iv", "bt", "live"] },
+  inv: { lab: "คัดหุ้นเข้าพอร์ต", sub: "ดูคะแนนและคลาส → ตรวจย้อนหลังเทียบ SET → shortlist ตรวจต่อ", tabs: ["iv", "bt", "live"] },
 };
 const SHARED = ["dm", "mt", "howto", "guide"];
 S.mode = "org";
@@ -2327,26 +2327,26 @@ function renderEquityChart(mv) {
 function renderMarketBacktestBlock() {
   const mv = M.market_validation;
   if (!mv) return `<div class="note warn" style="margin-bottom:16px"><b>ยังไม่มี market backtest</b><br>
-    ต้องรัน Python pipeline เพื่อเติมบล็อก <code>market_validation</code> ในไฟล์โมเดลก่อน จึงจะแสดงผลตอบแทน Top 10 เทียบ SET Index ได้</div>`;
+    ต้องประมวลผลข้อมูลย้อนหลังของหุ้นและ SET Index ก่อน จึงจะแสดงผลเทียบพอร์ตจำลองได้</div>`;
   const m = mv.backtest.metrics;
   return `
-    <h3 style="margin:0 0 8px">TRL 6 · Quantitative Backtesting: Top 10 เทียบ SET Index</h3>
+    <h3 style="margin:0 0 8px">ผลทดสอบย้อนหลัง: หุ้นคะแนนสูงสุด 10 ตัว เทียบ SET Index</h3>
     <div class="tiles" style="margin-bottom:16px">
-      <div class="tile hero"><div class="lab">Alpha รวม</div><div class="val">${moneyPct(m.alpha_pct)}</div>
+      <div class="tile hero"><div class="lab">ผลตอบแทนเหนือ SET รวม</div><div class="val">${moneyPct(m.alpha_pct)}</div>
         <div class="sub">${esc(mv.backtest.portfolio)} · ${esc(mv.backtest.period)}</div></div>
-      <div class="tile"><div class="lab">ผลตอบแทนพอร์ต Top 10</div><div class="val">${moneyPct(m.portfolio_total_return_pct)}</div>
+      <div class="tile"><div class="lab">ผลตอบแทนกลุ่มที่ระบบคัดเลือก</div><div class="val">${moneyPct(m.portfolio_total_return_pct)}</div>
         <div class="sub">SET Index ${moneyPct(m.set_total_return_pct)}</div></div>
-      <div class="tile"><div class="lab">Win rate รายไตรมาส</div><div class="val">${fmt(m.win_rate_pct, 0)}%</div>
+      <div class="tile"><div class="lab">ชนะ SET รายไตรมาส</div><div class="val">${fmt(m.win_rate_pct, 0)}%</div>
         <div class="sub">จำนวนไตรมาสที่ชนะ benchmark</div></div>
       <div class="tile"><div class="lab">Sharpe / Max drawdown</div><div class="val">${fmt(m.sharpe, 2)}</div>
         <div class="sub">Max DD ${moneyPct(m.max_drawdown_pct)}</div></div>
     </div>
     <div class="softbox" style="margin-bottom:16px">
-      <h3>Equity curve</h3>
-      <p class="desc">ฐาน 100 · รีบาลานซ์รายไตรมาส · พอร์ต Top 10 ถือแบบ equal-weight</p>
+      <h3>กราฟมูลค่าพอร์ตจำลอง</h3>
+      <p class="desc">ฐาน 100 · ปรับพอร์ตทุกไตรมาส · ถือหุ้นที่ได้คะแนนสูงสุด 10 ตัว แบบน้ำหนักเท่ากัน</p>
       ${renderEquityChart(mv)}
     </div>
-    <table><thead><tr><th>ปี</th><th class="n">Top 10</th><th class="n">SET Index</th><th class="n">Alpha</th><th>ผล</th></tr></thead><tbody>
+    <table><thead><tr><th>ช่วงเวลา</th><th class="n">หุ้นที่ระบบคัดเลือก</th><th class="n">SET Index</th><th class="n">ส่วนต่าง</th><th>ผล</th></tr></thead><tbody>
       ${mv.backtest.folds.map(f => `<tr>
         <td><b>${esc(f.period)}</b></td>
         <td class="n">${moneyPct(f.top10_return_pct)}</td>
@@ -2355,9 +2355,9 @@ function renderMarketBacktestBlock() {
         <td><span class="pill ${f.hit ? "ok" : "warn"}">${f.hit ? "ชนะ SET" : "แพ้ SET"}</span></td></tr>`).join("")}
     </tbody></table>
     <div class="note ${mv.status === "demo_generated" ? "warn" : "ok"}" style="margin:12px 0 20px">
-      <b>${mv.status === "demo_generated" ? "ข้อมูลสาธิตจาก Python" : "ข้อมูลจาก pipeline จริง"}</b><br>
+      <b>${mv.status === "demo_generated" ? "ข้อมูลสาธิตสำหรับนำเสนอ" : "ข้อมูลจากรอบประมวลผลจริง"}</b><br>
       ${esc(mv.data_note)}<br>
-      Workflow: ${mv.pipeline.map(esc).join(" → ")}
+      ขั้นตอนคำนวณ: ${mv.pipeline.map(esc).join(" → ")}
     </div>`;
 }
 
@@ -2366,7 +2366,7 @@ function renderLatestTop5() {
   if (!host) return;
   const mv = M.market_validation;
   if (!mv?.latest?.rows?.length) {
-    host.innerHTML = `<div class="empty">ยังไม่มีข้อมูลล่าสุด<br><br>รัน Python pipeline เพื่อเติม <code>market_validation.latest.rows</code> ก่อน</div>`;
+    host.innerHTML = `<div class="empty">ยังไม่มีรายชื่อหุ้นล่าสุด<br><br>ต้องประมวลผลข้อมูลรอบล่าสุดก่อน ระบบจึงจะแสดงรายชื่อหุ้นสำหรับตรวจต่อ</div>`;
     return;
   }
   const rows = mv.latest.rows.slice(0, 5);
@@ -2374,33 +2374,33 @@ function renderLatestTop5() {
   host.innerHTML = `
     <div class="tiles" style="margin-bottom:16px">
       <div class="tile hero"><div class="lab">อันดับ 1 ล่าสุด</div><div class="val" style="font-size:26px">${esc(rows[0].symbol)}</div>
-        <div class="sub">Innovation Alpha Score ${fmt(rows[0].innovation_alpha_score, 1)} · ${esc(rows[0].industry)}</div></div>
+        <div class="sub">คะแนนนวัตกรรม ${fmt(rows[0].innovation_alpha_score, 1)} · ${esc(rows[0].industry)}</div></div>
       <div class="tile"><div class="lab">วันที่ประมวลผล</div><div class="val" style="font-size:25px">${esc(mv.latest.as_of)}</div>
         <div class="sub">${esc(mv.latest.universe)}</div></div>
-      <div class="tile"><div class="lab">Top 5 เฉลี่ย</div><div class="val">${fmt(rows.reduce((s, r) => s + r.innovation_alpha_score, 0) / rows.length, 1)}</div>
-        <div class="sub">คะแนน Innovation Alpha</div></div>
+      <div class="tile"><div class="lab">คะแนนเฉลี่ยของ Top 5</div><div class="val">${fmt(rows.reduce((s, r) => s + r.innovation_alpha_score, 0) / rows.length, 1)}</div>
+        <div class="sub">คะแนนแนวโน้มนวัตกรรม</div></div>
       <div class="tile"><div class="lab">สถานะข้อมูล</div><div class="val" style="font-size:22px">${mv.status === "demo_generated" ? "Demo" : "Live"}</div>
-        <div class="sub">สร้างจาก Python pipeline</div></div>
+        <div class="sub">รายชื่อเพื่อใช้ตรวจต่อ</div></div>
     </div>
     <div class="grid g2">
       <div class="card">
-        <h3>Top 5 หุ้นนวัตกรรมล่าสุด</h3>
-        <p class="desc">ใช้สำหรับ TRL 7: รันกับข้อมูลไตรมาสล่าสุดและนำไปทดสอบพฤติกรรมตลาดจริง</p>
-        <table><thead><tr><th>#</th><th>Symbol</th><th>อุตสาหกรรม</th><th class="n">Score</th><th class="n">Model signal</th><th>หลักฐาน</th></tr></thead><tbody>
+        <h3>หุ้นที่น่าสนใจ 5 อันดับแรก</h3>
+        <p class="desc">ใช้เป็น shortlist สำหรับนักวิเคราะห์ตรวจข่าว งบการเงิน สภาพคล่อง และความเหมาะสมก่อนตัดสินใจ</p>
+        <table><thead><tr><th>#</th><th>Symbol</th><th>อุตสาหกรรม</th><th class="n">Score</th><th class="n">สัญญาณโมเดล</th><th>ที่มาของคะแนน</th></tr></thead><tbody>
           ${rows.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td><td>${esc(r.industry)}</td>
             <td class="n"><b>${fmt(r.innovation_alpha_score, 1)}</b></td><td class="n">${fmt(r.model_signal, 2)}</td>
             <td style="color:var(--grey)">${esc(r.evidence || "Public text + board variables")}</td></tr>`).join("")}
         </tbody></table>
       </div>
       <div class="card">
-        <h3>รายการสำรองและความเสี่ยง</h3>
+        <h3>อันดับสำรองและหมายเหตุ</h3>
         <p class="desc">ใช้ดูหุ้นอันดับ 6-10 เผื่อกรณีสภาพคล่องหรือข่าวล่าสุดทำให้ต้องตัดออก</p>
         <table><thead><tr><th>#</th><th>Symbol</th><th class="n">Score</th><th>หมายเหตุ</th></tr></thead><tbody>
           ${rest.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td>
             <td class="n">${fmt(r.innovation_alpha_score, 1)}</td><td>${esc(r.risk_flag || "ตรวจต่อ")}</td></tr>`).join("")}
         </tbody></table>
-        <div class="note warn" style="margin-top:12px"><b>ไม่ใช่คำแนะนำลงทุน</b><br>
-          หน้านี้เป็น screener เพื่อคัดหุ้นไปตรวจต่อ ต้องตรวจราคา ข่าว งบล่าสุด สภาพคล่อง และข้อจำกัดการลงทุนก่อนใช้งานจริง</div>
+        <div class="note warn" style="margin-top:12px"><b>ไม่ใช่คำแนะนำซื้อขาย และไม่ทำนายราคาหุ้น</b><br>
+          หน้านี้เป็นเครื่องมือคัดกรองหุ้นที่ควรตรวจต่อ ต้องพิจารณาข่าว งบล่าสุด สภาพคล่อง ราคา และข้อจำกัดการลงทุนก่อนใช้งานจริง</div>
       </div>
     </div>`;
   wrapTables(host);
@@ -2823,14 +2823,14 @@ function renderUploadGuide() {
 /* ---------------------------------------------------------------- โครงหน้าใหม่ */
 const PANES_V2 = `
 <section class="pane" id="p-iv">
-  <div class="kicker">TRL 5 · Ideate & Prototype</div>
-  <h2 class="sechead">Innovation Alpha Score สำหรับคัดหุ้นนวัตกรรม</h2>
-  <p class="secsub">Python pipeline ดึง text สาธารณะของ SET100 มาคำนวณ LIWC-style score ผสมกับตัวแปรบอร์ด 4 ตัว แล้วแปลงเป็น Innovation Alpha Score 0–100 รายไตรมาส — หน้านี้ใช้ดู ranking และ sensitivity ให้คุยในที่ประชุมง่าย</p>
+  <div class="kicker">คัดหุ้นเข้าพอร์ต</div>
+  <h2 class="sechead">จัดอันดับหุ้นจากสัญญาณนวัตกรรมของผู้บริหารและบอร์ด</h2>
+  <p class="secsub">ระบบประเมินข้อความสื่อสารของ CEO/ผู้บริหารร่วมกับโครงสร้างคณะกรรมการ เพื่อจัดหุ้นเป็นคลาส A-E และคะแนน 0-100 สำหรับช่วยคัดเลือกหุ้นที่น่าสนใจเข้าพอร์ต โดยไม่คำนวณหรือคาดการณ์ราคาหุ้นสุดท้าย</p>
 
   <div class="flow3">
-    <div><b>1 · Prototype</b><span>Public text + board variables → Score 0–100</span></div>
-    <div><b>2 · Technical validation</b><span>ซื้อ Top 10 รายไตรมาส เทียบ SET Index</span></div>
-    <div><b>3 · Operational shortlist</b><span>รันไตรมาสล่าสุดเพื่อหา Top 5 ตรวจต่อ</span></div>
+    <div><b>1 · อ่านสัญญาณบริษัท</b><span>ข้อความ CEO + โครงสร้างบอร์ด → คะแนนและคลาส</span></div>
+    <div><b>2 · เทียบผลย้อนหลัง</b><span>พอร์ตจำลองหุ้นคะแนนสูงสุด 10 ตัว เทียบ SET Index</span></div>
+    <div><b>3 · ได้รายชื่อเพื่อตรวจต่อ</b><span>Top 5 สำหรับนักวิเคราะห์ตรวจราคา ข่าว งบ และสภาพคล่อง</span></div>
   </div>
 
   <div class="card" style="margin-bottom:14px">
@@ -2840,34 +2840,34 @@ const PANES_V2 = `
       <button class="btn s" id="btnInvCsv">ส่งออกตารางเรตติ้ง (CSV)</button>
       <button class="btn s" id="btnClearInv">ล้างรายการ</button>
       <div style="flex:1"></div>
-      <span class="modelPickLabel">โมเดลคัดหุ้น</span>
+      <span class="modelPickLabel">มุมมองคะแนน</span>
       <div class="segbar engpick"></div>
     </div>
   </div>
 
   <div class="tiles" id="ivTiles"></div>
   <div class="split2">
-    <div class="card"><h3>1 · ตารางเรตติ้งและคะแนนเติบโต</h3>
-      <p class="desc">เรียงตามคะแนนรวม · คลิกแถวเพื่อดูการวิเคราะห์ความอ่อนไหวของหลักทรัพย์นั้น</p>
+    <div class="card"><h3>1 · ตารางจัดอันดับหุ้น</h3>
+      <p class="desc">เรียงตามคะแนนและคลาส · คลิกแถวเพื่อดูว่าอะไรเป็นตัวผลักดันคะแนนของหุ้นนั้น</p>
       <div id="ivBody"></div></div>
-    <div class="card"><h3>2 · วิเคราะห์ความอ่อนไหว</h3>
-      <p class="desc">ถ้าตัวแปรแต่ละตัวเปลี่ยนไป 1 ส่วนเบี่ยงเบนมาตรฐาน ค่าคาดการณ์จะเปลี่ยนกี่เปอร์เซ็นต์</p>
+    <div class="card"><h3>2 · เหตุผลประกอบคะแนน</h3>
+      <p class="desc">ดูว่าปัจจัยใด เช่น บอร์ดอิสระ ขนาดบอร์ด อายุงานบอร์ด หรือโทนภาษาผู้บริหาร มีผลต่อคะแนนมากที่สุด</p>
       <div id="ivSens"></div></div>
   </div>
 </section>
 
 <section class="pane" id="p-bt">
-  <div class="kicker">คัดหุ้นลงทุน</div>
-  <h2 class="sechead">Backtest ผลตอบแทน และทดสอบย้อนหลัง 5 ปี</h2>
-  <p class="secsub">ทดสอบสองชั้น: 1) พอร์ตจำลองซื้อหุ้น Top 10 ตาม Innovation Alpha Score เทียบ SET Index และ 2) ตรวจความแม่นของโมเดลกับข้อมูลปีถัดไปที่ไม่เคยเห็น</p>
-  <div class="card"><div class="btnrow modelTopbar" style="margin-bottom:14px"><div style="flex:1"></div><span class="modelPickLabel">โมเดล backtest</span><div class="segbar engpick"></div></div>
+  <div class="kicker">ตรวจผลย้อนหลัง</div>
+  <h2 class="sechead">พอร์ตจำลองหุ้นคะแนนสูง เทียบ SET Index</h2>
+  <p class="secsub">ตรวจว่าหากเลือกหุ้นที่ได้คะแนนสูงสุด 10 ตัวในแต่ละรอบ ผลตอบแทนย้อนหลังจะชนะหรือแพ้ SET Index อย่างไร ใช้เพื่อประเมินคุณค่าของสัญญาณ ไม่ใช่เพื่อทำนายราคาหุ้นรายตัว</p>
+  <div class="card"><div class="btnrow modelTopbar" style="margin-bottom:14px"><div style="flex:1"></div><span class="modelPickLabel">มุมมองคะแนน</span><div class="segbar engpick"></div></div>
     <div id="btBody"></div></div>
 </section>
 
 <section class="pane" id="p-live">
-  <div class="kicker">TRL 7</div>
-  <h2 class="sechead">Top 5 หุ้นนวัตกรรมล่าสุด</h2>
-  <p class="secsub">รันข้อมูลไตรมาสล่าสุดเพื่อหา shortlist สำหรับ operational validation เช่น landing page, Substack, LINE OA หรือ request API access</p>
+  <div class="kicker">Shortlist ล่าสุด</div>
+  <h2 class="sechead">หุ้นที่ควรนำไปตรวจต่อ 5 อันดับแรก</h2>
+  <p class="secsub">รายชื่อจากข้อมูลรอบล่าสุดสำหรับนักวิเคราะห์หรือนักลงทุนใช้ตรวจต่อ ไม่ใช่คำสั่งซื้อขาย และไม่ใช่การคาดการณ์ราคาหุ้น</p>
   <div id="liveBody"></div>
 </section>
 
@@ -2894,13 +2894,13 @@ const PANES_V2 = `
   <div class="card" style="margin-bottom:14px"><h3>3 · สเปกโมเดลชุดใหม่ (8 ตัวแปร)</h3>
     <div id="dmSpec"></div></div>
 
-  <div class="card" style="margin-bottom:14px"><h3>4 · Python pipeline สำหรับ TRL 5-6</h3>
-    <p class="desc">ใส่ข้อมูลรายไตรมาส 4 ไฟล์ แล้วรันคำสั่งนี้เพื่อสร้าง score, backtest Top 10 และอัปเดตหน้าเว็บ</p>
+  <div class="card" style="margin-bottom:14px"><h3>4 · รายละเอียดเทคนิคสำหรับทีมข้อมูล</h3>
+    <p class="desc">ส่วนนี้ใช้โดยทีมข้อมูลเพื่อประมวลผลชุดข้อมูลจริง: ข้อความ CEO, ตัวแปรบอร์ด, ผลตอบแทนหุ้น และ SET Index ก่อนนำผลมาแสดงใน dashboard ผู้ใช้</p>
     <div class="cmd">python src/innovation_alpha_pipeline.py --text-csv data/set100_text.csv --board-csv data/set100_board.csv --returns-csv data/set100_returns.csv --benchmark-csv data/set_index_returns.csv --update-model</div>
     <div class="btnrow" style="margin-top:14px">
-      <button class="btn s" id="btnTplText">template: public text</button>
-      <button class="btn s" id="btnTplBoard">template: board variables</button>
-      <button class="btn s" id="btnTplReturns">template: stock returns</button>
+      <button class="btn s" id="btnTplText">template: ข้อความ CEO</button>
+      <button class="btn s" id="btnTplBoard">template: โครงสร้างบอร์ด</button>
+      <button class="btn s" id="btnTplReturns">template: ผลตอบแทนหุ้น</button>
       <button class="btn s" id="btnTplBench">template: SET Index</button>
     </div>
   </div>
@@ -2911,43 +2911,43 @@ const PANES_V2 = `
 
 <section class="pane" id="p-guide">
   <div class="kicker">คู่มือใช้งาน</div>
-  <h2 class="sechead">เริ่มใช้ระบบนี้แบบไม่งง</h2>
-  <p class="secsub">เลือกงานที่ต้องการก่อน แล้วทำตาม 3 ขั้นตอนด้านล่าง ระบบนี้มีสองงานหลัก: ประเมินองค์กรจากเอกสาร และคัดหุ้นนวัตกรรมจากคะแนน/ผล backtest</p>
+  <h2 class="sechead">ระบบนี้ช่วยคัดหุ้นเข้าพอร์ตอย่างไร</h2>
+  <p class="secsub">ระบบนี้ออกแบบสำหรับนักลงทุนและบริษัทจัดสรรการลงทุน ใช้จัดอันดับหุ้นจากสัญญาณนวัตกรรมของผู้บริหารและบอร์ด เพื่อช่วยเลือกหุ้นไปตรวจต่อ ไม่ได้ทำนายราคาหุ้นสุดท้าย</p>
 
   <div class="guideHero">
     <div>
       <span class="guideBadge">งานที่ 1</span>
-      <h3>ประเมินองค์กร</h3>
-      <p>ใช้เมื่อมีรายงานประจำปีหรือข้อความผู้บริหาร แล้วต้องการดูว่าโครงสร้างบอร์ดและภาษาผู้บริหารสัมพันธ์กับนวัตกรรมเปิดอย่างไร</p>
-      <button class="btn p" id="btnGuideOrg">ไปประเมินองค์กร</button>
+      <h3>เพิ่มบริษัทจากรายงาน</h3>
+      <p>ใช้เมื่อต้องการเพิ่มหุ้นใหม่จากรายงานประจำปีหรือข้อความ CEO ระบบจะอ่านเนื้อหาและช่วยเติมค่าตั้งต้นก่อนนำไปจัดอันดับ</p>
+      <button class="btn p" id="btnGuideOrg">ไปเพิ่มรายงาน</button>
     </div>
     <div>
       <span class="guideBadge">งานที่ 2</span>
-      <h3>คัดหุ้นลงทุน</h3>
-      <p>ใช้เมื่ออยากจัดอันดับ SET100 ด้วย Innovation Alpha Score, ตรวจ Top 10 เทียบ SET Index, และหา Top 5 ล่าสุดเพื่อตรวจต่อ</p>
-      <button class="btn p" id="btnGuideInv">ไปคัดหุ้นลงทุน</button>
+      <h3>คัดหุ้นเข้าพอร์ต</h3>
+      <p>ใช้ดูคะแนน 0-100, คลาส A-E, ผลทดสอบย้อนหลังเทียบ SET Index และรายชื่อหุ้นที่ควรนำไปตรวจต่อ</p>
+      <button class="btn p" id="btnGuideInv">ไปคัดหุ้นเข้าพอร์ต</button>
     </div>
   </div>
 
   <div class="guideSteps">
-    <div class="guideStep"><b>1</b><h3>ใส่ข้อมูล</h3><p>อัปโหลดเอกสาร หรือเตรียม CSV สำหรับ Python pipeline ตาม template ในหน้า ข้อมูลและโมเดล</p></div>
-    <div class="guideStep"><b>2</b><h3>ดูคะแนน</h3><p>ดูค่าคาดการณ์, percentile, Innovation Alpha Score และ sensitivity ว่าตัวแปรไหนทำให้ผลเปลี่ยนมาก</p></div>
-    <div class="guideStep"><b>3</b><h3>ตรวจผลก่อนใช้</h3><p>ดู backtest, ข้อจำกัด, และส่งออกรายงาน พร้อมระบุเสมอว่าไม่ใช่คำแนะนำลงทุนหรือความสัมพันธ์เชิงสาเหตุ</p></div>
+    <div class="guideStep"><b>1</b><h3>เลือกหุ้นที่น่าสนใจ</h3><p>ดูคะแนนและคลาสของหุ้นแต่ละตัวจากข้อความผู้บริหารและโครงสร้างบอร์ด</p></div>
+    <div class="guideStep"><b>2</b><h3>ดูเหตุผลประกอบ</h3><p>ตรวจว่าคะแนนมาจากปัจจัยใด เช่น บอร์ดอิสระ ขนาดบอร์ด อายุงานบอร์ด หรือโทนภาษา CEO</p></div>
+    <div class="guideStep"><b>3</b><h3>ตรวจต่อก่อนตัดสินใจ</h3><p>ดูผลย้อนหลังเทียบ SET แล้วตรวจข่าว งบ ราคา และสภาพคล่องก่อนนำเข้าพอร์ต</p></div>
   </div>
 
   <div class="grid g2" style="margin-top:16px">
     <div class="card">
       <h3>อ่านหน้าคัดหุ้นอย่างไร</h3>
       <div class="readList">
-        <div><b>Innovation Alpha Score</b><span>คะแนน 0-100 ยิ่งสูงยิ่งอยู่ลำดับบนเมื่อเทียบกับ universe ที่ใช้</span></div>
-        <div><b>Backtest Top 10</b><span>ทดสอบว่าซื้อหุ้นคะแนนสูงสุด 10 ตัวรายไตรมาส ชนะ SET Index หรือไม่</span></div>
-        <div><b>Top 5 ล่าสุด</b><span>รายชื่อสำหรับตรวจต่อ ไม่ใช่คำสั่งซื้อขาย ต้องดูข่าว งบ สภาพคล่อง และราคาอีกครั้ง</span></div>
+        <div><b>คะแนน 0-100</b><span>ยิ่งสูง แปลว่าหุ้นนั้นมีสัญญาณนวัตกรรมเด่นกว่าเมื่อเทียบกับกลุ่มที่ใช้ประเมิน</span></div>
+        <div><b>คลาส A-E</b><span>Class A คือกลุ่มบนสุด เหมาะสำหรับนำไปตรวจต่อก่อนหุ้นคลาสต่ำกว่า</span></div>
+        <div><b>ผลย้อนหลังเทียบ SET</b><span>ดูว่ากลยุทธ์เลือกหุ้นคะแนนสูงสุดเคยสร้างผลตอบแทนเหนือ SET Index หรือไม่</span></div>
       </div>
     </div>
     <div class="card">
       <h3>คำที่ควรใช้ตอนนำเสนอ</h3>
-      <div class="note info"><b>ประโยคสั้น ๆ</b><br>ระบบนี้เป็น prototype เพื่อจัดอันดับและทดสอบสมมติฐานว่า “บริษัทที่มีสัญญาณนวัตกรรมสูง” สามารถสร้าง alpha เทียบ SET Index ได้หรือไม่</div>
-      <div class="note warn" style="margin-top:10px"><b>ประโยคข้อจำกัด</b><br>คะแนนเป็นสัญญาณเชิงสถิติจากข้อมูลย้อนหลังและข้อความสาธารณะ ไม่ใช่คำแนะนำลงทุน และไม่ยืนยันเหตุและผล</div>
+      <div class="note info"><b>ประโยคสั้น ๆ</b><br>ระบบนี้ช่วยคัดหุ้นที่มีแนวโน้มด้านนวัตกรรมสูงจากข้อความ CEO และโครงสร้างบอร์ด เพื่อให้นักลงทุนเลือกหุ้นไปตรวจต่ออย่างเป็นระบบ</div>
+      <div class="note warn" style="margin-top:10px"><b>ประโยคข้อจำกัด</b><br>ระบบจัดอันดับและแนะนำกลุ่มหุ้นที่น่าสนใจเท่านั้น ไม่คำนวณราคาหุ้นสุดท้าย ไม่ใช่คำแนะนำซื้อขาย และไม่ยืนยันเหตุและผล</div>
     </div>
   </div>
 </section>
@@ -2965,13 +2965,14 @@ const PANES_V2 = `
       <label class="check"><input type="checkbox"> ผลตอบแทน SET Index ช่วงเดียวกัน</label>
     </div>
     <div class="card"><h3>สิ่งที่ระบบต้องแสดง</h3>
-      <label class="check"><input type="checkbox"> Innovation Alpha Score 0-100</label>
-      <label class="check"><input type="checkbox"> Top 10 backtest เทียบ SET Index</label>
+      <label class="check"><input type="checkbox"> คะแนน 0-100 และคลาส A-E</label>
+      <label class="check"><input type="checkbox"> ผลย้อนหลังของกลุ่มหุ้นคะแนนสูง เทียบ SET Index</label>
       <label class="check"><input type="checkbox"> Equity curve และ alpha รวม</label>
-      <label class="check"><input type="checkbox"> Top 5 ล่าสุดสำหรับ operational validation</label>
+      <label class="check"><input type="checkbox"> รายชื่อหุ้น Top 5 สำหรับตรวจต่อ</label>
     </div>
     <div class="card"><h3>คำเตือนที่ต้องพูด</h3>
       <label class="check"><input type="checkbox"> ไม่ใช่คำแนะนำลงทุน</label>
+      <label class="check"><input type="checkbox"> ไม่คำนวณหรือคาดการณ์ราคาหุ้นสุดท้าย</label>
       <label class="check"><input type="checkbox"> ไม่ใช่ความสัมพันธ์เชิงสาเหตุ</label>
       <label class="check"><input type="checkbox"> ต้องตรวจข่าว งบ และสภาพคล่องก่อนใช้จริง</label>
       <label class="check"><input type="checkbox"> Demo data ต้องแยกจาก real pipeline output</label>
@@ -2981,11 +2982,11 @@ const PANES_V2 = `
   <div class="card" style="margin-top:16px">
     <h3>ลำดับการ demo ที่ง่ายที่สุด</h3>
     <ol class="demoFlow">
-      <li><b>เปิด คู่มือใช้งาน</b> อธิบายว่าระบบมี 2 งาน: ประเมินองค์กร และคัดหุ้นลงทุน</li>
-      <li><b>ไป คัดหุ้นลงทุน → Innovation Alpha Score</b> แสดงว่าคะแนนเรียงลำดับหุ้นได้</li>
-      <li><b>ไป Backtest เทียบ SET</b> อธิบายว่าพอร์ต Top 10 ชนะ/แพ้ SET Index อย่างไร</li>
-      <li><b>ไป Top 5 ล่าสุด</b> แสดง shortlist สำหรับทดลองในสภาพแวดล้อมจริง</li>
-      <li><b>จบที่ ข้อมูลและโมเดล</b> แสดง Python pipeline และ template CSV เพื่อพิสูจน์ว่าทำซ้ำได้</li>
+      <li><b>เปิด คู่มือใช้งาน</b> อธิบายว่าระบบช่วยคัดหุ้นเข้าพอร์ต ไม่ได้ทำนายราคาหุ้น</li>
+      <li><b>ไป คัดหุ้นเข้าพอร์ต</b> แสดงคะแนน 0-100 และคลาส A-E</li>
+      <li><b>ไป ผลย้อนหลังเทียบ SET</b> อธิบายว่ากลุ่มหุ้นคะแนนสูงเคยชนะหรือแพ้ SET Index อย่างไร</li>
+      <li><b>ไป หุ้นที่ควรตรวจต่อ 5 อันดับแรก</b> แสดง shortlist สำหรับนักวิเคราะห์</li>
+      <li><b>จบที่ ข้อมูลและโมเดล</b> แสดงว่าระบบประมวลผลจากข้อมูลข้อความ CEO โครงสร้างบอร์ด และผลตอบแทนย้อนหลัง</li>
     </ol>
   </div>
 </section>`;
@@ -3170,10 +3171,10 @@ function bootV2() {
   const wanted = [
     ["group", "เพิ่มรายงาน"],
     ["up", existing.up], ["mo", existing.mo], ["db", existing.db],
-    ["group", "คัดหุ้นลงทุน"],
-    ["iv", mk("iv", "TRL 5", "Innovation Alpha Score")],
-    ["bt", mk("bt", "TRL 6", "Backtest เทียบ SET")],
-    ["live", mk("live", "TRL 7", "Top 5 ล่าสุด")],
+    ["group", "คัดหุ้นเข้าพอร์ต"],
+    ["iv", mk("iv", "คะแนน", "จัดอันดับหุ้น")],
+    ["bt", mk("bt", "ย้อนหลัง", "เทียบ SET Index")],
+    ["live", mk("live", "Shortlist", "หุ้นที่ควรตรวจต่อ")],
     ["group", "ระบบ"],
     ["guide", mk("guide", "เริ่มต้น", "คู่มือใช้งาน")],
     ["howto", mk("howto", "นำเสนอ", "Checklist ก่อนส่ง")],
