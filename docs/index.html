@@ -2858,6 +2858,87 @@ const PANES_V2 = `
 
   <div class="card"><h3>5 · ตัวติดตามข้อมูลตรวจสอบ</h3>
     <div id="dmData"></div></div>
+</section>
+
+<section class="pane" id="p-guide">
+  <div class="kicker">คู่มือใช้งาน</div>
+  <h2 class="sechead">เริ่มใช้ระบบนี้แบบไม่งง</h2>
+  <p class="secsub">เลือกงานที่ต้องการก่อน แล้วทำตาม 3 ขั้นตอนด้านล่าง ระบบนี้มีสองงานหลัก: ประเมินองค์กรจากเอกสาร และคัดหุ้นนวัตกรรมจากคะแนน/ผล backtest</p>
+
+  <div class="guideHero">
+    <div>
+      <span class="guideBadge">งานที่ 1</span>
+      <h3>ประเมินองค์กร</h3>
+      <p>ใช้เมื่อมีรายงานประจำปีหรือข้อความผู้บริหาร แล้วต้องการดูว่าโครงสร้างบอร์ดและภาษาผู้บริหารสัมพันธ์กับนวัตกรรมเปิดอย่างไร</p>
+      <button class="btn p" id="btnGuideOrg">ไปประเมินองค์กร</button>
+    </div>
+    <div>
+      <span class="guideBadge">งานที่ 2</span>
+      <h3>คัดหุ้นลงทุน</h3>
+      <p>ใช้เมื่ออยากจัดอันดับ SET100 ด้วย Innovation Alpha Score, ตรวจ Top 10 เทียบ SET Index, และหา Top 5 ล่าสุดเพื่อตรวจต่อ</p>
+      <button class="btn p" id="btnGuideInv">ไปคัดหุ้นลงทุน</button>
+    </div>
+  </div>
+
+  <div class="guideSteps">
+    <div class="guideStep"><b>1</b><h3>ใส่ข้อมูล</h3><p>อัปโหลดเอกสาร หรือเตรียม CSV สำหรับ Python pipeline ตาม template ในหน้า ข้อมูลและโมเดล</p></div>
+    <div class="guideStep"><b>2</b><h3>ดูคะแนน</h3><p>ดูค่าคาดการณ์, percentile, Innovation Alpha Score และ sensitivity ว่าตัวแปรไหนทำให้ผลเปลี่ยนมาก</p></div>
+    <div class="guideStep"><b>3</b><h3>ตรวจผลก่อนใช้</h3><p>ดู backtest, ข้อจำกัด, และส่งออกรายงาน พร้อมระบุเสมอว่าไม่ใช่คำแนะนำลงทุนหรือความสัมพันธ์เชิงสาเหตุ</p></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>อ่านหน้าคัดหุ้นอย่างไร</h3>
+      <div class="readList">
+        <div><b>Innovation Alpha Score</b><span>คะแนน 0-100 ยิ่งสูงยิ่งอยู่ลำดับบนเมื่อเทียบกับ universe ที่ใช้</span></div>
+        <div><b>Backtest Top 10</b><span>ทดสอบว่าซื้อหุ้นคะแนนสูงสุด 10 ตัวรายไตรมาส ชนะ SET Index หรือไม่</span></div>
+        <div><b>Top 5 ล่าสุด</b><span>รายชื่อสำหรับตรวจต่อ ไม่ใช่คำสั่งซื้อขาย ต้องดูข่าว งบ สภาพคล่อง และราคาอีกครั้ง</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>คำที่ควรใช้ตอนนำเสนอ</h3>
+      <div class="note info"><b>ประโยคสั้น ๆ</b><br>ระบบนี้เป็น prototype เพื่อจัดอันดับและทดสอบสมมติฐานว่า “บริษัทที่มีสัญญาณนวัตกรรมสูง” สามารถสร้าง alpha เทียบ SET Index ได้หรือไม่</div>
+      <div class="note warn" style="margin-top:10px"><b>ประโยคข้อจำกัด</b><br>คะแนนเป็นสัญญาณเชิงสถิติจากข้อมูลย้อนหลังและข้อความสาธารณะ ไม่ใช่คำแนะนำลงทุน และไม่ยืนยันเหตุและผล</div>
+    </div>
+  </div>
+</section>
+
+<section class="pane" id="p-howto">
+  <div class="kicker">Checklist</div>
+  <h2 class="sechead">ต้องทำอะไรบ้างก่อนนำเสนอ</h2>
+  <p class="secsub">ใช้หน้านี้เป็นรายการตรวจงาน เพื่อให้ demo ดูครบและตอบคำถามกรรมการได้ชัด</p>
+
+  <div class="checkGrid">
+    <div class="card"><h3>ข้อมูลที่ต้องมี</h3>
+      <label class="check"><input type="checkbox"> Public text ของ SET100 รายไตรมาส</label>
+      <label class="check"><input type="checkbox"> Board variables 4 ตัว: female, independent, size, tenure</label>
+      <label class="check"><input type="checkbox"> ผลตอบแทนหุ้นรายไตรมาสย้อนหลัง 3-5 ปี</label>
+      <label class="check"><input type="checkbox"> ผลตอบแทน SET Index ช่วงเดียวกัน</label>
+    </div>
+    <div class="card"><h3>สิ่งที่ระบบต้องแสดง</h3>
+      <label class="check"><input type="checkbox"> Innovation Alpha Score 0-100</label>
+      <label class="check"><input type="checkbox"> Top 10 backtest เทียบ SET Index</label>
+      <label class="check"><input type="checkbox"> Equity curve และ alpha รวม</label>
+      <label class="check"><input type="checkbox"> Top 5 ล่าสุดสำหรับ operational validation</label>
+    </div>
+    <div class="card"><h3>คำเตือนที่ต้องพูด</h3>
+      <label class="check"><input type="checkbox"> ไม่ใช่คำแนะนำลงทุน</label>
+      <label class="check"><input type="checkbox"> ไม่ใช่ความสัมพันธ์เชิงสาเหตุ</label>
+      <label class="check"><input type="checkbox"> ต้องตรวจข่าว งบ และสภาพคล่องก่อนใช้จริง</label>
+      <label class="check"><input type="checkbox"> Demo data ต้องแยกจาก real pipeline output</label>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>ลำดับการ demo ที่ง่ายที่สุด</h3>
+    <ol class="demoFlow">
+      <li><b>เปิด คู่มือใช้งาน</b> อธิบายว่าระบบมี 2 งาน: ประเมินองค์กร และคัดหุ้นลงทุน</li>
+      <li><b>ไป คัดหุ้นลงทุน → Innovation Alpha Score</b> แสดงว่าคะแนนเรียงลำดับหุ้นได้</li>
+      <li><b>ไป Backtest เทียบ SET</b> อธิบายว่าพอร์ต Top 10 ชนะ/แพ้ SET Index อย่างไร</li>
+      <li><b>ไป Top 5 ล่าสุด</b> แสดง shortlist สำหรับทดลองในสภาพแวดล้อมจริง</li>
+      <li><b>จบที่ ข้อมูลและโมเดล</b> แสดง Python pipeline และ template CSV เพื่อพิสูจน์ว่าทำซ้ำได้</li>
+    </ol>
+  </div>
 </section>`;
 
 const CSS_V2 = `
@@ -2917,6 +2998,28 @@ const CSS_V2 = `
 .flow3 span{display:block;font-size:12px;line-height:1.45;color:var(--grey)}
 .cmd{font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--mist);border:1px solid var(--line);border-radius:7px;padding:10px 12px;overflow-x:auto;color:var(--ink)}
 @media(max-width:900px){.flow3{grid-template-columns:1fr}}
+.guideHero{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.guideHero>div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px;box-shadow:var(--sh)}
+.guideHero h3{margin:6px 0 5px;font-size:20px}
+.guideHero p{margin:0 0 14px;color:var(--grey);font-size:13px;line-height:1.6}
+.guideBadge{display:inline-block;font-size:11px;color:#0d7a5c;background:var(--mint);border-radius:999px;padding:2px 9px}
+.guideSteps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.guideStep{background:var(--ink);color:#fff;border-radius:8px;padding:16px;min-height:132px}
+.guideStep b{display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:var(--accent);margin-bottom:12px}
+.guideStep h3{margin:0 0 4px;font-size:15px}
+.guideStep p{margin:0;color:#b9c8d4;font-size:12px;line-height:1.55}
+.readList{display:grid;gap:10px}
+.readList>div{border-bottom:1px solid var(--line);padding-bottom:10px}
+.readList>div:last-child{border-bottom:0;padding-bottom:0}
+.readList b{display:block;font-size:13px}
+.readList span{display:block;color:var(--grey);font-size:12px;line-height:1.5}
+.checkGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.check{display:flex;gap:9px;align-items:flex-start;border-bottom:1px solid var(--line);padding:9px 0;font-size:12.5px;color:var(--grey)}
+.check:last-child{border-bottom:0}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.demoFlow{margin:8px 0 0;padding-left:22px;color:var(--grey);font-size:13px}
+.demoFlow li{margin:8px 0}.demoFlow b{color:var(--ink)}
+@media(max-width:1000px){.guideHero,.guideSteps,.checkGrid{grid-template-columns:1fr}}
 tr.selrow{background:var(--mist)}
 tr.selrow td{border-left:0}
 tr.selrow td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
@@ -3003,8 +3106,10 @@ function bootV2() {
     ["bt", mk("bt", "TRL 6", "Backtest เทียบ SET")],
     ["live", mk("live", "TRL 7", "Top 5 ล่าสุด")],
     ["group", "ระบบ"],
+    ["guide", mk("guide", "เริ่มต้น", "คู่มือใช้งาน")],
+    ["howto", mk("howto", "นำเสนอ", "Checklist ก่อนส่ง")],
     ["dm", mk("dm", "ข้อมูล", "ข้อมูลและโมเดล")],
-    ["mt", existing.mt], ["howto", existing.howto], ["guide", existing.guide],
+    ["mt", existing.mt],
   ];
   nav.innerHTML = "";
   wanted.forEach(([p, el]) => {
@@ -3052,6 +3157,10 @@ function bootV2() {
               r.pi.lo, r.pi.hi, Math.round(r.pct), r.head.toFixed(1), S.engine].join(","); });
     dl("promosignal_rating.csv", "﻿" + [head, ...body].join("\n"), "text/csv;charset=utf-8");
   };
+  const guideOrg = $("#btnGuideOrg");
+  if (guideOrg) guideOrg.onclick = () => { setMode("org", true); go("up"); };
+  const guideInv = $("#btnGuideInv");
+  if (guideInv) guideInv.onclick = () => { setMode("inv", true); go("iv"); };
 
   // 6b · ห่อตารางของหน้าเดิมด้วย เมื่อแดชบอร์ดวาดใหม่
   if (typeof renderDashboard === "function") {
