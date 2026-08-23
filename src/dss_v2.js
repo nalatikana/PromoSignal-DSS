@@ -10,7 +10,7 @@
 
 /* ---------------------------------------------------------------- โหมด */
 const MODES = {
-  org: { lab: "ประเมินองค์กร", sub: "อ่านเอกสาร → วิเคราะห์ → จัดอันดับผู้สมัคร", tabs: ["up", "mo", "db"] },
+  org: { lab: "เพิ่มรายงาน", sub: "อัปโหลดรายงาน → ตรวจโมเดล → เก็บเข้ารายการ", tabs: ["up", "mo", "db"] },
   inv: { lab: "คัดหุ้นลงทุน", sub: "ให้เรตติ้ง → backtest ผลตอบแทน → Top 5 ล่าสุด", tabs: ["iv", "bt", "live"] },
 };
 const SHARED = ["dm", "mt", "howto", "guide"];
@@ -98,8 +98,8 @@ function renderInvest() {
   const C = S.cands, E = S.engine;
   if (!C.length) {
     $("#ivBody").innerHTML = `<div class="empty">ยังไม่มีหลักทรัพย์ในรายการเฝ้าดู<br><br>
-      กด <b>“＋ เพิ่มตัวอย่าง 6 หลักทรัพย์”</b> ด้านบนเพื่อดูการทำงาน หรือสลับไปโหมด
-      <b>ประเมินองค์กร</b> อัปโหลดรายงานประจำปีแล้วกดเก็บ ระบบจะดึงมาที่นี่ให้เอง</div>`;
+      กด <b>“＋ โหลดตัวอย่างคะแนน”</b> ด้านบนเพื่อดูการทำงาน หรือกด
+      <b>“เพิ่มหุ้นจากรายงานประจำปี”</b> เพื่ออัปโหลดรายงานแล้วส่งกลับมาที่ตารางนี้</div>`;
     $("#ivTiles").innerHTML = ""; $("#ivSens").innerHTML = ""; return;
   }
   const rows = C.map((c, i) => Object.assign({ i, c }, scoreOf(c))).sort((a, b) => b.total - a.total);
@@ -707,6 +707,29 @@ function initPipelineDownloads() {
   bind("btnTplBench", "set_index_returns_template.csv", PIPE_TEMPLATES.benchmark);
 }
 
+function renderUploadGuide() {
+  const pane = $("#p-up");
+  if (!pane) return;
+  let box = $("#uploadGuideV2");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "uploadGuideV2";
+    const sub = pane.querySelector(".secsub");
+    sub ? sub.insertAdjacentElement("afterend", box) : pane.prepend(box);
+  }
+  const fromInvest = S.addReportFlow === "invest";
+  box.innerHTML = `
+    ${fromInvest ? `<div class="uploadHint"><b>กำลังเพิ่มหุ้นจากรายงานประจำปี</b><br>
+      ทำ 3 ขั้นตอนนี้แล้วระบบจะพากลับไปหน้าคัดหุ้นลงทุนอัตโนมัติ: อัปโหลดรายงาน → ตรวจค่าบอร์ดในโมเดล → กด “เก็บเข้ารายการคัดหุ้น”</div>` : ""}
+    <div class="uploadGuide">
+      <div><b>1 · อัปโหลดรายงาน</b><span>เลือก PDF, DOCX หรือ TXT ของบริษัทที่ต้องการเพิ่ม</span></div>
+      <div><b>2 · ตรวจโมเดล</b><span>ระบบอ่านสารผู้บริหารและเติมค่าตั้งต้น จากนั้นตรวจ/ปรับตัวแปรบอร์ด</span></div>
+      <div><b>3 · เก็บเข้ารายการ</b><span>กดปุ่มเก็บรายการ ระบบจะนำบริษัทไปแสดงในตารางคัดหุ้น</span></div>
+    </div>`;
+  const save = $("#btnSaveCand");
+  if (save) save.textContent = fromInvest ? "＋ เก็บเข้ารายการคัดหุ้น" : "＋ เก็บเป็นผู้สมัคร";
+}
+
 /* ---------------------------------------------------------------- โครงหน้าใหม่ */
 const PANES_V2 = `
 <section class="pane" id="p-iv">
@@ -723,7 +746,7 @@ const PANES_V2 = `
   <div class="card" style="margin-bottom:14px">
     <div class="btnrow">
       <button class="btn p" id="btnSeedInv">＋ โหลดตัวอย่างคะแนน</button>
-      <button class="btn s" id="btnGoUp">อัปโหลดรายงานประจำปีเพื่อเพิ่มเอง</button>
+      <button class="btn s" id="btnGoUp">เพิ่มหุ้นจากรายงานประจำปี</button>
       <button class="btn s" id="btnInvCsv">ส่งออกตารางเรตติ้ง (CSV)</button>
       <button class="btn s" id="btnClearInv">ล้างรายการ</button>
       <div style="flex:1"></div>
@@ -930,6 +953,12 @@ const CSS_V2 = `
 .eqchart{width:100%;height:auto;display:block;overflow:visible}
 .split2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start}
 @media(max-width:1000px){.split2{grid-template-columns:1fr}}
+.uploadGuide{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px}
+.uploadGuide>div{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.uploadGuide b{display:block;font-size:13px;color:var(--ink);margin-bottom:3px}
+.uploadGuide span{display:block;font-size:12px;color:var(--grey);line-height:1.45}
+.uploadHint{border:1px solid #b9e9db;background:var(--mint);border-radius:8px;padding:12px 14px;margin:0 0 14px;color:#0d7a5c;font-size:12.5px}
+.uploadHint b{color:#075f47}
 .flow3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
 .flow3>div{border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px 14px;min-height:78px}
 .flow3 b{display:block;font-size:13px;margin-bottom:6px;color:var(--ink)}
@@ -957,7 +986,7 @@ const CSS_V2 = `
 .check input{margin-top:4px;accent-color:var(--accent)}
 .demoFlow{margin:8px 0 0;padding-left:22px;color:var(--grey);font-size:13px}
 .demoFlow li{margin:8px 0}.demoFlow b{color:var(--ink)}
-@media(max-width:1000px){.guideHero,.guideSteps,.checkGrid{grid-template-columns:1fr}}
+@media(max-width:1000px){.guideHero,.guideSteps,.checkGrid,.uploadGuide{grid-template-columns:1fr}}
 tr.selrow{background:var(--mist)}
 tr.selrow td{border-left:0}
 tr.selrow td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
@@ -1044,8 +1073,12 @@ function bootV2() {
     return b;
   };
   const existing = Object.fromEntries($$("nav.steps .step").map(b => [b.dataset.p, b]));
+  if (existing.up) existing.up.innerHTML = `<span class="n">เพิ่ม</span><span class="t">อัปโหลดรายงาน</span>`;
+  if (existing.mo) existing.mo.innerHTML = `<span class="n">ตรวจ</span><span class="t">โมเดลวิเคราะห์</span>`;
+  if (existing.db) existing.db.innerHTML = `<span class="n">รายงาน</span><span class="t">รายการที่เก็บไว้</span>`;
+  if (existing.mt) existing.mt.innerHTML = `<span class="n">อ้างอิง</span><span class="t">วิธีการและข้อจำกัด</span>`;
   const wanted = [
-    ["group", "ประเมินองค์กร"],
+    ["group", "เพิ่มรายงาน"],
     ["up", existing.up], ["mo", existing.mo], ["db", existing.db],
     ["group", "คัดหุ้นลงทุน"],
     ["iv", mk("iv", "TRL 5", "Innovation Alpha Score")],
@@ -1088,7 +1121,12 @@ function bootV2() {
 
   // 6 · ปุ่มในหน้าคัดหุ้น
   $("#btnSeedInv").onclick = seedInvest;
-  $("#btnGoUp").onclick = () => { setMode("org", true); go("up"); };
+  $("#btnGoUp").onclick = () => {
+    S.addReportFlow = "invest";
+    renderUploadGuide();
+    setMode("org", true);
+    go("up");
+  };
   $("#btnClearInv").onclick = () => {
     if (!S.cands.length || !confirm("ล้างรายการเฝ้าดูทั้งหมด?")) return;
     S.cands.length = 0; S.sel = 0; renderInvest();
@@ -1119,6 +1157,7 @@ function bootV2() {
   }
 
   // 7 · ช่องเสียบโมเดล + เนื้อหา
+  renderUploadGuide();
   initModelDrop();
   initPipelineDownloads();
   renderModelSlot(); renderSpecSlot(); renderDataStatus();
@@ -1141,7 +1180,18 @@ function bootV2() {
 // ให้ saveCandidate อัปเดตหน้าคัดหุ้นด้วย
 if (typeof saveCandidate === "function") {
   const sc0 = saveCandidate;
-  window.saveCandidate = function () { const r = sc0.apply(this, arguments); renderInvest(); return r; };
+  window.saveCandidate = function () {
+    const fromInvest = S.addReportFlow === "invest";
+    const r = sc0.apply(this, arguments);
+    renderInvest();
+    if (fromInvest) {
+      S.addReportFlow = null;
+      renderUploadGuide();
+      setMode("inv", true);
+      go("iv");
+    }
+    return r;
+  };
   const btn = document.getElementById("btnSaveCand");
   if (btn) btn.onclick = window.saveCandidate;
 }
