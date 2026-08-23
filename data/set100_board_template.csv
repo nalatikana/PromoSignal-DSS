@@ -1,0 +1,4 @@
+symbol,period,industry,female_pct,indep_pct,board_size,wa_board_tenure,ln_assets,firm_age,roa,de_ratio_w,pol_tie
+ADVANC,2024Q1,เทคโนโลยี,27,50,12,8.2,12.4,34,0.12,0.55,0
+PTT,2024Q1,พลังงาน,18,42,15,11.5,14.1,45,0.08,0.80,1
+CPALL,2024Q1,บริการ,22,47,13,9.4,13.5,36,0.09,0.72,0

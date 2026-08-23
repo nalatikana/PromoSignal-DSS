@@ -63,6 +63,29 @@ panel_clean.csv  ──▶  export_model.R  ──▶  model.json  ──▶  �
 
 ---
 
+## 🐍 Python pipeline สำหรับ TRL 5-6
+
+เพิ่มสคริปต์ `src/innovation_alpha_pipeline.py` สำหรับงานตามมติประชุมช่วงสัปดาห์ที่ 3-8:
+
+```bash
+python src/innovation_alpha_pipeline.py \
+  --text-csv data/set100_text.csv \
+  --board-csv data/set100_board.csv \
+  --returns-csv data/set100_returns.csv \
+  --benchmark-csv data/set_index_returns.csv \
+  --update-model
+```
+
+ผลลัพธ์จะสร้าง `out/market_validation.json` และเติม `market_validation` ใน `out/dss_model.json` เพื่อให้หน้าเว็บแสดง:
+
+- `Innovation Alpha Score (0-100)` รายไตรมาสจาก public text + board variables 4 ตัว
+- พอร์ตจำลองซื้อหุ้น Top 10 เทียบ `SET Index`
+- Top 5 หุ้นนวัตกรรมล่าสุดสำหรับ operational validation
+
+มีแม่แบบ CSV ให้เริ่มกรอกใน `data/*_template.csv` และดาวน์โหลดได้จากหน้าเว็บแท็บ **ข้อมูลและโมเดล → Python pipeline สำหรับ TRL 5-6**
+
+---
+
 ## 🗂 สถานะข้อมูล
 
 ตรวจ `panel_clean.csv` เมื่อ 23 สิงหาคม 2569 พบสองเรื่องที่**ไม่ตรงกับบันทึกการประชุม**
@@ -113,6 +136,8 @@ uvicorn dss_api.app:app --reload --port 8000
 python3 src/export_dss_model.py    # ฟิตโมเดล 2 ชุด        → out/dss_model.json
 python3 src/add_backtest.py        # ทดสอบย้อนหลัง 5 ปี    → เติมบล็อก backtest
 python3 src/add_datastatus.py      # ตรวจความครบถ้วนข้อมูล → เติมบล็อก datastatus
+python3 src/add_market_validation.py # เติม market validation demo สำหรับนำเสนอ
+python3 src/innovation_alpha_pipeline.py --text-csv data/set100_text.csv --board-csv data/set100_board.csv --returns-csv data/set100_returns.csv --benchmark-csv data/set_index_returns.csv --update-model
 python3 src/make_contract.py       # แปลงชุด B เป็นไฟล์สัญญา → spec/example_model.json
 python3 src/build_dss_all.py       # ประกอบทั้งหมดเป็นไฟล์เดียว → out/PromoSignal_DSS.html
 cp out/PromoSignal_DSS.html docs/index.html
@@ -211,11 +236,14 @@ src/export_dss_model.py    ฟิตโมเดลทั้งสองชุ�
 src/dss_template.html      โครงหน้าเว็บ
 src/dss_app.js             ตรรกะทั้งหมดของหน้าเว็บ
 src/build_dss.py           ประกอบเป็นไฟล์เดียว
+src/add_market_validation.py เติม market validation demo สำหรับนำเสนอ
+src/innovation_alpha_pipeline.py คำนวณ Innovation Alpha Score และ backtest จาก CSV จริง
 src/ingest_lexicon.js      พจนานุกรมคำเชิงรุก/เชิงป้องกัน/นวัตกรรม
 src/vendor/                pdf.js · fflate (พร้อมไฟล์สัญญาอนุญาต)
 dss_api/app.py             FastAPI backend
 out/dss_model.json         สัมประสิทธิ์ · covariance · ค่าอ้างอิง (18 KB)
 data/data_dictionary.csv   คำอธิบายตัวแปร
+data/*_template.csv        แม่แบบข้อมูลสำหรับ Python pipeline
 ```
 
 ---

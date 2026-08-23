@@ -2100,6 +2100,24 @@ S.mode = "org";
 S.sel = 0;                      // แถวที่เลือกในหน้าคัดหุ้น
 S.loaded = null;                // ชุดโมเดลที่โหลดเข้ามาจากภายนอก
 
+const PIPE_TEMPLATES = {
+  text: `symbol,period,industry,text
+ADVANC,2024Q1,เทคโนโลยี,"We expand digital platforms, launch new partnerships, and explore AI services."
+PTT,2024Q1,พลังงาน,"บริษัทมุ่งพัฒนานวัตกรรมพลังงานสะอาด พร้อมบริหารความเสี่ยงและความปลอดภัย"
+`,
+  board: `symbol,period,industry,female_pct,indep_pct,board_size,wa_board_tenure,ln_assets,firm_age,roa,de_ratio_w,pol_tie
+ADVANC,2024Q1,เทคโนโลยี,27,50,12,8.2,12.4,34,0.12,0.55,0
+PTT,2024Q1,พลังงาน,18,42,15,11.5,14.1,45,0.08,0.80,1
+`,
+  returns: `symbol,period,return_pct
+ADVANC,2024Q1,7.4
+PTT,2024Q1,2.1
+`,
+  benchmark: `period,return_pct
+2024Q1,3.2
+`,
+};
+
 /** ห่อตารางด้วยกล่องเลื่อนแนวนอน — บนจอแคบตารางจะเลื่อนเอง ไม่ดันทั้งหน้าให้ล้น */
 function wrapTables(sel) {
   const root = typeof sel === "string" ? $(sel) : sel;
@@ -2358,7 +2376,7 @@ function renderLatestTop5() {
         <table><thead><tr><th>#</th><th>Symbol</th><th>อุตสาหกรรม</th><th class="n">Score</th><th class="n">Model signal</th><th>หลักฐาน</th></tr></thead><tbody>
           ${rows.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td><td>${esc(r.industry)}</td>
             <td class="n"><b>${fmt(r.innovation_alpha_score, 1)}</b></td><td class="n">${fmt(r.model_signal, 2)}</td>
-            <td style="color:var(--grey)">${esc(r.evidence)}</td></tr>`).join("")}
+            <td style="color:var(--grey)">${esc(r.evidence || "Public text + board variables")}</td></tr>`).join("")}
         </tbody></table>
       </div>
       <div class="card">
@@ -2366,7 +2384,7 @@ function renderLatestTop5() {
         <p class="desc">ใช้ดูหุ้นอันดับ 6-10 เผื่อกรณีสภาพคล่องหรือข่าวล่าสุดทำให้ต้องตัดออก</p>
         <table><thead><tr><th>#</th><th>Symbol</th><th class="n">Score</th><th>หมายเหตุ</th></tr></thead><tbody>
           ${rest.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td>
-            <td class="n">${fmt(r.innovation_alpha_score, 1)}</td><td>${esc(r.risk_flag)}</td></tr>`).join("")}
+            <td class="n">${fmt(r.innovation_alpha_score, 1)}</td><td>${esc(r.risk_flag || "ตรวจต่อ")}</td></tr>`).join("")}
         </tbody></table>
         <div class="note warn" style="margin-top:12px"><b>ไม่ใช่คำแนะนำลงทุน</b><br>
           หน้านี้เป็น screener เพื่อคัดหุ้นไปตรวจต่อ ต้องตรวจราคา ข่าว งบล่าสุด สภาพคล่อง และข้อจำกัดการลงทุนก่อนใช้งานจริง</div>
@@ -2743,16 +2761,33 @@ function initModelDrop() {
   bindDl("btnSpecSchema", "model_contract.schema.json", SPEC_FILES.schema, "application/json");
 }
 
+function initPipelineDownloads() {
+  const bind = (id, name, text) => {
+    const btn = $("#" + id);
+    if (btn) btn.onclick = () => dl(name, "﻿" + text, "text/csv;charset=utf-8");
+  };
+  bind("btnTplText", "set100_text_template.csv", PIPE_TEMPLATES.text);
+  bind("btnTplBoard", "set100_board_template.csv", PIPE_TEMPLATES.board);
+  bind("btnTplReturns", "set100_returns_template.csv", PIPE_TEMPLATES.returns);
+  bind("btnTplBench", "set_index_returns_template.csv", PIPE_TEMPLATES.benchmark);
+}
+
 /* ---------------------------------------------------------------- โครงหน้าใหม่ */
 const PANES_V2 = `
 <section class="pane" id="p-iv">
-  <div class="kicker">คัดหุ้นลงทุน</div>
-  <h2 class="sechead">เรตติ้ง คะแนนเติบโต และความอ่อนไหว</h2>
-  <p class="secsub">ให้เรตติ้ง A–E กับหลักทรัพย์ในรายการเฝ้าดู จากค่าคาดการณ์นวัตกรรมเปิดของโมเดล พร้อมบอกว่าถ้าโครงสร้างคณะกรรมการขยับ ค่าคาดการณ์จะขยับตามเท่าไหร่ — ใช้เป็นตัวคัดกรองขั้นต้น ไม่ใช่คำแนะนำการลงทุน</p>
+  <div class="kicker">TRL 5 · Ideate & Prototype</div>
+  <h2 class="sechead">Innovation Alpha Score สำหรับคัดหุ้นนวัตกรรม</h2>
+  <p class="secsub">Python pipeline ดึง text สาธารณะของ SET100 มาคำนวณ LIWC-style score ผสมกับตัวแปรบอร์ด 4 ตัว แล้วแปลงเป็น Innovation Alpha Score 0–100 รายไตรมาส — หน้านี้ใช้ดู ranking และ sensitivity ให้คุยในที่ประชุมง่าย</p>
+
+  <div class="flow3">
+    <div><b>1 · Prototype</b><span>Public text + board variables → Score 0–100</span></div>
+    <div><b>2 · Technical validation</b><span>ซื้อ Top 10 รายไตรมาส เทียบ SET Index</span></div>
+    <div><b>3 · Operational shortlist</b><span>รันไตรมาสล่าสุดเพื่อหา Top 5 ตรวจต่อ</span></div>
+  </div>
 
   <div class="card" style="margin-bottom:14px">
     <div class="btnrow">
-      <button class="btn p" id="btnSeedInv">＋ เพิ่มตัวอย่าง 6 หลักทรัพย์</button>
+      <button class="btn p" id="btnSeedInv">＋ โหลดตัวอย่างคะแนน</button>
       <button class="btn s" id="btnGoUp">อัปโหลดรายงานประจำปีเพื่อเพิ่มเอง</button>
       <button class="btn s" id="btnInvCsv">ส่งออกตารางเรตติ้ง (CSV)</button>
       <button class="btn s" id="btnClearInv">ล้างรายการ</button>
@@ -2810,11 +2845,46 @@ const PANES_V2 = `
   <div class="card" style="margin-bottom:14px"><h3>3 · สเปกโมเดลชุดใหม่ (8 ตัวแปร)</h3>
     <div id="dmSpec"></div></div>
 
-  <div class="card"><h3>4 · ตัวติดตามข้อมูลตรวจสอบ</h3>
+  <div class="card" style="margin-bottom:14px"><h3>4 · Python pipeline สำหรับ TRL 5-6</h3>
+    <p class="desc">ใส่ข้อมูลรายไตรมาส 4 ไฟล์ แล้วรันคำสั่งนี้เพื่อสร้าง score, backtest Top 10 และอัปเดตหน้าเว็บ</p>
+    <div class="cmd">python src/innovation_alpha_pipeline.py --text-csv data/set100_text.csv --board-csv data/set100_board.csv --returns-csv data/set100_returns.csv --benchmark-csv data/set_index_returns.csv --update-model</div>
+    <div class="btnrow" style="margin-top:14px">
+      <button class="btn s" id="btnTplText">template: public text</button>
+      <button class="btn s" id="btnTplBoard">template: board variables</button>
+      <button class="btn s" id="btnTplReturns">template: stock returns</button>
+      <button class="btn s" id="btnTplBench">template: SET Index</button>
+    </div>
+  </div>
+
+  <div class="card"><h3>5 · ตัวติดตามข้อมูลตรวจสอบ</h3>
     <div id="dmData"></div></div>
 </section>`;
 
 const CSS_V2 = `
+.app-shell-ready header{position:fixed;left:0;top:0;bottom:0;width:260px;z-index:20;background:#fff;color:var(--ink);border-right:1px solid var(--line);box-shadow:0 12px 34px rgba(15,34,51,.08);padding:18px 0;overflow-y:auto}
+.app-shell-ready .wrap{max-width:none;margin:0 0 0 260px;padding:24px 28px 90px}
+.app-shell-ready .hrow{display:block;padding:0 18px;max-width:none}
+.app-shell-ready .logo{margin-bottom:13px}
+.app-shell-ready .logo span{border-radius:10px}
+.app-shell-ready h1{font-size:17px;line-height:1.25;color:var(--ink)}
+.app-shell-ready h1 span{display:block!important;margin-top:3px;color:var(--greyl)!important;font-size:11px!important}
+.app-shell-ready .hsub{display:none}
+.app-shell-ready .hspace{display:none}
+.app-shell-ready .hbtn{width:100%;margin-top:8px;border-color:var(--line);color:var(--grey);border-radius:8px;text-align:center;background:#fff}
+.app-shell-ready .hbtn:hover{border-color:var(--accent);color:var(--accent)}
+.app-shell-ready .modebar{display:block;padding:14px 18px 8px;border-top:1px solid var(--line);margin-top:16px}
+.app-shell-ready .modebar>span:first-child{display:block;margin-bottom:8px}
+.app-shell-ready .modebar .mb{width:100%;border-radius:8px;text-align:left;margin:0 0 7px;padding:8px 11px;background:#f8fafb}
+.app-shell-ready .modebar .mb.on{background:var(--ink);color:#fff}
+.app-shell-ready .modebar .msub{display:block;margin-top:6px;line-height:1.45}
+.app-shell-ready .steps{display:block;margin:10px 0 0;padding:0 12px;max-width:none;overflow:visible}
+.app-shell-ready .navGroup{font-size:10px;font-weight:600;letter-spacing:1.2px;color:var(--greyl);text-transform:uppercase;margin:16px 8px 6px}
+.app-shell-ready .step{width:100%;min-width:0;display:block;border:0;border-radius:9px;padding:10px 12px;margin:2px 0;color:var(--grey);background:transparent}
+.app-shell-ready .step:hover{background:var(--mist);color:var(--ink)}
+.app-shell-ready .step[aria-selected=true]{background:var(--mint);color:#0d7a5c;box-shadow:inset 3px 0 0 var(--accent)}
+.app-shell-ready .step .n{font-size:10px;letter-spacing:.8px;color:inherit;opacity:.68}
+.app-shell-ready .step .t{font-size:13px;margin-top:0;color:inherit}
+.app-shell-ready footer{padding-left:0;padding-right:0}
 .segbar{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
 .segbar .segb{background:transparent;border:0;border-right:1px solid var(--line);padding:7px 13px;font:inherit;font-size:11.5px;color:var(--grey);cursor:pointer}
 .segbar .segb:last-child{border-right:0}
@@ -2841,6 +2911,12 @@ const CSS_V2 = `
 .eqchart{width:100%;height:auto;display:block;overflow:visible}
 .split2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start}
 @media(max-width:1000px){.split2{grid-template-columns:1fr}}
+.flow3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.flow3>div{border:1px solid var(--line);border-radius:8px;background:#fff;padding:12px 14px;min-height:78px}
+.flow3 b{display:block;font-size:13px;margin-bottom:6px;color:var(--ink)}
+.flow3 span{display:block;font-size:12px;line-height:1.45;color:var(--grey)}
+.cmd{font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--mist);border:1px solid var(--line);border-radius:7px;padding:10px 12px;overflow-x:auto;color:var(--ink)}
+@media(max-width:900px){.flow3{grid-template-columns:1fr}}
 tr.selrow{background:var(--mist)}
 tr.selrow td{border-left:0}
 tr.selrow td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
@@ -2854,15 +2930,37 @@ tr.selrow td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 /* grid item ตั้งต้นเป็น min-width:auto ทำให้คอลัมน์ยืดตามตาราง แทนที่จะให้ตารางเลื่อนเอง */
 .split>*,.split2>*,.tiles>*,.pane .card{min-width:0}
 @media(max-width:760px){.tscroll table{min-width:620px}}
+@media(max-width:900px){
+  .app-shell-ready header{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line);box-shadow:none;padding:14px 0}
+  .app-shell-ready .wrap{margin:0;padding:20px 16px 80px}
+  .app-shell-ready .hrow{padding:0 16px}
+  .app-shell-ready .modebar{padding:12px 16px 6px}
+  .app-shell-ready .steps{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 2px}
+  .app-shell-ready .navGroup{display:none}
+  .app-shell-ready .step{min-width:168px;margin:0}
+  .app-shell-ready footer{padding-left:0;padding-right:0}
+}
 `;
 
 /* ---------------------------------------------------------------- สลับโหมด */
 function tabsOf(mode) { return MODES[mode].tabs.concat(SHARED); }
+function syncNavGroups() {
+  const kids = $$("nav.steps > *");
+  kids.forEach((el, i) => {
+    if (!el.classList.contains("navGroup")) return;
+    let hasVisible = false;
+    for (let j = i + 1; j < kids.length && !kids[j].classList.contains("navGroup"); j++) {
+      if (kids[j].classList.contains("step") && !kids[j].hidden) hasVisible = true;
+    }
+    el.hidden = !hasVisible;
+  });
+}
 function setMode(m, quiet) {
   if (!MODES[m]) return;
   S.mode = m;
   const allow = new Set(tabsOf(m));
   $$("nav.steps .step").forEach(b => b.hidden = !allow.has(b.dataset.p));
+  syncNavGroups();
   $$(".modebar .mb").forEach(b => b.classList.toggle("on", b.dataset.m === m));
   const sub = $("#modeSub"); if (sub) sub.textContent = MODES[m].sub;
   const cur = ($$(".pane.on")[0] || {}).id?.slice(2);
@@ -2898,15 +2996,27 @@ function bootV2() {
   };
   const existing = Object.fromEntries($$("nav.steps .step").map(b => [b.dataset.p, b]));
   const wanted = [
+    ["group", "ประเมินองค์กร"],
     ["up", existing.up], ["mo", existing.mo], ["db", existing.db],
-    ["iv", mk("iv", "ขั้นที่ 1", "เรตติ้งและคะแนนเติบโต")],
-    ["bt", mk("bt", "ขั้นที่ 2", "Backtest ผลตอบแทน")],
-    ["live", mk("live", "ขั้นที่ 3", "Top 5 ล่าสุด")],
-    ["dm", mk("dm", "ตั้งค่า", "ข้อมูลและโมเดล")],
+    ["group", "คัดหุ้นลงทุน"],
+    ["iv", mk("iv", "TRL 5", "Innovation Alpha Score")],
+    ["bt", mk("bt", "TRL 6", "Backtest เทียบ SET")],
+    ["live", mk("live", "TRL 7", "Top 5 ล่าสุด")],
+    ["group", "ระบบ"],
+    ["dm", mk("dm", "ข้อมูล", "ข้อมูลและโมเดล")],
     ["mt", existing.mt], ["howto", existing.howto], ["guide", existing.guide],
   ];
   nav.innerHTML = "";
-  wanted.forEach(([p, el]) => { if (el) { el.onclick = () => go(p); nav.appendChild(el); } });
+  wanted.forEach(([p, el]) => {
+    if (p === "group") {
+      const lab = document.createElement("div");
+      lab.className = "navGroup";
+      lab.textContent = el;
+      nav.appendChild(lab);
+      return;
+    }
+    if (el) { el.onclick = () => go(p); nav.appendChild(el); }
+  });
 
   // 4 · แถบสลับโหมด
   const bar = document.createElement("div");
@@ -2955,9 +3065,11 @@ function bootV2() {
 
   // 7 · ช่องเสียบโมเดล + เนื้อหา
   initModelDrop();
+  initPipelineDownloads();
   renderModelSlot(); renderSpecSlot(); renderDataStatus();
   renderInvest(); renderBacktest(); renderLatestTop5();
   syncEngineButtons();
+  document.body.classList.add("app-shell-ready");
 
   // 8 · โหมดเริ่มต้น — ถ้ามี hash ให้ hash ชนะ
   let m0 = "org";
