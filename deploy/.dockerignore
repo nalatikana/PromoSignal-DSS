@@ -1,0 +1,6 @@
+data/
+*_CONFIDENTIAL*
+__pycache__/
+*.pyc
+.git/
+docs/

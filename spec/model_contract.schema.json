@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nalatikana.github.io/PromoSignal-DSS/spec/model_contract.schema.json",
+  "title": "PromoSignal model contract v1",
+  "description": "รูปแบบไฟล์กลางสำหรับส่งโมเดลนับเหตุการณ์ (count model) จาก R / Stata / Python เข้าสู่เว็บแอป PromoSignal โดยไม่ต้องส่งข้อมูลดิบ",
+  "type": "object",
+  "required": ["schema", "name", "target", "variables", "terms", "coef", "vcov", "intercept"],
+  "additionalProperties": true,
+  "properties": {
+    "schema":      { "const": "promosignal-model/1" },
+    "name":        { "type": "string", "description": "ชื่อชุดโมเดลที่จะแสดงในแอป เช่น 'ชุดโมเดล C — Innovation Intensity'" },
+    "key":         { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,12}$", "description": "รหัสสั้นสำหรับปุ่มสลับ เช่น C" },
+    "produced_by": { "type": "string", "description": "เครื่องมือและเวอร์ชันที่ฟิต เช่น 'R 4.4.1 · MASS::glm.nb'" },
+    "produced_at": { "type": "string", "description": "วันที่ฟิต รูปแบบ YYYY-MM-DD" },
+
+    "target": {
+      "type": "object",
+      "required": ["var", "family", "link"],
+      "properties": {
+        "var":    { "type": "string", "description": "ชื่อตัวแปรตามในข้อมูลต้นทาง" },
+        "label":  { "type": "string", "description": "คำอธิบายภาษาไทยที่จะแสดงในแอป" },
+        "family": { "enum": ["negbin", "poisson"], "description": "negbin = Negative Binomial แบบ NB2 (Var = mu + alpha·mu²)" },
+        "link":   { "const": "log" },
+        "scale":  { "enum": ["count", "rate"], "default": "count",
+                    "description": "count = จำนวนครั้ง · rate = อัตราส่วน เช่น Innovation Intensity — แอปจะปิดช่วงพยากรณ์แบบจำนวนเต็มถ้าเป็น rate" }
+      }
+    },
+
+    "alpha":     { "type": "number", "minimum": 0, "description": "พารามิเตอร์การกระจายเกิน (overdispersion) ของ NB2 · ต้องมีเมื่อ family = negbin" },
+    "intercept": { "type": "number", "description": "ค่าคงที่ของสมการบนสเกล log" },
+
+    "variables": {
+      "type": "array", "minItems": 1,
+      "description": "อธิบายตัวแปรทุกตัวที่ผู้ใช้ปรับได้ · ลำดับในอาร์เรย์คือลำดับที่แสดงบนหน้าจอ",
+      "items": {
+        "type": "object",
+        "required": ["key", "label", "center"],
+        "properties": {
+          "key":     { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "label":   { "type": "string" },
+          "unit":    { "type": "string", "default": "" },
+          "min":     { "type": "number" },
+          "max":     { "type": "number" },
+          "step":    { "type": "number", "exclusiveMinimum": 0 },
+          "dec":     { "type": "integer", "minimum": 0, "maximum": 4, "default": 2 },
+          "center":  { "type": "number", "description": "ค่าเฉลี่ยที่ใช้ mean-center ตอนฟิต · แอปจะลบค่านี้ก่อนคูณสัมประสิทธิ์" },
+          "sd":      { "type": "number", "description": "ส่วนเบี่ยงเบนมาตรฐาน · ใช้ทำแผนภาพความอ่อนไหว ±1 SD" },
+          "control": { "type": "boolean", "default": false, "description": "true = ตัวแปรควบคุม แอปจะซ่อนไว้ใต้หัวข้อพับ" },
+          "bool":    { "type": "boolean", "default": false, "description": "true = ตัวแปรทวิภาค แสดงเป็นสวิตช์แทน slider" },
+          "note":    { "type": "string", "description": "คำอธิบายเพิ่มเติมที่แสดงใต้ slider" }
+        }
+      }
+    },
+
+    "terms": {
+      "type": "array", "minItems": 1,
+      "description": "พจน์ในสมการตามลำดับ · ตัวแปรเดี่ยวใช้ key ตรง ๆ · ปฏิสัมพันธ์ใช้ 'a:b' เช่น 'promotion:female_pct'",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(:[a-z][a-z0-9_]*)*$" }
+    },
+
+    "coef": { "type": "object", "description": "สัมประสิทธิ์ต่อพจน์ · คีย์ต้องตรงกับ terms ทุกตัว", "additionalProperties": { "type": "number" } },
+    "se":   { "type": "object", "additionalProperties": { "type": "number" } },
+    "p":    { "type": "object", "additionalProperties": { "type": "number" } },
+
+    "vcov": {
+      "type": "object",
+      "required": ["order", "matrix"],
+      "description": "เมทริกซ์ความแปรปรวนร่วม ใช้คำนวณช่วงความเชื่อมั่นด้วย delta method",
+      "properties": {
+        "order":  { "type": "array", "items": { "type": "string" },
+                    "description": "ลำดับแถว/คอลัมน์ · ต้องขึ้นต้นด้วย 'Intercept' ตามด้วย terms" },
+        "matrix": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } }
+      }
+    },
+
+    "fixed_effects": {
+      "type": "object",
+      "description": "ค่าฐานคงที่ที่บวกเข้าสมการบนสเกล log · ปีและอุตสาหกรรมฐานให้ใส่ 0",
+      "properties": {
+        "year":     { "type": "object", "additionalProperties": { "type": "number" } },
+        "industry": { "type": "object", "additionalProperties": { "type": "number" } }
+      }
+    },
+
+    "fit": {
+      "type": "object",
+      "properties": {
+        "n":         { "type": "integer", "minimum": 1 },
+        "n_firms":   { "type": "integer" },
+        "pseudo_r2": { "type": "number" },
+        "llf":       { "type": "number" },
+        "aic":       { "type": "number" }
+      }
+    },
+
+    "oos": {
+      "type": "object",
+      "description": "ผลทดสอบนอกกลุ่มตัวอย่าง · แอปจะแสดงตัวเลขเหล่านี้ในหน้าอ้างอิงตามข้อกำหนด explainability",
+      "properties": {
+        "n_test":        { "type": "integer" },
+        "spearman":      { "type": "number" },
+        "c_index":       { "type": "number" },
+        "mase":          { "type": "number", "description": "< 1 = ดีกว่าการทายด้วยค่าปีก่อน" },
+        "mae":           { "type": "number" },
+        "pi90_coverage": { "type": "number" }
+      }
+    },
+
+    "reference": {
+      "type": "object",
+      "description": "การกระจายของค่าจริงในกลุ่มตัวอย่าง ใช้จัดอันดับเปอร์เซ็นไทล์",
+      "properties": {
+        "quantiles":     { "type": "array", "minItems": 101, "maxItems": 101, "items": { "type": "number" } },
+        "mean":          { "type": "number" },
+        "median":        { "type": "number" },
+        "quintile_edges":{ "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } }
+      }
+    },
+
+    "notes": { "type": "string", "description": "ข้อจำกัดหรือหมายเหตุที่ต้องแสดงคู่กับผลลัพธ์" }
+  }
+}

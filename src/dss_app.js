@@ -576,13 +576,17 @@ function renderDashboard() {
     return;
   }
   const key = c => c[E].mu;
+  // ชุดโมเดลที่โหลดเข้ามาใหม่ไม่มี pctA/pctB ที่คำนวณไว้ล่วงหน้า — คิดสด ๆ ตามชุดที่ใช้อยู่
+  const uniE = M.universe[E] || M.universe.B;
+  const pctE = c => E === "A" ? c.pctA : E === "B" ? c.pctB : pctOf(c[E].mu, uniE.quantiles);
+  const qE = c => E === "A" ? c.qA : E === "B" ? c.qB : quintileOf(c[E].mu, uniE.quintile_edges);
   const sorted = [...C].sort((a, b) => key(b) - key(a));
   const best = sorted[0], worst = sorted[sorted.length - 1];
   const spread = C.length > 1 ? (best[E].mu / (worst[E].mu || .01) - 1) * 100 : 0;
   const flips = C.filter(c => quintileOf(c.A.mu, M.universe.A.quintile_edges) !== quintileOf(c.B.mu, M.universe.B.quintile_edges)).length;
 
   $("#dbTiles").innerHTML = `
-    <div class="tile hero"><div class="lab">อันดับ 1 (ชุดโมเดล ${E})</div><div class="val" style="font-size:20px">${esc(best.alias)}</div><div class="sub">${fmt(best[E].mu, 2)} รายการ/ปี · เปอร์เซ็นไทล์ ${Math.round(E === "A" ? best.pctA : best.pctB)}</div></div>
+    <div class="tile hero"><div class="lab">อันดับ 1 (ชุดโมเดล ${E})</div><div class="val" style="font-size:20px">${esc(best.alias)}</div><div class="sub">${fmt(best[E].mu, 2)} รายการ/ปี · เปอร์เซ็นไทล์ ${Math.round(pctE(best))}</div></div>
     <div class="tile"><div class="lab">จำนวนที่เก็บไว้</div><div class="val">${C.length}</div><div class="sub">ผู้สมัคร / บริษัท</div></div>
     <div class="tile"><div class="lab">ช่วงห่างอันดับ 1 กับสุดท้าย</div><div class="val">${C.length > 1 ? "+" + fmt(spread, 0) + "%" : "—"}</div><div class="sub">${C.length > 1 ? "ยิ่งห่างมาก ยิ่งแยกความต่างได้ชัด" : "ต้องมีอย่างน้อย 2 ราย"}</div></div>
     <div class="tile"><div class="lab">อันดับเปลี่ยนเมื่อสลับชุดโมเดล</div><div class="val" style="color:${flips ? "var(--amber)" : "var(--accent)"}">${flips}</div><div class="sub">${flips ? "ข้อสรุปขึ้นกับสมมติฐานของโมเดล" : "ทั้งสองชุดโมเดลให้ข้อสรุปเดียวกัน"}</div></div>`;
@@ -591,7 +595,7 @@ function renderDashboard() {
   $("#rankTable").innerHTML = `<table><thead><tr>
     <th>#</th><th>ชื่อเรียก</th><th>อุตสาหกรรม</th><th class="n">คาดการณ์</th><th class="n">CI 95%</th><th class="n">%ile</th><th class="n">Q</th><th class="n">ค่าจริง</th></tr></thead><tbody>
     ${sorted.map((c, i) => {
-      const p = c[E], pc = E === "A" ? c.pctA : c.pctB, q = E === "A" ? c.qA : c.qB;
+      const p = c[E], pc = pctE(c), q = qE(c);
       return `<tr data-i="${C.indexOf(c)}" style="cursor:pointer">
         <td class="n">${i + 1}</td><td><b>${esc(c.alias)}</b></td><td style="color:var(--grey)">${esc(c.industry)} · ${c.year}</td>
         <td class="n"><b>${fmt(p.mu, 2)}</b></td><td class="n" style="color:var(--greyl)">${fmt(p.lo, 1)}–${fmt(p.hi, 1)}</td>
@@ -788,10 +792,18 @@ function renderMethod() {
 }
 
 /* ---------------------------------------------------------------- นำทาง */
-function go(p) {
-  $$(".step").forEach(b => b.setAttribute("aria-selected", b.dataset.p === p));
+function go(p, fromHash) {
+  if (!$("#p-" + p)) return;
+  $$("nav.steps .step").forEach(b => b.setAttribute("aria-selected", b.dataset.p === p));
   $$(".pane").forEach(s => s.classList.toggle("on", s.id === "p-" + p));
+  // ให้ลิงก์ตรงไปยังแท็บได้ เช่น  ...html#howto
+  if (!fromHash && location.hash.slice(1) !== p) history.replaceState(null, "", "#" + p);
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+/** เปิดแท็บตาม hash ถ้ารู้จัก (ไม่ยุ่งกับ anchor ภายในเอกสาร เช่น #s1) */
+function goFromHash() {
+  const h = location.hash.slice(1);
+  if (h && $("#p-" + h)) go(h, true);
 }
 function demo() {
   $("#stmt").value = `สารจากประธานกรรมการ
@@ -809,9 +821,11 @@ function demo() {
 
 function boot() {
   initStep1(); initStep2(); initExport();
-  $$(".step").forEach(b => b.onclick = () => go(b.dataset.p));
+  $$("nav.steps .step").forEach(b => b.onclick = () => go(b.dataset.p));
   $("#btnDemo").onclick = demo;
   $("#btnReset").onclick = () => { if (confirm("ล้างข้อมูลทั้งหมดและเริ่มใหม่?")) location.reload(); };
   seedFromIndustry(); renderStep1(); renderModel(); renderMethod();
+  goFromHash();
+  addEventListener("hashchange", goFromHash);
 }
 boot();

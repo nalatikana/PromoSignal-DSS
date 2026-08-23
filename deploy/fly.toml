@@ -1,0 +1,18 @@
+# ตั้งค่าสำหรับ Fly.io — ยังไม่ได้เปิดใช้
+# วิธีใช้: fly launch --no-deploy  แล้วแก้ app ให้ตรงกับชื่อที่จองได้ จากนั้น fly deploy
+app = "promosignal-dss"
+primary_region = "sin"          # สิงคโปร์ — ใกล้ไทยที่สุดในแผนฟรี
+
+[build]
+  dockerfile = "deploy/Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true     # หยุดเครื่องเมื่อไม่มีคนใช้ ประหยัดโควตาฟรี
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"              # statsmodels + numpy ต้องการอย่างน้อยเท่านี้
