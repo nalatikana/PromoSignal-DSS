@@ -17,6 +17,19 @@ const SHARED = ["dm", "mt", "howto", "guide"];
 S.mode = "org";
 S.sel = 0;                      // แถวที่เลือกในหน้าคัดหุ้น
 S.loaded = null;                // ชุดโมเดลที่โหลดเข้ามาจากภายนอก
+S.engineByMode = S.engineByMode || { org: S.engine || "B", inv: S.engine || "B" };
+
+function modeEngine(mode = S.mode) {
+  const k = (S.engineByMode && S.engineByMode[mode]) || S.engine || "B";
+  return M.engines[k] ? k : "B";
+}
+
+function rememberModeEngine(k) {
+  S.engineByMode = S.engineByMode || {};
+  S.engineByMode[S.mode] = k;
+  S.engine = k;
+  try { localStorage.setItem("ps_engine_" + S.mode, k); } catch (e) { }
+}
 
 const PIPE_TEMPLATES = {
   text: `symbol,period,industry,text
@@ -465,7 +478,7 @@ function installContract(c) {
 
   S.loaded = { key, name: c.name, at: new Date().toISOString().slice(0, 16).replace("T", " "),
                by: c.produced_by || "ไม่ระบุ", terms: c.terms.length, target: c.target?.label || c.target?.var || "—" };
-  S.engine = key;
+  rememberModeEngine(key);
   ENG_NOTE[key] = { cls: "info", html:
     `<b>${esc(c.name)} — ชุดโมเดลจากไฟล์ภายนอก</b><br>` +
     `ตัวแปรตาม: ${esc(c.target?.label || c.target?.var || "ไม่ระบุ")} · ` +
@@ -494,7 +507,7 @@ function engLabel(k) {
 }
 function switchEngine(k) {
   if (!M.engines[k]) return;
-  S.engine = k;
+  rememberModeEngine(k);
   syncEngineButtons();
   if (typeof renderModel === "function") renderModel();
   if (typeof renderMethod === "function") renderMethod();
@@ -509,8 +522,11 @@ function syncEngineButtons() {
     tog.querySelectorAll("button").forEach(b => b.onclick = () => switchEngine(b.dataset.e));
   }
   $$(".engpick").forEach(box => {
+    const title = S.mode === "inv" ? "โมเดลคัดหุ้น" : "โมเดลประเมินองค์กร";
     box.innerHTML = keys.map(k =>
       `<button class="segb${S.engine === k ? " on" : ""}" data-eng="${k}">${engLabel(k)}</button>`).join("");
+    box.setAttribute("aria-label", title);
+    box.dataset.title = title;
     box.querySelectorAll("[data-eng]").forEach(b => b.onclick = () => switchEngine(b.dataset.eng));
   });
 }
@@ -521,9 +537,10 @@ const SPEC_SLOTS = 8;   // จำนวนตัวแปรหลักที�
 function renderModelSlot() {
   const host = $("#dmModel"); if (!host) return;
   const E = M.engines[S.engine], L = S.loaded;
+  const scope = S.mode === "inv" ? "โหมดคัดหุ้นลงทุน" : "โหมดประเมินองค์กร";
   host.innerHTML = `
     <div class="kv2">
-      <div><span>ชุดโมเดลที่ระบบใช้อยู่</span><b>${esc(E.label)}</b></div>
+      <div><span>ชุดโมเดลของ${scope}</span><b>${esc(E.label)}</b></div>
       <div><span>ที่มา</span><b>${L && L.key === S.engine ? "ไฟล์ภายนอก · " + esc(L.by) : "ฝังมากับระบบ (Python · statsmodels)"}</b></div>
       <div><span>ตัวแปรตาม</span><b>${esc(L && L.key === S.engine ? L.target : M.meta.target)}</b></div>
       <div><span>จำนวนพจน์</span><b>${E.n_terms}</b></div>
@@ -710,6 +727,7 @@ const PANES_V2 = `
       <button class="btn s" id="btnInvCsv">ส่งออกตารางเรตติ้ง (CSV)</button>
       <button class="btn s" id="btnClearInv">ล้างรายการ</button>
       <div style="flex:1"></div>
+      <span class="modelPickLabel">โมเดลคัดหุ้น</span>
       <div class="segbar engpick"></div>
     </div>
   </div>
@@ -729,7 +747,7 @@ const PANES_V2 = `
   <div class="kicker">คัดหุ้นลงทุน</div>
   <h2 class="sechead">Backtest ผลตอบแทน และทดสอบย้อนหลัง 5 ปี</h2>
   <p class="secsub">ทดสอบสองชั้น: 1) พอร์ตจำลองซื้อหุ้น Top 10 ตาม Innovation Alpha Score เทียบ SET Index และ 2) ตรวจความแม่นของโมเดลกับข้อมูลปีถัดไปที่ไม่เคยเห็น</p>
-  <div class="card"><div class="btnrow" style="margin-bottom:14px"><div style="flex:1"></div><div class="segbar engpick"></div></div>
+  <div class="card"><div class="btnrow modelTopbar" style="margin-bottom:14px"><div style="flex:1"></div><span class="modelPickLabel">โมเดล backtest</span><div class="segbar engpick"></div></div>
     <div id="btBody"></div></div>
 </section>
 
@@ -892,6 +910,8 @@ const CSS_V2 = `
 .modebar .mb{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 15px;font:inherit;font-size:12px;color:var(--grey);cursor:pointer}
 .modebar .mb.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .modebar .msub{font-size:11.5px;color:var(--greyl)}
+.modelPickLabel{align-self:center;font-size:11.5px;color:var(--greyl);white-space:nowrap}
+.modelTopbar{align-items:center}
 .tor{position:relative;height:19px;background:var(--mist);border-radius:5px}
 .tor .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
 .tor .lft,.tor .rgt{position:absolute;top:3px;bottom:3px;border-radius:3px}
@@ -978,7 +998,9 @@ function syncNavGroups() {
 }
 function setMode(m, quiet) {
   if (!MODES[m]) return;
+  const prevEngine = S.engine;
   S.mode = m;
+  S.engine = modeEngine(m);
   const allow = new Set(tabsOf(m));
   $$("nav.steps .step").forEach(b => b.hidden = !allow.has(b.dataset.p));
   syncNavGroups();
@@ -987,6 +1009,12 @@ function setMode(m, quiet) {
   const cur = ($$(".pane.on")[0] || {}).id?.slice(2);
   if (!quiet || !allow.has(cur)) go(MODES[m].tabs[0]);
   try { localStorage.setItem("ps_mode", m); } catch (e) { }
+  if (prevEngine !== S.engine) {
+    syncEngineButtons();
+    if (typeof renderModel === "function") renderModel();
+    if (typeof renderDashboard === "function") renderDashboard();
+    renderInvest(); renderBacktest(); renderLatestTop5(); renderModelSlot();
+  }
 }
 
 /** ให้ปุ่มแท็บที่ถูกซ่อนอยู่ พาไปโหมดที่มันสังกัดโดยอัตโนมัติ */
@@ -1101,6 +1129,10 @@ function bootV2() {
   // 8 · โหมดเริ่มต้น — ถ้ามี hash ให้ hash ชนะ
   let m0 = "org";
   try { m0 = localStorage.getItem("ps_mode") || "org"; } catch (e) { }
+  try {
+    S.engineByMode.org = localStorage.getItem("ps_engine_org") || S.engineByMode.org;
+    S.engineByMode.inv = localStorage.getItem("ps_engine_inv") || S.engineByMode.inv;
+  } catch (e) { }
   const h = location.hash.slice(1);
   setMode(modeOfPane(h) || m0, true);
   if (h && $("#p-" + h)) go(h, true);
