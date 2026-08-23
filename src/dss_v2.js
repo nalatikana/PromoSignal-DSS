@@ -1,7 +1,7 @@
 /* ============================================================================
    PromoSignal DSS · ส่วนต่อขยาย v2 (ตามมติที่ประชุม 19/8/2569)
    1. สองโหมด  — ประเมินองค์กร / คัดหุ้นลงทุน  สลับได้จากหัวหน้าจอ
-   2. ช่องเสียบโมเดล — ลากไฟล์สัญญา promosignal-model/1 จาก R หรือ Stata เข้ามาแทนที่ได้
+   2. ช่องเสียบโมเดล — ลากไฟล์สัญญา promosignal-model/1 ที่สร้างจาก Python เข้ามาแทนที่ได้
    3. ทดสอบย้อนหลัง 5 ปี — ตัวเลขจริงจาก rolling origin ไม่ใช่ค่าจำลอง
    4. ตัวติดตามข้อมูลตรวจสอบ 420 เรคคอร์ด
    ต่อท้าย dss_app.js — ใช้ $ $$ fmt esc S M VARS predict predInterval pctOf
@@ -489,7 +489,7 @@ function renderSpecSlot() {
     <div class="note info"><b>สถานะ: รอชื่อตัวแปรจากคุณปูลม</b><br>
       ที่ประชุมตกลงว่าโมเดลชุดใหม่จะเปลี่ยนตัวแปรตามเป็น <b>Innovation Intensity</b> ที่คำนวณจาก Wording Ratios
       และใช้ตัวแปรอิสระ <b>${SPEC_SLOTS} ตัว</b> โดยรายชื่อจะยืนยันภายในวันจันทร์
-      ระบบจึงเตรียม<b>ช่องเสียบ</b>ไว้ล่วงหน้า — เมื่อได้รายชื่อแล้วไม่ต้องแก้โค้ดเว็บ เพียงฟิตโมเดลใน R หรือ Stata
+      ระบบจึงเตรียม<b>ช่องเสียบ</b>ไว้ล่วงหน้า — เมื่อได้รายชื่อแล้วไม่ต้องแก้โค้ดเว็บ เพียงฟิตโมเดลด้วย Python
       ส่งออกเป็นไฟล์สัญญา แล้วลากเข้ามาในกล่องด้านล่าง</div>
     <table style="margin-top:12px"><thead><tr><th class="n">ช่อง</th><th>ตัวแปรที่ตกลงไว้</th><th>ตัวแปรที่ระบบใช้อยู่ตอนนี้</th><th>สถานะ</th></tr></thead><tbody>
       ${Array.from({ length: SPEC_SLOTS }, (_, i) => {
@@ -536,10 +536,12 @@ function initModelDrop() {
   ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
   dz.addEventListener("drop", e => handle(e.dataTransfer.files[0]));
 
-  $("#btnSpecEx").onclick = () => dl("example_model.json", SPEC_FILES.example, "application/json");
-  $("#btnSpecR").onclick = () => dl("export_model.R", SPEC_FILES.R, "text/plain;charset=utf-8");
-  $("#btnSpecDo").onclick = () => dl("export_model.do", SPEC_FILES.do, "text/plain;charset=utf-8");
-  $("#btnSpecSchema").onclick = () => dl("model_contract.schema.json", SPEC_FILES.schema, "application/json");
+  const bindDl = (id, name, text, mime) => {
+    const btn = $("#" + id);
+    if (btn && text) btn.onclick = () => dl(name, text, mime);
+  };
+  bindDl("btnSpecEx", "example_model.json", SPEC_FILES.example, "application/json");
+  bindDl("btnSpecSchema", "model_contract.schema.json", SPEC_FILES.schema, "application/json");
 }
 
 /* ---------------------------------------------------------------- โครงหน้าใหม่ */
@@ -587,16 +589,14 @@ const PANES_V2 = `
   <div class="card" style="margin-bottom:14px"><h3>1 · ชุดโมเดลที่ระบบใช้อยู่</h3>
     <div id="dmModel"></div></div>
 
-  <div class="card" style="margin-bottom:14px"><h3>2 · เสียบโมเดลจาก R หรือ Stata</h3>
-    <p class="desc">ฟิตโมเดลในเครื่องมือที่ทีมสถิติถนัด ส่งออกเป็นไฟล์สัญญา แล้วลากเข้ามาที่นี่ ระบบจะตรวจไฟล์ก่อน ถ้าไม่ผ่านจะไม่เปลี่ยนอะไรเลย</p>
+  <div class="card" style="margin-bottom:14px"><h3>2 · เสียบโมเดลจาก Python</h3>
+    <p class="desc">ฟิตโมเดลด้วย Python ส่งออกเป็นไฟล์สัญญา แล้วลากเข้ามาที่นี่ ระบบจะตรวจไฟล์ก่อน ถ้าไม่ผ่านจะไม่เปลี่ยนอะไรเลย</p>
     <div class="dz" id="mdz"><div class="dzi">⇩</div>
       <div><b>ลากไฟล์ model.json มาวางที่นี่</b><br><span style="color:var(--greyl);font-size:11.5px">หรือคลิกเพื่อเลือกไฟล์ · อ่านในเบราว์เซอร์เท่านั้น ไม่ส่งขึ้นเซิร์ฟเวอร์</span></div></div>
     <input type="file" id="mdzFile" accept=".json,application/json" style="display:none">
     <div id="mdzOut"></div>
     <div class="btnrow" style="margin-top:14px">
       <button class="btn s" id="btnSpecEx">ไฟล์ตัวอย่าง example_model.json</button>
-      <button class="btn s" id="btnSpecR">สคริปต์ R · export_model.R</button>
-      <button class="btn s" id="btnSpecDo">สคริปต์ Stata · export_model.do</button>
       <button class="btn s" id="btnSpecSchema">ข้อกำหนดไฟล์ (JSON Schema)</button>
     </div>
   </div>

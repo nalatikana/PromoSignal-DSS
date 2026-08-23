@@ -379,7 +379,10 @@ function updateHint(el, k, val) {
 function setVar(k, v) { S.form[k] = v; S.userTouched = Object.assign({}, S.userTouched || {}, { [k]: v }); }
 
 function renderModel(skipSliders) {
-  const note = ENG_NOTE[S.engine];
+  const note = ENG_NOTE[S.engine] || {
+    cls: "info",
+    html: `<b>${esc(M.engines[S.engine]?.label || "ชุดโมเดลที่โหลดเข้ามา")}</b><br>โมเดลนี้มาจากไฟล์ภายนอก ระบบจะแสดงผลคำนวณจากสัมประสิทธิ์ที่แนบมา และควรตรวจผลทดสอบนอกกลุ่มตัวอย่างก่อนใช้ประกอบการตัดสินใจ`
+  };
   $("#engNote").innerHTML = `<div class="note ${note.cls}" style="margin:0">${note.html}</div>`;
   if (!skipSliders) buildSliders();
 
