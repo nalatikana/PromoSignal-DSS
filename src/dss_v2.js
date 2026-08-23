@@ -11,7 +11,7 @@
 /* ---------------------------------------------------------------- โหมด */
 const MODES = {
   org: { lab: "ประเมินองค์กร", sub: "อ่านเอกสาร → วิเคราะห์ → จัดอันดับผู้สมัคร", tabs: ["up", "mo", "db"] },
-  inv: { lab: "คัดหุ้นลงทุน", sub: "ให้เรตติ้ง → คะแนนเติบโต → ทดสอบย้อนหลัง", tabs: ["iv", "bt"] },
+  inv: { lab: "คัดหุ้นลงทุน", sub: "ให้เรตติ้ง → backtest ผลตอบแทน → Top 5 ล่าสุด", tabs: ["iv", "bt", "live"] },
 };
 const SHARED = ["dm", "mt", "howto", "guide"];
 S.mode = "org";
@@ -177,6 +177,122 @@ function seedInvest() {
   renderInvest(); if (typeof renderDashboard === "function") renderDashboard();
 }
 
+/* ---------------------------------------------------------------- Market validation */
+function moneyPct(v, d = 2) {
+  return (v > 0 ? "+" : "") + fmt(v, d) + "%";
+}
+
+function linePath(rows, key, w, h) {
+  const vals = rows.map(r => +r[key]);
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  return vals.map((v, i) => {
+    const x = vals.length === 1 ? 0 : i / (vals.length - 1) * w;
+    const y = h - ((v - lo) / span * h);
+    return `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(" ");
+}
+
+function renderEquityChart(mv) {
+  const p = mv.backtest.equity_curve.portfolio;
+  const b = mv.backtest.equity_curve.benchmark;
+  const rows = p.map((r, i) => ({ period: r.period, portfolio: r.value, benchmark: b[i].value }));
+  const w = 640, h = 170, all = rows.flatMap(r => [r.portfolio, r.benchmark]);
+  const lo = Math.min(...all), hi = Math.max(...all);
+  const y = v => h - ((v - lo) / ((hi - lo) || 1) * h);
+  const last = rows[rows.length - 1];
+  return `<svg class="eqchart" viewBox="0 0 ${w + 64} ${h + 58}" role="img" aria-label="Equity curve">
+    <line x1="0" y1="${y(100).toFixed(1)}" x2="${w}" y2="${y(100).toFixed(1)}" stroke="#dfe5ea" stroke-width="1"/>
+    <path d="${linePath(rows, "portfolio", w, h)}" fill="none" stroke="#17b387" stroke-width="3" stroke-linecap="round"/>
+    <path d="${linePath(rows, "benchmark", w, h)}" fill="none" stroke="#3c8dde" stroke-width="3" stroke-linecap="round"/>
+    <text x="0" y="${h + 28}" fill="#93a1ac" font-size="12">${esc(rows[0].period)}</text>
+    <text x="${w - 48}" y="${h + 28}" fill="#93a1ac" font-size="12">${esc(last.period)}</text>
+    <text x="${w + 12}" y="${y(last.portfolio).toFixed(1)}" fill="#0d7a5c" font-size="12">Top 10 ${fmt(last.portfolio, 1)}</text>
+    <text x="${w + 12}" y="${y(last.benchmark).toFixed(1)}" fill="#255d99" font-size="12">SET ${fmt(last.benchmark, 1)}</text>
+  </svg>`;
+}
+
+function renderMarketBacktestBlock() {
+  const mv = M.market_validation;
+  if (!mv) return `<div class="note warn" style="margin-bottom:16px"><b>ยังไม่มี market backtest</b><br>
+    ต้องรัน Python pipeline เพื่อเติมบล็อก <code>market_validation</code> ในไฟล์โมเดลก่อน จึงจะแสดงผลตอบแทน Top 10 เทียบ SET Index ได้</div>`;
+  const m = mv.backtest.metrics;
+  return `
+    <h3 style="margin:0 0 8px">TRL 6 · Quantitative Backtesting: Top 10 เทียบ SET Index</h3>
+    <div class="tiles" style="margin-bottom:16px">
+      <div class="tile hero"><div class="lab">Alpha รวม</div><div class="val">${moneyPct(m.alpha_pct)}</div>
+        <div class="sub">${esc(mv.backtest.portfolio)} · ${esc(mv.backtest.period)}</div></div>
+      <div class="tile"><div class="lab">ผลตอบแทนพอร์ต Top 10</div><div class="val">${moneyPct(m.portfolio_total_return_pct)}</div>
+        <div class="sub">SET Index ${moneyPct(m.set_total_return_pct)}</div></div>
+      <div class="tile"><div class="lab">Win rate รายไตรมาส</div><div class="val">${fmt(m.win_rate_pct, 0)}%</div>
+        <div class="sub">จำนวนไตรมาสที่ชนะ benchmark</div></div>
+      <div class="tile"><div class="lab">Sharpe / Max drawdown</div><div class="val">${fmt(m.sharpe, 2)}</div>
+        <div class="sub">Max DD ${moneyPct(m.max_drawdown_pct)}</div></div>
+    </div>
+    <div class="softbox" style="margin-bottom:16px">
+      <h3>Equity curve</h3>
+      <p class="desc">ฐาน 100 · รีบาลานซ์รายไตรมาส · พอร์ต Top 10 ถือแบบ equal-weight</p>
+      ${renderEquityChart(mv)}
+    </div>
+    <table><thead><tr><th>ปี</th><th class="n">Top 10</th><th class="n">SET Index</th><th class="n">Alpha</th><th>ผล</th></tr></thead><tbody>
+      ${mv.backtest.folds.map(f => `<tr>
+        <td><b>${esc(f.period)}</b></td>
+        <td class="n">${moneyPct(f.top10_return_pct)}</td>
+        <td class="n">${moneyPct(f.set_return_pct)}</td>
+        <td class="n" style="color:${f.alpha_pct > 0 ? "var(--accent)" : "var(--rose)"}"><b>${moneyPct(f.alpha_pct)}</b></td>
+        <td><span class="pill ${f.hit ? "ok" : "warn"}">${f.hit ? "ชนะ SET" : "แพ้ SET"}</span></td></tr>`).join("")}
+    </tbody></table>
+    <div class="note ${mv.status === "demo_generated" ? "warn" : "ok"}" style="margin:12px 0 20px">
+      <b>${mv.status === "demo_generated" ? "ข้อมูลสาธิตจาก Python" : "ข้อมูลจาก pipeline จริง"}</b><br>
+      ${esc(mv.data_note)}<br>
+      Workflow: ${mv.pipeline.map(esc).join(" → ")}
+    </div>`;
+}
+
+function renderLatestTop5() {
+  const host = $("#liveBody");
+  if (!host) return;
+  const mv = M.market_validation;
+  if (!mv?.latest?.rows?.length) {
+    host.innerHTML = `<div class="empty">ยังไม่มีข้อมูลล่าสุด<br><br>รัน Python pipeline เพื่อเติม <code>market_validation.latest.rows</code> ก่อน</div>`;
+    return;
+  }
+  const rows = mv.latest.rows.slice(0, 5);
+  const rest = mv.latest.rows.slice(5);
+  host.innerHTML = `
+    <div class="tiles" style="margin-bottom:16px">
+      <div class="tile hero"><div class="lab">อันดับ 1 ล่าสุด</div><div class="val" style="font-size:26px">${esc(rows[0].symbol)}</div>
+        <div class="sub">Innovation Alpha Score ${fmt(rows[0].innovation_alpha_score, 1)} · ${esc(rows[0].industry)}</div></div>
+      <div class="tile"><div class="lab">วันที่ประมวลผล</div><div class="val" style="font-size:25px">${esc(mv.latest.as_of)}</div>
+        <div class="sub">${esc(mv.latest.universe)}</div></div>
+      <div class="tile"><div class="lab">Top 5 เฉลี่ย</div><div class="val">${fmt(rows.reduce((s, r) => s + r.innovation_alpha_score, 0) / rows.length, 1)}</div>
+        <div class="sub">คะแนน Innovation Alpha</div></div>
+      <div class="tile"><div class="lab">สถานะข้อมูล</div><div class="val" style="font-size:22px">${mv.status === "demo_generated" ? "Demo" : "Live"}</div>
+        <div class="sub">สร้างจาก Python pipeline</div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Top 5 หุ้นนวัตกรรมล่าสุด</h3>
+        <p class="desc">ใช้สำหรับ TRL 7: รันกับข้อมูลไตรมาสล่าสุดและนำไปทดสอบพฤติกรรมตลาดจริง</p>
+        <table><thead><tr><th>#</th><th>Symbol</th><th>อุตสาหกรรม</th><th class="n">Score</th><th class="n">Model signal</th><th>หลักฐาน</th></tr></thead><tbody>
+          ${rows.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td><td>${esc(r.industry)}</td>
+            <td class="n"><b>${fmt(r.innovation_alpha_score, 1)}</b></td><td class="n">${fmt(r.model_signal, 2)}</td>
+            <td style="color:var(--grey)">${esc(r.evidence)}</td></tr>`).join("")}
+        </tbody></table>
+      </div>
+      <div class="card">
+        <h3>รายการสำรองและความเสี่ยง</h3>
+        <p class="desc">ใช้ดูหุ้นอันดับ 6-10 เผื่อกรณีสภาพคล่องหรือข่าวล่าสุดทำให้ต้องตัดออก</p>
+        <table><thead><tr><th>#</th><th>Symbol</th><th class="n">Score</th><th>หมายเหตุ</th></tr></thead><tbody>
+          ${rest.map(r => `<tr><td class="n">${r.rank}</td><td><b>${esc(r.symbol)}</b></td>
+            <td class="n">${fmt(r.innovation_alpha_score, 1)}</td><td>${esc(r.risk_flag)}</td></tr>`).join("")}
+        </tbody></table>
+        <div class="note warn" style="margin-top:12px"><b>ไม่ใช่คำแนะนำลงทุน</b><br>
+          หน้านี้เป็น screener เพื่อคัดหุ้นไปตรวจต่อ ต้องตรวจราคา ข่าว งบล่าสุด สภาพคล่อง และข้อจำกัดการลงทุนก่อนใช้งานจริง</div>
+      </div>
+    </div>`;
+  wrapTables(host);
+}
+
 /* ---------------------------------------------------------------- ทดสอบย้อนหลัง */
 function renderBacktest() {
   const bt = M.backtest, E = S.engine, host = $("#btBody");
@@ -204,6 +320,7 @@ function renderBacktest() {
   const cell = (v, good) => `<td class="n" style="color:${good ? "var(--accent)" : "var(--ink)"}">${fmt(v, 3)}</td>`;
 
   host.innerHTML = `
+    ${renderMarketBacktestBlock()}
     <div class="tiles" style="margin-bottom:16px">
       <div class="tile hero"><div class="lab">ความสามารถในการเรียงอันดับ (c-index)</div>
         <div class="val">${fmt(o.c_index, 3)}</div>
@@ -348,7 +465,7 @@ function installContract(c) {
   if (typeof renderModel === "function") renderModel();
   if (typeof renderMethod === "function") renderMethod();
   if (typeof renderDashboard === "function") renderDashboard();
-  renderInvest(); renderBacktest(); renderModelSlot();
+  renderInvest(); renderBacktest(); renderLatestTop5(); renderModelSlot();
 }
 
 /** สร้าง/ซิงก์ปุ่มสลับชุดโมเดลทุกที่ให้ครบทุกชุดที่มีอยู่ตอนนี้ */
@@ -364,7 +481,7 @@ function switchEngine(k) {
   if (typeof renderModel === "function") renderModel();
   if (typeof renderMethod === "function") renderMethod();
   if (typeof renderDashboard === "function") renderDashboard();
-  renderInvest(); renderBacktest(); renderModelSlot();
+  renderInvest(); renderBacktest(); renderLatestTop5(); renderModelSlot();
 }
 function syncEngineButtons() {
   const keys = Object.keys(M.engines);
@@ -575,10 +692,17 @@ const PANES_V2 = `
 
 <section class="pane" id="p-bt">
   <div class="kicker">คัดหุ้นลงทุน</div>
-  <h2 class="sechead">ทดสอบย้อนหลัง 5 ปี</h2>
-  <p class="secsub">เทรนโมเดลด้วยข้อมูลถึงปีหนึ่ง แล้วเอาไปทดสอบกับปีถัดไปที่โมเดลไม่เคยเห็น ทำซ้ำเลื่อนไปทีละปี — ตัวเลขทุกตัวในหน้านี้มาจากข้อมูลจริง ไม่ใช่ค่าจำลอง</p>
+  <h2 class="sechead">Backtest ผลตอบแทน และทดสอบย้อนหลัง 5 ปี</h2>
+  <p class="secsub">ทดสอบสองชั้น: 1) พอร์ตจำลองซื้อหุ้น Top 10 ตาม Innovation Alpha Score เทียบ SET Index และ 2) ตรวจความแม่นของโมเดลกับข้อมูลปีถัดไปที่ไม่เคยเห็น</p>
   <div class="card"><div class="btnrow" style="margin-bottom:14px"><div style="flex:1"></div><div class="segbar engpick"></div></div>
     <div id="btBody"></div></div>
+</section>
+
+<section class="pane" id="p-live">
+  <div class="kicker">TRL 7</div>
+  <h2 class="sechead">Top 5 หุ้นนวัตกรรมล่าสุด</h2>
+  <p class="secsub">รันข้อมูลไตรมาสล่าสุดเพื่อหา shortlist สำหรับ operational validation เช่น landing page, Substack, LINE OA หรือ request API access</p>
+  <div id="liveBody"></div>
 </section>
 
 <section class="pane" id="p-dm">
@@ -631,6 +755,8 @@ const CSS_V2 = `
 .prog{height:7px;background:var(--mist);border-radius:4px;overflow:hidden}
 .prog.sm{height:6px;min-width:70px}
 .prog>span{display:block;height:100%;background:var(--accent);border-radius:4px}
+.softbox{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}
+.eqchart{width:100%;height:auto;display:block;overflow:visible}
 .split2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start}
 @media(max-width:1000px){.split2{grid-template-columns:1fr}}
 tr.selrow{background:var(--mist)}
@@ -692,7 +818,8 @@ function bootV2() {
   const wanted = [
     ["up", existing.up], ["mo", existing.mo], ["db", existing.db],
     ["iv", mk("iv", "ขั้นที่ 1", "เรตติ้งและคะแนนเติบโต")],
-    ["bt", mk("bt", "ขั้นที่ 2", "ทดสอบย้อนหลัง 5 ปี")],
+    ["bt", mk("bt", "ขั้นที่ 2", "Backtest ผลตอบแทน")],
+    ["live", mk("live", "ขั้นที่ 3", "Top 5 ล่าสุด")],
     ["dm", mk("dm", "ตั้งค่า", "ข้อมูลและโมเดล")],
     ["mt", existing.mt], ["howto", existing.howto], ["guide", existing.guide],
   ];
@@ -747,7 +874,7 @@ function bootV2() {
   // 7 · ช่องเสียบโมเดล + เนื้อหา
   initModelDrop();
   renderModelSlot(); renderSpecSlot(); renderDataStatus();
-  renderInvest(); renderBacktest();
+  renderInvest(); renderBacktest(); renderLatestTop5();
   syncEngineButtons();
 
   // 8 · โหมดเริ่มต้น — ถ้ามี hash ให้ hash ชนะ
