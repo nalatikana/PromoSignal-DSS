@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AN·RC — ต้นแบบระบบวิเคราะห์ธรรมาภิบาลและนวัตกรรม</title>
+<style>
+  :root{--ink:#0f2233;--ink2:#44536b;--ink3:#8fa8bd;--line:#dfe5ee;--bg:#f4f6fa;--panel:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;font-weight:300;line-height:1.7}
+  .wrap{max-width:940px;margin:0 auto;padding:56px 24px 70px}
+  .b{display:flex;gap:6px;margin-bottom:22px}
+  .b span{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:600;color:#fff}
+  h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+  .sub{color:var(--ink2);font-size:15px;margin:0 0 34px;max-width:70ch}
+  .grid{display:grid;gap:18px;grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;
+    box-shadow:0 1px 2px rgba(15,34,51,.04),0 10px 30px rgba(15,34,51,.06);display:flex;flex-direction:column}
+  .tag{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-bottom:9px}
+  h2{font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+  .card p{font-size:13.5px;color:var(--ink2);margin:0 0 14px}
+  ul{margin:0 0 18px;padding-left:19px;font-size:12.8px;color:var(--ink2)}
+  li{margin:3px 0}
+  .row{margin-top:auto;display:flex;gap:9px;flex-wrap:wrap}
+  a.btn{text-decoration:none;padding:9px 18px;border-radius:999px;font-size:13.5px;white-space:nowrap}
+  a.p{color:#fff}
+  a.s{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+  a.s:hover{background:var(--line)}
+  footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink3);line-height:1.75}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="b"><span style="background:#17b387">AN</span><span style="background:#3c8dde">RC</span></div>
+  <h1>ต้นแบบระบบวิเคราะห์ธรรมาภิบาลและนวัตกรรม</h1>
+  <p class="sub">ต้นแบบสองตัวจากงานวิจัยชุดเดียวกัน — ตัวหนึ่งเน้นการประเมินองค์กรและคัดหุ้นจากโครงสร้างคณะกรรมการ
+    อีกตัวเน้นการอ่านสัญญาณนวัตกรรมจากภาษาผู้นำคู่กับองค์ประกอบบอร์ด</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="tag" style="color:#17b387">ต้นแบบที่ 1</div>
+      <h2>PromoSignal DSS</h2>
+      <p>ระบบสนับสนุนการตัดสินใจ ทำนายจำนวนนวัตกรรมเปิดจากภาษาผู้บริหารและโครงสร้างคณะกรรมการ
+        ข้อมูลปกปิดชื่อบริษัทและชื่อบุคคลทั้งหมด</p>
+      <ul>
+        <li>สองโหมด — ประเมินองค์กร และคัดหุ้นลงทุน</li>
+        <li>อัปโหลดรายงานประจำปี → วิเคราะห์ → จัดอันดับ</li>
+        <li>ทดสอบย้อนหลัง 5 ปีแบบเลื่อนจุดตั้งต้น</li>
+        <li>เสียบโมเดลจาก R หรือ Stata ได้โดยไม่ต้องแก้โค้ด</li>
+      </ul>
+      <div class="row">
+        <a class="btn p" style="background:#17b387" href="./">เปิดระบบ</a>
+        <a class="btn s" href="./#howto">คู่มือใช้งาน</a>
+        <a class="btn s" href="./#guide">ระบบทำงานอย่างไร</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tag" style="color:#1b4dd8">ต้นแบบที่ 2</div>
+      <h2>Board Signal</h2>
+      <p>ต้นแบบผลิตภัณฑ์เชิงพาณิชย์ — อ่านสัญญาณนวัตกรรมจากภาษา CEO คู่กับโครงสร้างบอร์ด
+        พร้อมระบบสมาชิก เครดิต และการเทียบคู่แข่ง</p>
+      <ul>
+        <li>รายงานวินิจฉัยรายบริษัท + เมทริกซ์กลยุทธ์ 2×2</li>
+        <li>เทียบคู่แข่งในอุตสาหกรรมได้ครั้งละ 3 บริษัท</li>
+        <li>What-if จำลองบอร์ด และตรวจคะแนนภาษา CEO จากไฟล์ PDF</li>
+        <li>ล็อกอิน Google · เครดิต · ซื้อภาพรวมรายอุตสาหกรรม</li>
+      </ul>
+      <div class="row">
+        <a class="btn p" style="background:#1b4dd8" href="./boardsignal/">เปิดระบบ</a>
+        <a class="btn s" href="./boardsignal/requirements.html">เอกสารสรุปความต้องการ</a>
+        <a class="btn s" href="./boardsignal/userflow.png">แผนภาพ User Flow</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ต้นแบบเพื่อการสาธิตและการนำเสนอ · ไม่ใช่ระบบ production · ไม่มีบัญชีผู้ใช้จริงและไม่เชื่อมข้อมูลสด ·
+    ผลลัพธ์เป็นการคาดการณ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ
+    และไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล
+  </footer>
+</div>
+</body></html>
