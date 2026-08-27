@@ -240,3 +240,41 @@ tbody tr.hl td{background:color-mix(in srgb,var(--brand) 6%,transparent)}
 svg text{font-family:Kanit,system-ui,sans-serif}
 .hi{background:color-mix(in srgb,var(--s3) 26%,transparent);border-radius:3px;padding:0 2px}
 .hi.prev{background:color-mix(in srgb,var(--s2) 26%,transparent)}
+
+/* ---------------------------------------------- ปุ่มลิงก์ในตาราง */
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--line)}
+.lnk:hover{color:var(--brand);border-bottom-color:var(--brand)}
+
+/* ---------------------------------------------- โหมดที่ประชุมลงทุน */
+.ic{max-width:1180px}
+.icbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.ichero{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;flex-wrap:wrap;
+  background:linear-gradient(150deg,var(--nav),var(--brand-2));color:#fff;border-radius:var(--radius);padding:26px 30px;margin-bottom:14px}
+.icname{font-size:54px;font-weight:500;letter-spacing:-.04em;line-height:1}
+.icsub{font-size:17px;opacity:.82;margin-top:6px;line-height:1.35}
+.ichero .pill{background:rgba(255,255,255,.14)!important;border-color:rgba(255,255,255,.26)!important;color:#fff!important}
+.icscore{text-align:right;flex:none}
+.icipi{font-size:82px;font-weight:500;letter-spacing:-.05em;line-height:.92}
+.ick{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.66}
+.icup{font-size:14px;margin-top:8px;color:#9ff0c4}
+.icth .card{padding:19px 21px}
+.icsc{display:grid;grid-template-columns:minmax(0,1fr) 130px 62px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.icsc:last-of-type{border-bottom:0}
+.icdec{display:flex;align-items:center;gap:9px;font-size:14px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--panel)}
+.icdec:hover{border-color:var(--ink-3)}
+.icdec.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 7%,var(--panel))}
+.icdec input{accent-color:var(--brand)}
+.icfoot{margin-top:20px;padding-top:13px;border-top:1px solid var(--line);font-size:10.6px;color:var(--ink-3);line-height:1.65}
+@media(max-width:760px){.icname{font-size:36px}.icipi{font-size:58px}
+  .icsc{grid-template-columns:minmax(0,1fr) 62px}.icsc .mbar{grid-column:1/-1;order:3}}
+
+/* โหมดฉายในที่ประชุม — ซ่อนเมนูและแถบบน ขยายตัวอักษรทั้งหน้า */
+body.present .side,body.present .topbar{display:none}
+body.present .app{grid-template-columns:1fr}
+body.present .wrap{max-width:1500px;padding:30px 40px}
+body.present .icname{font-size:74px}
+body.present .icipi{font-size:112px}
+body.present .icth .card{font-size:15px}
+body.present .card>h3{font-size:16px}
+
+body.present .ic{max-width:100%}

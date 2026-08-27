@@ -1,33 +1,26 @@
-"""ประกอบ Board Signal เป็นไฟล์ HTML ไฟล์เดียว → docs/boardsignal/index.html
-
-ใช้ฟอนต์ Kanit และไลบรารี pdf.js ร่วมกับโปรเจกต์ PromoSignal ที่อยู่ใน src/ ของ repo
-จึงไม่ต้องเก็บไฟล์เดียวกันสองชุด
-
-    python3 boardsignal/build.py
-"""
+"""ประกอบ Board Signal เป็นไฟล์ HTML เดียว"""
 import json
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent          # boardsignal/
-REPO = HERE.parent                              # รากของ repo
-SHARED = REPO / "src"                           # ฟอนต์และ vendor ที่ใช้ร่วมกัน
+ROOT = Path(__file__).resolve().parent
 rd = lambda p: Path(p).read_text(encoding="utf-8")
 
-html = rd(HERE / "src" / "app.html")
+html = rd(ROOT / "src" / "app.html")
 parts = {
-    "/*__FONT__*/": rd(SHARED / "kanit_font.css"),
-    "/*__THEME__*/": rd(HERE / "src" / "theme.css"),
-    "/*__PDFWORKER__*/": rd(SHARED / "vendor" / "pdf.worker.min.js"),
-    "/*__PDFJS__*/": rd(SHARED / "vendor" / "pdf.min.js"),
-    "/*__DATA__*/": json.dumps(json.loads(rd(HERE / "src" / "prof_data.json")), ensure_ascii=False),
-    "/*__LEX__*/": rd(HERE / "src" / "lex.js"),
-    "/*__APP__*/": rd(HERE / "src" / "app.js"),
+    "/*__FONT__*/": rd(ROOT / "src" / "kanit_font.css"),
+    "/*__THEME__*/": rd(ROOT / "src" / "theme.css"),
+    "/*__PDFWORKER__*/": rd(ROOT / "src" / "vendor" / "pdf.worker.min.js"),
+    "/*__PDFJS__*/": rd(ROOT / "src" / "vendor" / "pdf.min.js"),
+    "/*__DATA__*/": json.dumps(json.loads(rd(ROOT / "src" / "prof_data.json")), ensure_ascii=False),
+    "/*__LEX__*/": rd(ROOT / "src" / "lex.js"),
+    "/*__APP__*/": rd(ROOT / "src" / "app.js"),
+    "/*__INVEST__*/": rd(ROOT / "src" / "invest.js"),
 }
 for k, v in parts.items():
     assert k in html, f"ไม่พบ placeholder {k}"
+    assert "</script" not in v or k in ("/*__PDFJS__*/", "/*__PDFWORKER__*/"), f"{k} มี </script"
     html = html.replace(k, v, 1)
 
-out = REPO / "docs" / "boardsignal" / "index.html"
-out.parent.mkdir(parents=True, exist_ok=True)
+out = ROOT / "out" / "BoardSignal.html"
 out.write_text(html, encoding="utf-8")
-print("wrote", out.relative_to(REPO), round(out.stat().st_size / 1e6, 2), "MB")
+print("wrote", out, round(out.stat().st_size / 1e6, 2), "MB")

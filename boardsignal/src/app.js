@@ -283,18 +283,18 @@ const RADAR_SCALE = RADAR_AX.map(a => {
   return { lo: q(.05), hi: q(.95) };
 });
 function radar(c, cmp, cmpLabel) {
-  const R = 78, cx = 118, cy = 104, n = RADAR_AX.length;
+  const R = 70, cx = 152, cy = 100, n = RADAR_AX.length;
   const norm = (co, i) => clamp((RADAR_AX[i].f(co) - RADAR_SCALE[i].lo) / ((RADAR_SCALE[i].hi - RADAR_SCALE[i].lo) || 1), .04, 1);
   const P = (i, t) => { const a = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + R * t * Math.cos(a), cy + R * t * Math.sin(a)]; };
   const poly = co => RADAR_AX.map((_, i) => P(i, norm(co, i)).map(x => x.toFixed(1)).join(",")).join(" ");
   const rings = [.25, .5, .75, 1].map(t =>
     `<polygon points="${RADAR_AX.map((_, i) => P(i, t).map(x => x.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join("");
   const labs = RADAR_AX.map((a, i) => {
-    const [x, y] = P(i, 1.24);
+    const [x, y] = P(i, 1.3);
     const anc = Math.abs(x - cx) < 12 ? "middle" : x > cx ? "start" : "end";
     return `<text x="${x.toFixed(0)}" y="${(y + 3).toFixed(0)}" font-size="9.5" fill="var(--ink-3)" text-anchor="${anc}">${a.l}</text>`;
   }).join("");
-  return `<svg viewBox="0 0 236 214" width="100%" style="max-width:250px" role="img" aria-label="องค์ประกอบบอร์ด">
+  return `<svg viewBox="0 0 304 212" width="100%" style="max-width:304px;display:block;margin:0 auto" role="img" aria-label="องค์ประกอบบอร์ด">
     ${rings}${labs}
     ${cmp ? `<polygon points="${poly(cmp)}" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="4 3"/>` : ""}
     <polygon points="${poly(c)}" fill="var(--s1)" fill-opacity=".18" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>
@@ -1425,8 +1425,9 @@ function wireBilling(h) {
   });
   const r = h.querySelector("#btnResetDemo");
   if (r) r.onclick = () => {
-    if (!confirm("รีเซ็ตข้อมูลสาธิตทั้งหมด?\n\nเครดิตกลับเป็น 3 · ล้างสิทธิ์ที่ปลดล็อกไว้ · คืนสิทธิ์รายงานฟรี")) return;
+    if (!confirm("รีเซ็ตข้อมูลสาธิตทั้งหมด?\n\nเครดิตกลับเป็น 3 · ล้างสิทธิ์ที่ปลดล็อกไว้ · คืนสิทธิ์รายงานฟรี · ล้างพอร์ตและมติที่บันทึกไว้")) return;
     S.credits = 3; S.freeCo = null; S.unlocked = {}; S.sectors = {}; S.log = [];
+    S.port = []; S.dec = {};
     save(); toast("รีเซ็ตแล้ว"); render();
   };
 }

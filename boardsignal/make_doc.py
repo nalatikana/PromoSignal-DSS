@@ -2,18 +2,19 @@
 import base64
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-REPO = HERE.parent
-SH = HERE / "shots"
-FONT = (REPO / "src" / "kanit_font.css").read_text(encoding="utf-8")
+ROOT = Path(__file__).resolve().parent
+SH = Path("/tmp/bq")
+FONT = (ROOT / "src" / "kanit_font.css").read_text(encoding="utf-8")
 img = lambda n: "data:image/jpeg;base64," + base64.b64encode((SH / f"{n}.jpg").read_bytes()).decode()
 FLOW = "data:image/png;base64," + base64.b64encode(
-    (HERE / "shots" / "userflow_small.png").read_bytes()).decode()
+    (ROOT / "out" / "BoardSignal_UserFlow_small.png").read_bytes()).decode()
 
-BODY = (HERE / "src" / "doc_body.html").read_text(encoding="utf-8")
+BODY = Path(ROOT / "src" / "doc_body.html").read_text(encoding="utf-8")
 for k, n in [("__IMG_LOGIN__", "sh-login"), ("__IMG_FIT__", "sh-fit"), ("__IMG_MATRIX__", "sh-matrix"),
              ("__IMG_PAYWALL__", "sh-paywall"), ("__IMG_PEER__", "sh-peer"),
-             ("__IMG_STUDIO__", "sh-studio"), ("__IMG_BILLING__", "sh-billing")]:
+             ("__IMG_STUDIO__", "sh-studio"), ("__IMG_BILLING__", "sh-billing"),
+             ("__IMG_WF__", "sh-wf"), ("__IMG_UPSIDE__", "sh-upside"), ("__IMG_PORT__", "sh-port"),
+             ("__IMG_IC__", "sh-ic"), ("__IMG_MEMO__", "sh-memo")]:
     BODY = BODY.replace(k, img(n))
 BODY = BODY.replace("__IMG_FLOW__", FLOW)
 assert "__IMG_" not in BODY, "ยังมีภาพที่ยังไม่ฝัง"
@@ -76,6 +77,6 @@ html = f"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <title>Board Signal — สรุปความต้องการและฟีเจอร์ต้นแบบ</title>
 <style>{FONT}</style><style>{CSS}</style></head><body>{BODY}</body></html>"""
 
-out = REPO / "docs" / "boardsignal" / "requirements.html"
+out = ROOT / "out" / "BoardSignal_Requirements.html"
 out.write_text(html, encoding="utf-8")
-print("wrote", out.relative_to(REPO), round(out.stat().st_size / 1e6, 2), "MB")
+print("wrote", out, round(out.stat().st_size / 1e6, 2), "MB")
