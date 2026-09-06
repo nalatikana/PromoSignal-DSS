@@ -850,7 +850,7 @@ const WIRES = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireSt
   sector: wireSector, billing: wireBilling, port: wirePort, ic: wireIC };
 render = function () {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   (WIRES[S.view] || (() => { }))(host);
@@ -1685,7 +1685,7 @@ const WIRES2 = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireS
   billing: wireBilling, port: wirePort, ic: wireIC, docs: wireDocs, zonec: wireZoneC };
 render = function () {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   (WIRES2[S.view] || (() => { }))(host);
@@ -1731,6 +1731,19 @@ render = function () {
   if ($("#btnEnter")) $("#btnEnter").onclick = goIn;
   if ($("#btnGoogle")) $("#btnGoogle").onclick = goIn;
   /* โทนและภาษา */
+
+  // ซ่อน / แสดงแถบเมนูซ้าย — จำสถานะไว้ในเครื่อง
+  function setSide(hide) {
+    document.body.classList.toggle("sidehid", hide);
+    const bs = $("#btnSide");
+    if (bs) { bs.setAttribute("aria-expanded", String(!hide)); bs.title = hide ? T("Show menu", "แสดงแถบเมนู") : T("Hide menu", "ซ่อนแถบเมนู"); }
+    save();
+  }
+  const bside = $("#btnSide");
+  if (bside) bside.onclick = () => setSide(!document.body.classList.contains("sidehid"));
+  const bsideC = $("#btnSideC");
+  if (bsideC) bsideC.onclick = () => setSide(true);
+  setSide(document.body.classList.contains("sidehid"));
 
   const sl = $("#segLang");
   if (sl) sl.onclick = e => { const b = e.target.closest("[data-lang]"); if (b) { S.lang = b.dataset.lang; save(); render(); } };

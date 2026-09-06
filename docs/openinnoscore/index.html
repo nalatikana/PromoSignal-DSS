@@ -64,8 +64,16 @@ button{font-family:inherit}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
 
 /* ---------------------------------------------- โครงหน้า */
-.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
-.side{background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.app{display:grid;grid-template-columns:var(--sidew,236px) 1fr;min-height:100vh;
+  /* ทาสีคอลัมน์ซ้ายให้ยาวเท่าหน้า แถบเมนูจึงไม่ดูขาดกลางคันเวลาเลื่อนลง */
+  background:linear-gradient(to right,var(--nav) 0,var(--nav) var(--sidew,236px),transparent var(--sidew,236px))}
+body.sidehid{--sidew:0px}
+body.sidehid .side{display:none}
+body.sidehid .app{background:none}
+.sidecollapse{margin-left:auto;flex:none;width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:var(--nav-ink);cursor:pointer;font-size:12px;line-height:1;display:grid;place-items:center}
+.sidecollapse:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.side{grid-column:1;background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .brandbox{padding:20px 18px 14px;display:flex;align-items:center;gap:10px}
 .logo{width:32px;height:32px;border-radius:9px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:600;font-size:15px;flex:none}
 
@@ -86,7 +94,7 @@ button{font-family:inherit}
 .nav button[aria-current="page"] .lockb{background:rgba(0,0,0,.18)}
 .sidefoot{margin-top:auto;padding:14px;font-size:10.5px;color:var(--nav-ink);opacity:.7;line-height:1.5}
 
-.main{min-width:0;display:flex;flex-direction:column}
+.main{grid-column:2;min-width:0;display:flex;flex-direction:column}
 .topbar{
   position:sticky;top:0;z-index:40;background:var(--panel);border-bottom:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 22px;flex-wrap:wrap
@@ -151,7 +159,7 @@ button{font-family:inherit}
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
 .stack>*{min-width:0}
 @media(max-width:1080px){.g-side,.g-side-r,.g3,.g4{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.app{grid-template-columns:1fr}.side{position:static;height:auto}
+@media(max-width:720px){.app{grid-template-columns:1fr;background:none}.side,.main{grid-column:1}.side{position:static;height:auto}
   .g2,.g3,.g4,.g-side,.g-side-r{grid-template-columns:1fr}
   .g3.tight{grid-template-columns:repeat(3,1fr)}
   .g4.tight{grid-template-columns:1fr 1fr}
@@ -448,7 +456,7 @@ details.blk .bd{padding:0 12px 11px}
   <aside class="side">
     <div class="brandbox">
       <span id="sLogo" style="display:block;flex:none"></span>
-      <div><div class="brandtxt" id="sBrand">OpenInnoScore<sup style="font-size:8px">™</sup></div>
+      <div style="min-width:0"><div class="brandtxt" id="sBrand">OpenInnoScore<sup style="font-size:8px">™</sup></div>
         <div class="brandsub">CEO Focus × Board Composition</div></div>
     </div>
     <div class="navsec">ลำดับการทำงาน</div>
@@ -467,6 +475,7 @@ details.blk .bd{padding:0 12px 11px}
   <div class="main">
     <header class="topbar">
       <div class="tgroup">
+        <button class="iconbtn" id="btnSide" title="ซ่อน / แสดงแถบเมนู" aria-label="ซ่อนหรือแสดงแถบเมนู" aria-expanded="true">☰</button>
         <select class="sel" id="selInd" style="max-width:210px"></select>
         <select class="sel" id="selCo" style="max-width:270px"></select>
         <span class="chip" id="chipZone"></span>
@@ -748,7 +757,8 @@ const S = {
 const LS = "boardsignal_demo_v1";
 function save() { try { localStorage.setItem(LS, JSON.stringify({ u: S.user, c: S.credits, f: S.freeCo, k: S.unlocked, s: S.sectors,
     l: S.log.slice(0, 40), m: document.body.dataset.mode,
-    pl: S.plan, ov: S.ov, lg: S.lang, tn: S.tone, cs: S.cons, hz: S.horizon, pr: S.priority, vw: S.view })); } catch (e) { } }
+    pl: S.plan, ov: S.ov, lg: S.lang, tn: S.tone, cs: S.cons, hz: S.horizon, pr: S.priority, vw: S.view,
+    sh: document.body.classList.contains("sidehid") })); } catch (e) { } }
 function load() {
   try {
     const o = JSON.parse(localStorage.getItem(LS) || "null"); if (!o) return null;
@@ -757,6 +767,7 @@ function load() {
       cons: o.cs || { sizeFixed: true, fem30: false, fam25: false }, horizon: o.hz || "12m", priority: o.pr || "max",
       view: o.vw || "docs" });
     if (o.m) document.body.dataset.mode = o.m;
+    document.body.classList.toggle("sidehid", !!o.sh);
     return o.u;
   } catch (e) { return null; }
 }
@@ -2129,7 +2140,8 @@ function viewValid() {
 const VIEWS = { fit: viewFit, matrix: viewMatrix, peer: viewPeer, studio: viewStudio, sector: viewSector, billing: viewBilling, arch: viewArch, valid: viewValid };
 function render() {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  // หน้าของแก้ไขครั้งที่ 1 (Zone A/B/C) ถูกลงทะเบียนในไฟล์ถัดไป — ตอนบูตอาจยังไม่มี จึงต้องกันไว้
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   ({ fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio, sector: wireSector, billing: wireBilling }[S.view] || (() => { }))(host);
@@ -3111,7 +3123,7 @@ const WIRES = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireSt
   sector: wireSector, billing: wireBilling, port: wirePort, ic: wireIC };
 render = function () {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   (WIRES[S.view] || (() => { }))(host);
@@ -3946,7 +3958,7 @@ const WIRES2 = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireS
   billing: wireBilling, port: wirePort, ic: wireIC, docs: wireDocs, zonec: wireZoneC };
 render = function () {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   (WIRES2[S.view] || (() => { }))(host);
@@ -3992,6 +4004,19 @@ render = function () {
   if ($("#btnEnter")) $("#btnEnter").onclick = goIn;
   if ($("#btnGoogle")) $("#btnGoogle").onclick = goIn;
   /* โทนและภาษา */
+
+  // ซ่อน / แสดงแถบเมนูซ้าย — จำสถานะไว้ในเครื่อง
+  function setSide(hide) {
+    document.body.classList.toggle("sidehid", hide);
+    const bs = $("#btnSide");
+    if (bs) { bs.setAttribute("aria-expanded", String(!hide)); bs.title = hide ? T("Show menu", "แสดงแถบเมนู") : T("Hide menu", "ซ่อนแถบเมนู"); }
+    save();
+  }
+  const bside = $("#btnSide");
+  if (bside) bside.onclick = () => setSide(!document.body.classList.contains("sidehid"));
+  const bsideC = $("#btnSideC");
+  if (bsideC) bsideC.onclick = () => setSide(true);
+  setSide(document.body.classList.contains("sidehid"));
 
   const sl = $("#segLang");
   if (sl) sl.onclick = e => { const b = e.target.closest("[data-lang]"); if (b) { S.lang = b.dataset.lang; save(); render(); } };

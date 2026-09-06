@@ -89,7 +89,8 @@ const S = {
 const LS = "boardsignal_demo_v1";
 function save() { try { localStorage.setItem(LS, JSON.stringify({ u: S.user, c: S.credits, f: S.freeCo, k: S.unlocked, s: S.sectors,
     l: S.log.slice(0, 40), m: document.body.dataset.mode,
-    pl: S.plan, ov: S.ov, lg: S.lang, tn: S.tone, cs: S.cons, hz: S.horizon, pr: S.priority, vw: S.view })); } catch (e) { } }
+    pl: S.plan, ov: S.ov, lg: S.lang, tn: S.tone, cs: S.cons, hz: S.horizon, pr: S.priority, vw: S.view,
+    sh: document.body.classList.contains("sidehid") })); } catch (e) { } }
 function load() {
   try {
     const o = JSON.parse(localStorage.getItem(LS) || "null"); if (!o) return null;
@@ -98,6 +99,7 @@ function load() {
       cons: o.cs || { sizeFixed: true, fem30: false, fam25: false }, horizon: o.hz || "12m", priority: o.pr || "max",
       view: o.vw || "docs" });
     if (o.m) document.body.dataset.mode = o.m;
+    document.body.classList.toggle("sidehid", !!o.sh);
     return o.u;
   } catch (e) { return null; }
 }
@@ -1470,7 +1472,8 @@ function viewValid() {
 const VIEWS = { fit: viewFit, matrix: viewMatrix, peer: viewPeer, studio: viewStudio, sector: viewSector, billing: viewBilling, arch: viewArch, valid: viewValid };
 function render() {
   const host = $("#v-" + S.view);
-  if (!host) return;
+  // หน้าของแก้ไขครั้งที่ 1 (Zone A/B/C) ถูกลงทะเบียนในไฟล์ถัดไป — ตอนบูตอาจยังไม่มี จึงต้องกันไว้
+  if (!host || typeof VIEWS[S.view] !== "function") return;
   host.innerHTML = VIEWS[S.view]();
   wireActions(host);
   ({ fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio, sector: wireSector, billing: wireBilling }[S.view] || (() => { }))(host);

@@ -54,8 +54,16 @@ button{font-family:inherit}
 .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
 
 /* ---------------------------------------------- โครงหน้า */
-.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
-.side{background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.app{display:grid;grid-template-columns:var(--sidew,236px) 1fr;min-height:100vh;
+  /* ทาสีคอลัมน์ซ้ายให้ยาวเท่าหน้า แถบเมนูจึงไม่ดูขาดกลางคันเวลาเลื่อนลง */
+  background:linear-gradient(to right,var(--nav) 0,var(--nav) var(--sidew,236px),transparent var(--sidew,236px))}
+body.sidehid{--sidew:0px}
+body.sidehid .side{display:none}
+body.sidehid .app{background:none}
+.sidecollapse{margin-left:auto;flex:none;width:26px;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.16);
+  background:transparent;color:var(--nav-ink);cursor:pointer;font-size:12px;line-height:1;display:grid;place-items:center}
+.sidecollapse:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.side{grid-column:1;background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .brandbox{padding:20px 18px 14px;display:flex;align-items:center;gap:10px}
 .logo{width:32px;height:32px;border-radius:9px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:600;font-size:15px;flex:none}
 
@@ -76,7 +84,7 @@ button{font-family:inherit}
 .nav button[aria-current="page"] .lockb{background:rgba(0,0,0,.18)}
 .sidefoot{margin-top:auto;padding:14px;font-size:10.5px;color:var(--nav-ink);opacity:.7;line-height:1.5}
 
-.main{min-width:0;display:flex;flex-direction:column}
+.main{grid-column:2;min-width:0;display:flex;flex-direction:column}
 .topbar{
   position:sticky;top:0;z-index:40;background:var(--panel);border-bottom:1px solid var(--line);
   display:flex;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 22px;flex-wrap:wrap
@@ -141,7 +149,7 @@ button{font-family:inherit}
 .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
 .stack>*{min-width:0}
 @media(max-width:1080px){.g-side,.g-side-r,.g3,.g4{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.app{grid-template-columns:1fr}.side{position:static;height:auto}
+@media(max-width:720px){.app{grid-template-columns:1fr;background:none}.side,.main{grid-column:1}.side{position:static;height:auto}
   .g2,.g3,.g4,.g-side,.g-side-r{grid-template-columns:1fr}
   .g3.tight{grid-template-columns:repeat(3,1fr)}
   .g4.tight{grid-template-columns:1fr 1fr}
