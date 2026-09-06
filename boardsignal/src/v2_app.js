@@ -134,6 +134,10 @@ function isUnlocked(what, t) {
 /** ใช้ token — คืน true ถ้าปลดล็อกสำเร็จ */
 function spend(what, t, label) {
   t = t || S.t;
+  if (what === "studio" || what === "ceotext") {          // เป็นสิทธิ์ของแผน ไม่ใช่ของ token
+    toast("What-if Studio เป็นสิทธิ์ของแผน Pro — เปลี่ยนแผนก่อน");
+    return false;
+  }
   const cost = PRICE[what] || 1;
   if (S.credits < cost) { go("billing"); toast("token ไม่พอ — เหลือ " + S.credits + " token ต้องใช้ " + cost); return false; }
   S.credits -= cost;
@@ -178,7 +182,9 @@ function syncNavLocks() {
     const t = n.lock === "sector" ? S.ind : S.t;
     const ok = n.lock === "sector" ? (S.ind !== "all" && isUnlocked("sector", S.ind)) : isUnlocked(n.lock, t);
     tag.style.display = "";
-    tag.textContent = ok ? "เปิดแล้ว" : (n.lock === "report" && !S.freeCo ? "ฟรี" : "🔒");
+    tag.textContent = ok ? "เปิดแล้ว"
+      : (n.lock === "studio" || n.lock === "ceotext") ? "Pro"
+        : (n.lock === "report" && !S.freeCo ? "ฟรี" : "🔒");
   });
 }
 function go(v) {
@@ -359,11 +365,38 @@ function paywall(inner, what, title, body, cost, tag) {
         คุณมี <b style="color:var(--ink)">${S.credits}</b> token${tag ? " · " + tag : ""}</div>
     </div></div></div>`;
 }
+/** ผนังสำหรับฟีเจอร์ที่เป็นสิทธิ์ของแผน Pro — ปลดด้วย token ไม่ได้ ต้องเปลี่ยนแผน */
+function prowall(inner, title, body) {
+  return `<div class="lockwrap">
+    <div class="blurred" aria-hidden="true">${inner}</div>
+    <div class="paywall" style="align-items:flex-start;padding-top:64px"><div class="paycard">
+      <div class="lk">◈</div>
+      <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:500;margin-bottom:4px">สิทธิ์ของแผน Pro</div>
+      <h3 style="font-size:16px;margin-bottom:5px">${esc(title)}</h3>
+      <p style="font-size:12.3px;color:var(--ink-2);margin:0 0 15px;line-height:1.65">${body}</p>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+        <button class="btn p" data-pro="1">เปลี่ยนเป็นแผน Pro</button>
+        <button class="btn s" data-goto="billing">ดูรายละเอียดแผน</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:11px;line-height:1.6">
+        หน้านี้<b style="color:var(--ink)">ใช้ token ปลดไม่ได้</b> — เป็นสิทธิ์ที่ผูกกับแผน<br>
+        ต้นแบบยังไม่เชื่อมระบบชำระเงิน จึงสลับแผนได้ทันทีเพื่อสาธิต</div>
+    </div></div></div>`;
+}
+/** สลับเป็นแผน Pro (ต้นแบบ) — เติม token ให้ครบโควตา Pro ถ้ายังไม่ถึง */
+function goPro() {
+  if (S.plan === "pro") return;
+  S.plan = "pro";
+  if (S.credits < PLAN_TOKENS.pro) S.credits = PLAN_TOKENS.pro;
+  save(); syncChrome(); syncNavLocks();
+  toast("เปลี่ยนเป็นแผน Pro แล้ว · token " + S.credits);
+}
 function wireActions(root) {
   root.querySelectorAll("[data-unlock]").forEach(b => b.onclick = () => {
     const w = b.dataset.unlock;
     if (spend(w, w === "sector" ? S.ind : S.t, w === "sector" ? IND[S.ind] : cur().t)) render();
   });
+  root.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => { goPro(); render(); });
   root.querySelectorAll("[data-goto]").forEach(b => b.onclick = () => go(b.dataset.goto));
   root.querySelectorAll("[data-co]").forEach(b => b.onclick = () => {
     S.t = b.dataset.co; S.peers = []; $("#selCo").value = S.t; syncChrome(); go("fit");
@@ -893,9 +926,9 @@ function viewStudio() {
   const head = pageHead("จำลองสถานการณ์", "What-if Studio",
     `ปรับได้ทั้งสองด้านพร้อมกัน — ภาษาของ CEO จากเอกสารจริง และองค์ประกอบคณะกรรมการ — แล้วดูว่า OI ขยับไปเท่าไหร่และย้ายโซนหรือไม่`);
   return head + (isUnlocked("studio") ? inner
-    : paywall(inner, "studio", "What-if Studio",
-      `ปลดล็อกการจำลองสำหรับ <b>${esc(c.t)}</b> — ปรับองค์ประกอบบอร์ดได้ไม่จำกัดครั้ง
-       และอัปโหลดเอกสาร CEO เพื่อวัดคะแนนภาษาจริง`, PRICE.studio));
+    : prowall(inner, "What-if Studio",
+      `การจำลองสำหรับ <b>${esc(c.t)}</b> — ปรับองค์ประกอบบอร์ดได้ไม่จำกัดครั้ง
+       และอัปโหลดเอกสาร CEO เพื่อวัดคะแนนภาษาจริง — เปิดให้ผู้ใช้แผน Pro ตามที่ระบุในเอกสารแก้ไขครั้งที่ 1`));
 }
 /** แปลงเปอร์เซ็นไทล์ CEO กลับเป็นค่า promotion โดยประมาณ (ใช้จัดโซนเท่านั้น) */
 function promoInv(p) {
@@ -1170,6 +1203,32 @@ function viewBilling() {
     </div>
 
     <div class="card" style="margin-bottom:14px">
+      <h3>แผนการใช้งาน</h3>
+      <p class="desc">token ใช้จ่ายค่ารายงานรายครั้ง ส่วน <b>แผน</b> เป็นตัวกำหนดว่าเปิดฟีเจอร์เชิงลึกได้หรือไม่ — สองอย่างนี้แยกกัน</p>
+      <div class="grid g2">
+        <div style="border:1px solid ${S.plan === "free" ? "var(--brand)" : "var(--line)"};border-radius:var(--radius);padding:16px;background:${S.plan === "free" ? "color-mix(in srgb,var(--brand) 5%,var(--panel))" : "var(--panel)"}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <b style="font-size:15px">Free User</b>
+            ${S.plan === "free" ? `<span class="pill ok">แผนปัจจุบัน</span>` : ""}</div>
+          <div style="font-size:12.3px;color:var(--ink-2);line-height:1.65;margin-top:6px">
+            เริ่มต้น 3 token · รายงานบริษัทของตัวเองฟรี · เทียบคู่แข่งและภาพรวมอุตสาหกรรมจ่ายด้วย token<br>
+            Validity แสดงเป็นผลสรุปและ remark</div>
+        </div>
+        <div style="border:1px solid ${S.plan === "pro" ? "var(--brand)" : "var(--line)"};border-radius:var(--radius);padding:16px;background:${S.plan === "pro" ? "color-mix(in srgb,var(--brand) 5%,var(--panel))" : "var(--panel)"}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <b style="font-size:15px">Pro Plan (Token based)</b>
+            ${S.plan === "pro" ? `<span class="pill ok">แผนปัจจุบัน</span>` : ""}</div>
+          <div style="font-size:12.3px;color:var(--ink-2);line-height:1.65;margin-top:6px">
+            เริ่มต้น ${PLAN_TOKENS.pro} token · เปิด <b>What-if Studio</b> และ <b>ตาราง Validity รายปี</b>
+            ซึ่งใช้ token ปลดไม่ได้ · ค่ารายงานคิด token เท่ากับ Free</div>
+          ${S.plan === "pro" ? "" : `<button class="btn p" data-pro="1" style="width:100%;justify-content:center;margin-top:12px">เปลี่ยนเป็นแผน Pro</button>`}
+        </div>
+      </div>
+      <div class="note" style="margin-top:13px">ต้นแบบยังไม่เชื่อมระบบชำระเงิน จึงสลับแผนได้ทันทีเพื่อสาธิต ·
+        ระบบจริงจะผูกแผนกับการชำระเงินและออกใบเสร็จทุกครั้ง</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
       <h3>แพ็กเกจ token</h3>
       <p class="desc">1 token = เปิดรายงาน 1 ครั้ง · tokenไม่หมดอายุ · ต้นแบบนี้จำลองการชำระเงิน ไม่มีการตัดบัตรจริง</p>
       <div class="grid g3">${PACKS.map((p, i) => `
@@ -1191,7 +1250,8 @@ function viewBilling() {
         <div class="tw"><table><thead><tr><th>รายการ</th><th class="n">token</th><th>หมายเหตุ</th></tr></thead><tbody>
           <tr><td>รายงานวินิจฉัยรายบริษัท</td><td class="n"><b>${PRICE.report}</b></td><td style="color:var(--ink-2)">บริษัทแรกฟรี · ปลดล็อกแล้วดูซ้ำไม่เสียเพิ่ม</td></tr>
           <tr><td>เทียบคู่แข่ง 3 ราย</td><td class="n"><b>${PRICE.peer}</b></td><td style="color:var(--ink-2)">เปลี่ยนคู่แข่งได้ไม่จำกัดหลังปลดล็อก</td></tr>
-          <tr><td>What-if Studio</td><td class="n"><b>${PRICE.studio}</b></td><td style="color:var(--ink-2)">รวมการอัปโหลดเอกสาร CEO</td></tr>
+          <tr><td>What-if Studio · ตรวจข้อความ CEO</td><td class="n"><b>Pro</b></td><td style="color:var(--ink-2)">สิทธิ์ของแผน ใช้ token ปลดไม่ได้ · ใช้ได้ไม่จำกัดครั้งเมื่ออยู่แผน Pro</td></tr>
+          <tr><td>Validity แยกรายปี</td><td class="n"><b>Pro</b></td><td style="color:var(--ink-2)">Free เห็นผลสรุปและ remark · Pro เห็นตารางเต็มรายปี</td></tr>
           <tr class="hl"><td>ภาพรวมทั้งอุตสาหกรรม</td><td class="n"><b>${PRICE.sector}</b></td><td style="color:var(--ink-2)">หรือชำระรายครั้ง 990 บาท</td></tr>
           <tr><td>เมทริกซ์ 2×2 · หลักฐานความแม่น</td><td class="n">ฟรี</td><td style="color:var(--ink-2)">เปิดให้ดูเสมอ เพื่อให้ประเมินได้ก่อนซื้อ</td></tr>
         </tbody></table></div></div>

@@ -1489,9 +1489,7 @@ render = function () {
   wireActions(host);
   (WIRES2[S.view] || (() => { }))(host);
   wireInvestCommon(host);
-  host.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => {
-    S.plan = "pro"; S.credits = Math.max(S.credits, PLAN_TOKENS.pro); save(); toast("สลับเป็นผู้ใช้ Pro แล้ว"); render();
-  });
+  host.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => { goPro(); render(); });
   host.querySelectorAll("#btnRegen").forEach(b => b.onclick = () => { render();
     toast(T("Insights regenerated with the current tone", "สร้างข้อค้นพบใหม่ตามโทนปัจจุบัน")); });
   host.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
