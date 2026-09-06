@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"
+  role="img" aria-label="OpenInnoScore — CEO Regulatory Focus moderated by Board Composition">
+  <title>OpenInnoScore</title>
+  <path d="M15.83 76.07 A47.0 47.0 0 0 1 100.70 36.50" fill="none" stroke="#1F2B37" stroke-width="7" stroke-linecap="round"/>
+  <path d="M101.88 38.66 A47.0 47.0 0 0 1 96.00 90.21" fill="none" stroke="#4F76F6" stroke-width="7" stroke-linecap="round"/>
+  <line x1="60.0" y1="60.0" x2="41.26" y2="41.26" stroke="#4F76F6" stroke-width="4.40" stroke-linecap="round" opacity="1.00"/>
+  <line x1="60.0" y1="60.0" x2="78.74" y2="41.26" stroke="#4F76F6" stroke-width="2.29" stroke-linecap="round" opacity="0.64"/>
+  <line x1="60.0" y1="60.0" x2="78.74" y2="78.74" stroke="#4F76F6" stroke-width="1.17" stroke-linecap="round" opacity="0.45"/>
+  <line x1="60.0" y1="60.0" x2="41.26" y2="78.74" stroke="#4F76F6" stroke-width="2.88" stroke-linecap="round" opacity="0.74"/>
+  <circle cx="41.26" cy="41.26" r="7.20" fill="#4F76F6"/>
+  <circle cx="78.74" cy="41.26" r="5.15" fill="#4F76F6"/>
+  <circle cx="78.74" cy="78.74" r="4.07" fill="#4F76F6"/>
+  <circle cx="41.26" cy="78.74" r="5.72" fill="#4F76F6"/>
+  <circle cx="60.0" cy="60.0" r="9.6" fill="#FFFFFF"/>
+  <circle cx="60.0" cy="60.0" r="7.6" fill="#1F2B37"/>
+  <path d="M26.92 75.43 A36.5 36.5 0 0 0 91.07 79.42" fill="none" stroke="#77F2A1" stroke-width="5.2" stroke-linecap="round"/>
+  <path d="M96.34 69.09 L96.06 81.96 L86.08 76.88 Z" fill="#77F2A1"/>
+</svg>

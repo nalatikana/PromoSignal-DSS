@@ -1,0 +1,110 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenInnoScore™ — CEO Regulatory Focus × Board Composition Assessment</title>
+<style>/*__FONT__*/</style>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+
+<!-- ==================================================== หน้าเข้าสู่ระบบ -->
+<div class="gate" id="gate">
+  <div class="gbox">
+    <div class="gart">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span id="gLogo"></span>
+        <div><div style="font-size:17px;font-weight:600;line-height:1.15">OpenInnoScore<sup style="font-size:9px">™</sup></div>
+          <div style="font-size:11px;color:#9FB6CC">CEO Regulatory Focus × Board Composition</div></div>
+      </div>
+      <h2>วัดแนวโน้ม Open Innovation<br>จาก CEO Focus และโครงสร้างคณะกรรมการ</h2>
+      <p>อัปโหลด 56-1 One Report หรือรายงานประจำปี ระบบดึงองค์ประกอบคณะกรรมการและภาษาผู้บริหาร
+        แล้วแปลงเป็นคะแนน OI พร้อมข้อเสนอปรับโครงสร้างบอร์ดที่ใช้ในงาน Search และ Board Evaluation ได้ทันที</p>
+      <div class="pts">
+        <div>◇&nbsp;&nbsp;Zone A — Document Intelligence ดึงข้อมูลจากเอกสารจริง</div>
+        <div>◇&nbsp;&nbsp;Zone B — Automated Insight Generator เลือกโทนตามกลุ่มผู้ฟัง</div>
+        <div>◇&nbsp;&nbsp;Zone C — Board Refresh Recommendation Engine</div>
+        <div>◇&nbsp;&nbsp;What-if Studio — จำลองผลของการปรับบอร์ดแบบ deterministic</div>
+      </div>
+      <div style="font-size:10.8px;color:#8FA6BC;border-top:1px solid rgba(255,255,255,.14);padding-top:12px">
+        ต้นแบบเพื่อการนำเสนอ · ไม่ใช่ระบบจริง · ไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน</div>
+    </div>
+
+    <div class="gform">
+      <div style="font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);font-weight:600">เข้าสู่ระบบ</div>
+      <h2 style="font-size:20px;margin:5px 0 3px">เลือกประเภทผู้ใช้สำหรับการสาธิต</h2>
+      <p style="font-size:12.8px;color:var(--ink-2);margin:0">ต้นแบบยังไม่เชื่อมระบบชำระเงิน — เติม token ด้วยมือได้ตลอด</p>
+
+      <div class="plan" id="planPick">
+        <label class="planopt on" data-plan="free">
+          <input type="radio" name="plan" value="free" checked style="margin-top:4px;accent-color:var(--blue)">
+          <div><b>Free User · 3 tokens</b>
+            <span>ดูรายงานบริษัทของตัวเองได้ฟรี · เทียบคู่แข่งหรือเทียบระดับประเทศต้องใช้ token
+              · Validity แสดงเป็น remark สองระดับ</span></div></label>
+        <label class="planopt" data-plan="pro">
+          <input type="radio" name="plan" value="pro" style="margin-top:4px;accent-color:var(--blue)">
+          <div><b>Pro Plan (Token based) · 20 tokens</b>
+            <span>เปิด What-if Studio และตาราง Validity ฉบับเต็มรายปี · ใช้ token กับรายงานเทียบเหมือนกัน</span></div></label>
+      </div>
+
+      <label style="font-size:11.8px;color:var(--ink-3);display:block;margin-top:12px">บริษัทของคุณ (ดูรายงานได้ฟรีตลอด)</label>
+      <select class="sel" id="gCo" style="width:100%;max-width:none;margin-top:5px"></select>
+
+      <label style="font-size:11.8px;color:var(--ink-3);display:block;margin-top:11px">อีเมลที่จะแสดงในระบบ</label>
+      <input class="inp" id="gMail" style="width:100%;margin-top:5px" value="analyst@openinnoscore.co" spellcheck="false">
+
+      <label class="consent"><input type="checkbox" id="gConsent" checked style="margin-top:3px;accent-color:var(--blue)">
+        <span>ข้าพเจ้ายินยอมให้ระบบประมวลผลเอกสารที่อัปโหลดเพื่อสร้างรายงาน ·
+          <b>เอกสารถูกอ่านในเบราว์เซอร์เท่านั้น ไม่ถูกส่งออกไปที่เซิร์ฟเวอร์ใด</b> ·
+          ข้อมูลที่ประมวลผลเป็นข้อมูลระดับบริษัท ไม่ใช่ข้อมูลรายบุคคล</span></label>
+
+      <button class="btn p lg" id="btnEnter" style="width:100%;justify-content:center">เข้าใช้งานต้นแบบ</button>
+      <div class="note" style="margin-top:14px;font-size:11.4px">
+        ระบบจริงจะยืนยันตัวตนผ่าน OAuth 2.0 และเก็บเฉพาะอีเมลกับรหัสผู้ใช้ ไม่เก็บรหัสผ่าน ·
+        การซื้อ token ขั้นต่ำ 3 token ต่อครั้ง · ระบบชำระเงินอยู่ใน Phase II</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================================================== ตัวระบบ -->
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="tb1">
+      <div class="logo"><span id="tLogo"></span>
+        <div><div class="nm">OpenInnoScore<sup style="font-size:9px">™</sup></div>
+          <div class="sb">CEO Regulatory Focus × Board Composition</div></div></div>
+      <div class="spacer"></div>
+      <span class="tok" id="tokChip"></span>
+      <button class="btn s" id="btnTopUp">เติม token</button>
+      <button class="btn s" id="btnPresent">โหมดนำเสนอ</button>
+      <button class="btn s" id="btnOut">ออกจากระบบ</button>
+    </div>
+    <div class="ctx">
+      <div><div class="co" id="ctxCo">—</div><div class="cosub" id="ctxSub">—</div></div>
+      <select class="sel" id="selCo" aria-label="เลือกบริษัท"></select>
+      <span class="pill" id="ctxZone"></span>
+      <div class="spacer"></div>
+      <div class="seg" id="segTone" aria-label="โทนของข้อความ"></div>
+      <div class="seg" id="segLang" aria-label="ภาษา">
+        <button type="button" data-lang="EN" aria-selected="true">EN</button>
+        <button type="button" data-lang="TH" aria-selected="false">TH</button></div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+
+  <div class="wrap" id="wrap"></div>
+</div>
+
+<div class="drawer" id="drawer">
+  <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+    <h3 style="flex:1;font-size:14.5px">Activity Timeline</h3>
+    <button class="btn s sm" id="drawerClose">ปิด</button></div>
+  <div class="tl" id="tl"></div>
+</div>
+
+<script type="text/plain" id="pdfw">/*__PDFWORKER__*/</script>
+<script>/*__PDFJS__*/</script>
+<script>try{const b=new Blob([document.getElementById("pdfw").textContent],{type:"text/javascript"});pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);}catch(e){}</script>
+<script>const DATA = /*__DATA__*/;</script>
+<script>const LOGO_LIGHT = /*__LOGO__*/, LOGO_DARK = /*__LOGO_DARK__*/;</script>
+<script>/*__LEX__*/</script>
+<script>/*__CORE__*/</script>
+<script>/*__APP__*/</script>

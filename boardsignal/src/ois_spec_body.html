@@ -1,0 +1,262 @@
+<header><div class="inner">
+  <div class="brandrow"><span id="hdrLogo"></span>
+    <div><div class="bn">OpenInnoScore<sup>™</sup></div>
+      <div class="bs">CEO Regulatory Focus × Board Composition Assessment</div></div></div>
+  <div class="eyebrow">เอกสารสเปกและแผนงาน · สรุปแนวทางการแก้ไขครั้งที่ 1</div>
+  <h1>ขอบเขต Prototype Phase I<br>กติกาการเก็บเงิน และแผนพัฒนา</h1>
+  <p>เอกสารนี้แยกจากตัวต้นแบบโดยตั้งใจ — หน้าต้นแบบมีไว้ให้ <b>กดใช้งาน</b> ส่วนหน้านี้มีไว้ให้ <b>อ่านและตัดสินใจ</b> ·
+    เนื้อหาทั้งหมดมาจากไฟล์ “สรุปแนวทางการแก้ไข ครั้งที่ 1” ลงวันที่ 27 สิงหาคม 2569 โดยแก้ตัวเลขทุกตัวให้ตรงกับข้อมูลจริงในระบบ</p>
+  <div class="hbtns"><a class="hb p" href="./">เปิดต้นแบบ OpenInnoScore</a><a class="hb" href="../hub.html">หน้าเลือกเวอร์ชัน</a></div>
+</div></header>
+
+<div class="wrap">
+
+<h2>1 · ชื่อ ตัวตน และความหมายของเครื่องหมาย</h2>
+<div class="grid g2">
+  <div class="card">
+    <h3>ชื่อเต็ม</h3>
+    <p><b>OpenInnoScore™ – CEO Regulatory Focus × Board Composition Assessment</b><br>
+      <span style="color:var(--ink-3)">tagline · วัดแนวโน้ม Open Innovation จาก CEO Focus และโครงสร้างคณะกรรมการ</span></p>
+    <table><tbody>
+      <tr><td>โทนสี</td><td>น้ำเงินเข้ม <code>#1F2B37</code> · ฟ้า <code>#4F76F6</code> · มิ้นต์ <code>#77F2A1</code> · พื้นอ่อน <code>#F5F8FB</code></td></tr>
+      <tr><td>ฟอนต์</td><td>Sarabun (ตระกูลเดียวกับ TH Sarabun · ใบอนุญาต SIL OFL) ฝังมาในไฟล์ จึงแสดงผลตรงกันทุกเครื่อง</td></tr>
+      <tr><td>สีของข้อมูล</td><td>ชุดตายตัวที่แยกออกได้ทั้งผู้อ่านปกติและผู้อ่านตาบอดสี — สีแบรนด์คุมเฉพาะส่วนตกแต่ง</td></tr>
+    </tbody></table>
+  </div>
+  <div class="card">
+    <h3>เครื่องหมายวงกลมสื่อ Moderation Analysis อย่างไร</h3>
+    <div class="markrow"><span id="specLogo"></span>
+      <table><tbody>
+        <tr><td><b>จุดศูนย์กลาง</b></td><td>CEO Regulatory Focus — ตัวแปรต้น</td></tr>
+        <tr><td><b>จุดรอบนอก 4 จุด</b></td><td>องค์ประกอบคณะกรรมการ — Family · Female · Political · Tenure</td></tr>
+        <tr><td><b>เส้นเชื่อมหนาไม่เท่ากัน</b></td><td>ขนาดของ moderation effect จริง — ความหนาแปรตาม |β| ของแต่ละพจน์ปฏิสัมพันธ์</td></tr>
+        <tr><td><b>ลูกศรมิ้นต์</b></td><td>ผลลัพธ์ Open Innovation ที่เกิดจากความสัมพันธ์นี้ พุ่งออกจากวง</td></tr>
+      </tbody></table></div>
+    <div class="note">ความหนาของเส้นไม่ได้วาดตามใจ — คำนวณจากสัมประสิทธิ์จริง
+      Female <b>3.3506</b> หนาที่สุด · Family <b>−1.0196</b> · Political <b>0.4796</b> · Tenure <b>−0.0085</b> บางที่สุด</div>
+  </div>
+</div>
+
+<h2>2 · Algorithm ใน Assessment Tools</h2>
+<p class="lead">ทุกช่วงที่รายงานประจำปีออก (ม.ค.–พ.ค.) ระบบที่ออกแบบไว้จะดึง One Report จาก SET →
+  Structured Excel → แปลผลด้วย STATA → ปรับสมการถดถอย → Validation → ผลลัพธ์เชิงโมเดล
+  <b>ส่วนที่เป็นโฟกัสของ Prototype รอบนี้คือช่วงท้าย</b></p>
+<div class="tw"><table>
+  <thead><tr><th style="width:230px">ช่วงงาน</th><th>สิ่งที่ระบบทำ</th><th style="width:160px">สถานะในต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ม.ค.–พ.ค. หลังรายงานประจำปีออก</td><td>Fetch / Scrape One Report จาก SET แล้วจัดเป็น Structured Excel</td>
+      <td><span class="pill warn">ออกแบบไว้ · Phase II</span></td></tr>
+    <tr><td>Structured Excel 5 ปี</td><td>ใช้แผงข้อมูลที่มีอยู่ 209 บริษัท 928 บริษัท-ปี (2562–2566) เป็นฐานของต้นแบบ</td>
+      <td><span class="pill ok">ใช้งานจริงแล้ว</span></td></tr>
+    <tr><td>STATA / R · Moderation Analysis</td><td>สัมประสิทธิ์จาก moderation model — promotion 0.1882 · family −1.0196 · political 0.4796 · female 3.3506 · tenure −0.0085</td>
+      <td><span class="pill ok">ผูกเข้าระบบแล้ว</span></td></tr>
+    <tr><td>NLP นับภาษาผู้บริหาร</td><td>นับคำเชิงรุกเทียบคำเชิงป้องกันจากเอกสารจริง แล้วแปลงสัดส่วนเป็นเปอร์เซ็นไทล์</td>
+      <td><span class="pill warn">พจนานุกรมเปิด ยังไม่ใช่ LIWC</span></td></tr>
+    <tr><td>Validation</td><td>Spearman · AUC · Decile lift · LOYO ทั้งรายปีและทั้งแผง</td>
+      <td><span class="pill ok">แสดงในแท็บ Validity</span></td></tr>
+    <tr><td>Result</td><td>OI Score · Insight · Recommendation · What-if Scenario</td>
+      <td><span class="pill ok">โฟกัสของรอบนี้</span></td></tr>
+  </tbody></table></div>
+<div class="note warn"><b>ข้อที่ต้องพูดตรง ๆ ในที่ประชุม</b> — เครื่องนับคำใช้พจนานุกรมเปิด ไม่ใช่ซอฟต์แวร์ LIWC ที่มีลิขสิทธิ์
+  ให้ผลตรงกันเชิงทิศทางแต่ค่าตัวเลขไม่ตรงกับที่รายงานในงานวิจัย · ตารางจุดยึดที่ใช้แปลงเป็นเปอร์เซ็นไทล์
+  <b>ยังเป็นค่าชั่วคราว</b> ต้องปรับเทียบกับคลังเอกสารที่ให้คะแนนด้วย LIWC จริงก่อนใช้กับลูกค้า</div>
+
+<h2>3 · Lead Users และการเชื่อมกับกระบวนการทำงานจริง</h2>
+<h3>กลุ่มที่ 1 · Executive Search Firm</h3>
+<div class="tw"><table>
+  <thead><tr><th style="width:250px">ขั้นตอนงาน Search Firm</th><th style="width:230px">ใช้ฟังก์ชันใด</th><th>ผลที่ได้</th></tr></thead>
+  <tbody>
+    <tr><td>รับ Brief จากลูกค้า / Nomination Committee</td><td>Document Intelligence</td>
+      <td>ดึงข้อมูล Board ปัจจุบันจาก 56-1 · แก้ค่าที่ระบบอ่านผิดได้ทุกช่อง</td></tr>
+    <tr><td>วิเคราะห์ช่องว่างของ Board</td><td>Board Refresh Recommendation Engine</td>
+      <td>ได้โปรไฟล์กรรมการที่ควรหา พร้อมเหตุผลเชิง OI Score</td></tr>
+    <tr><td>สร้าง Candidate Profile / Longlist</td><td>Recommendation Engine + Insight Generator</td>
+      <td>สเปคผู้สมัครที่ชัดเจนและมีข้อมูลรองรับ · ออกเป็น Candidate Brief หนึ่งหน้า</td></tr>
+    <tr><td>นำเสนอต่อลูกค้า</td><td>Automated Insight Generator</td>
+      <td>Key Insights ในโทน Search Firm และ Simulation พร้อมใช้ในการนำเสนอ</td></tr>
+    <tr><td>Follow-up หลังแต่งตั้ง</td><td>Document Intelligence + Insight</td>
+      <td>ติดตามว่าคะแนนเปลี่ยนจริงหรือไม่หลังปรับโครงสร้าง</td></tr>
+  </tbody></table></div>
+<div class="note ok"><b>Value ที่ Search Firm ได้</b> — เปลี่ยนจาก “หาคนตามสเปคทั่วไป” เป็น
+  “หาคนที่สร้าง impact ต่อ Open Innovation ขององค์กรได้จริง” · มีเหตุผลเชิงปริมาณรองรับค่าบริการที่สูงขึ้น ·
+  สร้าง differentiation จาก Search Firm ทั่วไป</div>
+
+<h3>กลุ่มที่ 2 · IOD</h3>
+<div class="tw"><table>
+  <thead><tr><th style="width:250px">ภารกิจของ IOD</th><th style="width:230px">ใช้ฟังก์ชันใด</th><th>ผลที่ได้</th></tr></thead>
+  <tbody>
+    <tr><td>Director Assessment / Board Evaluation</td><td>Document Intelligence + Insight Generator</td>
+      <td>ประเมิน Board ปัจจุบันอย่างเป็นระบบ เทียบกลุ่มอ้างอิงจริง</td></tr>
+    <tr><td>ให้คำแนะนำ Nomination Committee</td><td>Board Refresh Recommendation Engine</td>
+      <td>แนะนำการปรับโครงสร้าง Board แบบ data-driven</td></tr>
+    <tr><td>Director Development / Training</td><td>Insight Generator</td>
+      <td>สร้างกรณีศึกษาและ insight จากบริษัทจริง</td></tr>
+    <tr><td>งานวิจัยและ Policy</td><td>ทั้ง 3 Function</td>
+      <td>ฐานข้อมูลและรายงานภาพรวมตลาด</td></tr>
+    <tr><td>ให้บริการสมาชิก</td><td>ทั้ง 3 Function</td>
+      <td>เครื่องมือเสริมบริการ consulting ของ IOD</td></tr>
+  </tbody></table></div>
+<div class="note ok"><b>Value ที่ IOD ได้</b> — ยกระดับคำแนะนำจาก qualitative เป็น quantitative + qualitative ·
+  สร้างเครื่องมือที่บริษัทจดทะเบียนใช้งานได้จริง · เชื่อม Governance เข้ากับ Open Innovation
+  ซึ่งเป็นวาระสำคัญของตลาดทุนไทย</div>
+
+<div class="note crit"><b>ข้อห้ามที่ติดไปกับทุกผลลัพธ์</b> — ระบบอธิบาย<b>คุณสมบัติเชิงโครงสร้างของคณะกรรมการ</b>
+  ไม่ใช่การชี้ตัวบุคคล · <b>ห้ามนำไปใช้ให้คะแนนหรือคัดกรองกรรมการรายบุคคล</b> เพราะเพศ อายุ
+  และความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม PDPA มาตรา 26 ·
+  ระบบจึงไม่ตั้ง “กรรมการสายนโยบาย” เป็นเป้าหมายในการสรรหา แม้สัมประสิทธิ์จะเป็นบวก</div>
+
+<h2>4 · โครงสร้าง 3 Zones ที่ทำไว้ในต้นแบบ</h2>
+<div class="tw"><table>
+  <thead><tr><th style="width:150px">Zone</th><th style="width:210px">Purpose</th><th>Component ที่ทำแล้ว</th><th style="width:190px">สถานะ</th></tr></thead>
+  <tbody>
+    <tr><td><b>A · Document Intelligence</b></td><td>ดึงข้อมูลจากเอกสารให้เร็วและตรวจย้อนกลับได้</td>
+      <td>ลากวางหลายไฟล์ (56-1 · Annual Report · CEO Letter · Transcript) · รายการไฟล์พร้อมสถานะ Processing / Completed / Needs Review ·
+        การ์ดสรุป 4 ใบเรียงแถว (Family % · Female % · Political ties · Average tenure) ·
+        CEO Text Preview แบบพับได้ พร้อมปุ่ม Send to Linguistic Analysis · Source highlight ของทุกคำที่นับได้ ·
+        Confidence High / Medium / Low ทุกช่อง · แก้ค่าเองได้ทุกช่อง · ปุ่ม Re-extract</td>
+      <td><span class="pill ok">ทำแล้ว</span><br>
+        <span class="pill warn">Compare with previous year · Phase II</span><br>
+        <span class="pill warn">คลิกตัวเลขเพื่อกระโดดไปหน้า PDF · Phase II</span></td></tr>
+    <tr><td><b>B · Automated Insight Generator</b></td><td>เปลี่ยนผลของโมเดลเป็นข้อความที่ตัดสินใจต่อได้</td>
+      <td>Insight Cards พร้อม Type tag · หัวข้อสั้น · คำอธิบาย 1–2 ประโยค · <b>ผลต่อ OI Score เป็นตัวเลข</b> ·
+        ปุ่ม Copy และ Add to Report · <b>Tone Selector 4 โทน</b> (Investor / Board / Search Firm / IOD) ·
+        Language Toggle TH/EN โดยตั้งต้น EN · ปุ่ม Regenerate พร้อมตัวเลือกเน้นมิติ ·
+        Peer Context strip เทียบค่ากลางอุตสาหกรรม · เรียงตาม Impact หรือตามประเภท ·
+        แถบสีซ้าย เขียว = Strength/Opportunity · เหลืองอำพัน = Constraint · แดง = Risk ·
+        ส่วน Evidence พับได้ บอกว่าสัมประสิทธิ์หรือข้อมูลจุดไหนเป็นตัวขับ</td>
+      <td><span class="pill ok">ทำครบแล้ว</span></td></tr>
+    <tr><td><b>C · Board Refresh Recommendation Engine</b></td><td>ข้อเสนอที่ทำต่อได้เพื่อยกคะแนน OI</td>
+      <td>ซ้าย — Current vs Recommended พร้อมตัวชี้ +/− · กลาง — ข้อเสนอเรียงตามผล แต่ละข้อมี Action type (Add / Replace / Reduce) ·
+        การเปลี่ยนที่เจาะจง · ผลต่อคะแนน · Feasibility tag · คำค้นโปรไฟล์ที่ควรหา ·
+        ขวา — คะแนนสด Current → After · แผนภาพน้ำตก · ปุ่ม Apply Scenario ส่งเข้า What-if Studio · ปุ่ม Generate Candidate Brief ·
+        ตัวควบคุมเพิ่ม — Constraint toggles · Time horizon (Next AGM / 12 / 24 เดือน) · Priority mode (Max OI / Balanced / Lowest disruption)</td>
+      <td><span class="pill ok">ทำครบแล้ว</span></td></tr>
+  </tbody></table></div>
+
+<h3>Integrated Workflow</h3>
+<div class="steps">
+  <div class="st"><span>1</span><div>ผู้ใช้อัปโหลดเอกสารใน Zone A</div></div>
+  <div class="st"><span>2</span><div>ระบบดึงข้อมูล Board และข้อความ CEO</div></div>
+  <div class="st"><span>3</span><div>โมเดลทำงาน → Zone B สร้าง insight อัตโนมัติ</div></div>
+  <div class="st"><span>4</span><div>Insight และองค์ประกอบปัจจุบันไหลเข้า Zone C</div></div>
+  <div class="st"><span>5</span><div>Engine สร้างข้อเสนอปรับบอร์ดเรียงตามผล</div></div>
+  <div class="st"><span>6</span><div>ผู้ใช้ส่งข้อเสนอเข้า What-if Studio หรือออกเป็น Candidate Brief / Board Memo</div></div>
+</div>
+
+<h3>Supporting Elements และ Responsive Behavior</h3>
+<div class="grid g2">
+  <div class="card"><h3>Supporting Elements</h3><ul>
+    <li><b>Floating Action Bar</b> — Generate Full Report · Save Scenario · Share with Team · Export Candidate Brief</li>
+    <li><b>Activity Timeline</b> แบบลิ้นชัก เก็บประวัติ upload · แก้ค่า · ปลดล็อก · ส่งออก</li>
+    <li><b>Quick Switch</b> ระหว่าง Analysis Mode และ Presentation Mode</li>
+    <li>บริบทบริษัทค้างอยู่ด้านบนตลอดเวลา พร้อม token คงเหลือ</li>
+  </ul></div>
+  <div class="card"><h3>Responsive Behavior</h3><ul>
+    <li><b>Desktop</b> — โครงสามคอลัมน์เต็มรูปแบบใน Zone C</li>
+    <li><b>Laptop / จอประชุม</b> — โซนเรียงต่อกันแนวตั้ง พร้อมหัวข้อโซนค้างด้านบน</li>
+    <li><b>Tablet</b> — Upload และ Insights อยู่ด้านบน ส่วน Recommendations กลายเป็นการ์ดเต็มความกว้าง</li>
+    <li><b>มือถือ</b> — อยู่ในรายการที่ยังไม่ต้องทำรอบนี้ (Phase II)</li>
+  </ul></div>
+</div>
+
+<h2>5 · MVP Prototype Phase I — สิ่งที่ต้องมี</h2>
+<div class="grid g2">
+  <div class="card"><h3>ต้องมีในรอบนี้</h3><ul>
+    <li>ระบบสมาชิก การยืนยันตัวตน และการขอ <b>Consent</b> ข้อมูลและเอกสาร</li>
+    <li>ระบบ <b>Token</b> ปลดล็อกฟีเจอร์ — Free User 3 token · Paid User 20 token · เติมด้วยมือได้ ยังไม่เชื่อมระบบชำระเงิน</li>
+    <li>รายงานเปรียบเทียบในอุตสาหกรรม และเทียบคู่แข่งรายบริษัท <b>ไม่เกิน 3 ราย ข้าม Sector ได้</b></li>
+    <li>อัปโหลดเอกสารและประมวลผล NLP ค่าตัวแปร แล้วสรุปเป็นรายงาน</li>
+    <li>Validity Remark แนบไปกับรายงานทุกฉบับ</li>
+  </ul></div>
+  <div class="card"><h3>กติกา Free / Paid ที่ทำไว้จริง</h3>
+    <table><tbody>
+      <tr><td>รายงานบริษัทของตัวเอง</td><td class="n"><b>ฟรี</b></td></tr>
+      <tr><td>รายงานฉบับเต็มของบริษัทอื่น</td><td class="n"><b>1</b> token</td></tr>
+      <tr><td>เทียบคู่แข่งสูงสุด 3 ราย (ข้าม Sector ได้)</td><td class="n"><b>1</b> token</td></tr>
+      <tr><td>รายงานระดับอุตสาหกรรม / ประเทศ + CSV</td><td class="n"><b>3</b> token</td></tr>
+      <tr><td>What-if Studio และตาราง Validity รายปี</td><td class="n"><b>Pro</b></td></tr>
+      <tr><td>ซื้อ token ขั้นต่ำต่อครั้ง</td><td class="n"><b>3</b> token</td></tr>
+    </tbody></table>
+    <div class="note" style="margin-bottom:0">Pro Plan เป็นแบบ token based คล้ายของ Claude ·
+      หลัง login แสดง <b>company profile</b> ของผู้ใช้ก่อน แล้วจึงมีแท็บไปยัง What-if Studio</div></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+  <div class="card"><h3>Design Principles ที่ใช้จริงในหน้า</h3><ul>
+    <li>Vertical progressive disclosure — เรียงบนลงล่างตามลำดับงานจริงของผู้ใช้</li>
+    <li>One primary action per zone — หนึ่ง action หลักต่อหนึ่งโซน</li>
+    <li>Persistent company context at the top</li>
+    <li>Clear visual hierarchy — Upload → Insights → Recommendation</li>
+    <li>Tab เลือก TH / EN โดยตั้งค่าเริ่มต้นเป็น EN</li>
+  </ul></div>
+  <div class="card"><h3>Deterministic What-If / Scenario Analysis</h3>
+    <p>ปรับสี่ตัวแปรตรง ๆ แล้วคำนวณ OI Score ใหม่จากสมการถดถอยพร้อมพจน์ปฏิสัมพันธ์</p>
+    <ul>
+      <li>ตัวเลื่อนแบบเรียลไทม์ — Family % · Female % · Political · Average Tenure · CEO Focus</li>
+      <li>ฉากทัศน์สำเร็จรูป 5 แบบ — Current · Optimistic Board · Conservative / Status-quo ·
+        Regulatory-compliant minimum · New CEO + Board Refresh</li>
+      <li>แผนภาพส่วนร่วม แสดงว่าการเปลี่ยนแต่ละอย่างขยับคะแนนเท่าไหร่</li>
+    </ul>
+    <div class="note warn" style="margin-bottom:0"><b>ข้อจำกัดที่ต้องบอก</b> — โปร่งใสและตรงกับสัมประสิทธิ์แบบหนึ่งต่อหนึ่ง
+      แต่ไม่รวมความไม่แน่นอนและเส้นทางการเปลี่ยนผ่าน ไม่ได้จำลองว่าบอร์ดจะเดินจากจุดนี้ไปถึงเป้าหมายอย่างไร</div></div>
+</div>
+
+<h2>6 · Validity — เกณฑ์ตามเอกสาร และผลจริงของโมเดล</h2>
+<p class="lead">สมการถดถอยจะเปลี่ยนตามข้อมูลปีต่อปี ยิ่งเก็บข้อมูลมากขึ้นค่าประเมินจะดีขึ้นและ Validity อาจให้ผลต่างออกไป
+  การนำเสนอผลจึงต้องผูกกับผลวิเคราะห์ด้วย STATA หลังทำ Moderation Analysis ทุกครั้ง</p>
+<div class="tw"><table>
+  <thead><tr><th style="width:190px">ทดสอบ</th><th>แสดงอะไร</th><th style="width:170px">เกณฑ์ ‘ผ่าน’</th>
+    <th style="width:110px" class="n">ผลจริง</th><th style="width:130px">ผล</th></tr></thead>
+  <tbody>
+    <tr><td>Rank correlation (Spearman)</td><td>คะแนนเรียงลำดับ OI จริงได้ไหม</td><td>&gt; 0 และคงเส้นทุกปี</td>
+      <td class="n">0.175</td><td><span class="pill crit">ไม่ผ่าน</span></td></tr>
+    <tr><td>Discrimination (AUC)</td><td>แยกบริษัท OI สูง (top tercile) จากที่เหลือ</td><td>&gt; 0.5</td>
+      <td class="n">0.613</td><td><span class="pill ok">ผ่าน</span></td></tr>
+    <tr><td>Decile lift</td><td>OI เฉลี่ยกลุ่มคะแนนสูง ÷ กลุ่มต่ำ</td><td>Top/Bottom &gt; 1.5×</td>
+      <td class="n">2.34×</td><td><span class="pill ok">ผ่าน</span></td></tr>
+    <tr><td>Leave-one-year-out (LOYO)</td><td>fit 4 ปี ทำนายปีที่เหลือ</td><td>บวกทุกปี, mean &gt; 0</td>
+      <td class="n">+0.17</td><td><span class="pill ok">ผ่าน</span></td></tr>
+  </tbody></table></div>
+<div class="tw" style="margin-top:14px"><table>
+  <thead><tr><th>ปี</th><th class="n">n</th><th class="n">Spearman</th><th class="n">AUC</th><th class="n">Lift</th><th class="n">LOYO</th></tr></thead>
+  <tbody>
+    <tr><td>2562 (2019)</td><td class="n">209</td><td class="n">0.332</td><td class="n">0.702</td><td class="n">4.07×</td><td class="n">0.292</td></tr>
+    <tr><td>2563 (2020)</td><td class="n">155</td><td class="n">0.109</td><td class="n">0.592</td><td class="n">1.46×</td><td class="n">0.186</td></tr>
+    <tr><td>2564 (2021)</td><td class="n">181</td><td class="n">0.214</td><td class="n">0.639</td><td class="n">3.43×</td><td class="n">0.210</td></tr>
+    <tr class="bad"><td><b>2565 (2022)</b></td><td class="n">187</td><td class="n"><b>−0.023</b></td><td class="n">0.494</td><td class="n">0.90×</td><td class="n">0.038</td></tr>
+    <tr><td>2566 (2023)</td><td class="n">196</td><td class="n">0.200</td><td class="n">0.624</td><td class="n">3.92×</td><td class="n">0.139</td></tr>
+  </tbody></table></div>
+<div class="note crit"><b>ผลตามกติกาในเอกสาร = “Use Result with cautious”</b> —
+  ผ่าน 3 จาก 4 เกณฑ์ · ข้อที่ไม่ผ่านคือ <b>Rank correlation (Spearman)</b> เพราะเกณฑ์กำหนดว่าต้อง
+  “&gt; 0 <b>และคงเส้นทุกปี</b>” แต่ปี 2565 ได้ −0.023 · ต้นแบบจึงแสดง remark นี้บนหน้า Overview
+  และแนบท้ายเอกสารทุกฉบับที่ออกจากระบบ พร้อมระบุเกณฑ์ที่ไม่ผ่านและเหตุผล ตามที่กำหนดไว้</div>
+<div class="note"><b>การแสดงผลแยกตามประเภทผู้ใช้</b> —
+  <b>Free User</b> เห็นเฉพาะ remark สองระดับ (Strong predictive diagnosis / Use result with cautious) พร้อมเกณฑ์ที่ไม่ผ่าน ·
+  <b>Paid User</b> ที่ใช้ What-if Studio ได้ เห็นตารางรายปีและคำอธิบายผลกระทบของแต่ละเกณฑ์ครบ</div>
+
+<h2>7 · Phase II — ออกแบบเผื่อไว้ แยกงบต่างหาก</h2>
+<div class="grid g3">
+  <div class="card"><h3>ระบบชำระเงิน</h3><p>เติมเงิน ชำระเงิน และใบเสร็จอิเล็กทรอนิกส์ ·
+    รอบนี้ปรับ token ด้วยมือสำหรับการสาธิต</p></div>
+  <div class="card"><h3>Scraping ข้อมูลจากตลาดหลักทรัพย์</h3><p>ดึง One Report อัตโนมัติแล้วแปลงเป็น Structured Excel ·
+    รอบนี้ใช้ข้อมูลที่มีอยู่ 5 ปีก่อน</p></div>
+  <div class="card"><h3>การใช้งานบนมือถือ</h3><p>ออกแบบเฉพาะ Desktop / Laptop / Tablet ในรอบนี้
+    ตามที่ระบุไว้ในเอกสาร</p></div>
+</div>
+<div class="note brand"><b>งบประมาณ</b> — 58,000 บาท รวมช่วงออกแบบ ตามที่ระบุในเอกสารสรุปแนวทางการแก้ไขครั้งที่ 1 ·
+  งบของ Phase II (Payment และ Scraping) ให้คิดแยกออกมาต่างหาก</div>
+
+<h2>8 · สิ่งที่ยังรอการตัดสินใจ</h2>
+<div class="note brand"><ol style="margin:0;padding-left:20px">
+  <li><b>นิยาม Innovation Intensity</b> จาก Wording Ratios และรายชื่อตัวแปรอิสระชุดใหม่</li>
+  <li><b>การแสดงชื่อบริษัทจริง</b> — ต้นแบบแสดงชื่อจริงเพราะการเทียบคู่แข่งจะไม่มีความหมายถ้าไม่มีชื่อ
+    ควรปรึกษาฝ่ายกฎหมายก่อนเปิดสาธารณะ</li>
+  <li><b>User Journey ใน Canva ตั้งแต่หน้า 5</b> ต้องปรับให้ตรงกับโครง 3 Zones และแท็บ What-if Studio ในต้นแบบนี้</li>
+  <li><b>วันล็อกขอบเขต</b> — ถ้าจะรักษาวัน user testing เดือนธันวาคม ขอบเขตต้องถูกล็อกในที่ประชุมรอบนี้
+    ทุกฟีเจอร์ที่เพิ่มหลังจากนั้นจะดันวันทดสอบออกไป จึงควรใช้ที่ประชุม <b>ตัดออก</b> มากกว่าเพิ่มเข้า</li>
+</ol></div>
+
+</div>
+<footer><b>OpenInnoScore™</b> — CEO Regulatory Focus × Board Composition Assessment ·
+  เอกสารประกอบการนำเสนอ ไม่ใช่ระบบจริง · ตัวเลขความแม่นทุกตัวคำนวณจากแผงข้อมูล 209 บริษัท 928 บริษัท-ปี (2562–2566) ·
+  ความสัมพันธ์เป็นเชิงสหสัมพันธ์ ไม่ใช่เชิงสาเหตุ และไม่คงที่ทุกปี ·
+  ไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล</footer>
