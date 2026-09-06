@@ -99,6 +99,7 @@ HUB_CSS = """
 .hbrand .bs{font-size:12.4px;color:var(--ink-3)}
 .hsub{color:var(--ink-2);font-size:14.8px;margin:0 0 30px;max-width:84ch}
 .cards{display:grid;grid-template-columns:1.14fr 1fr 1fr;gap:16px;align-items:stretch}
+.cards.two{grid-template-columns:1fr 1fr;max-width:960px}
 @media(max-width:1000px){.cards{grid-template-columns:1fr}}
 .vc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 23px;box-shadow:var(--shadow);
  display:flex;flex-direction:column}
@@ -125,72 +126,63 @@ HUB_BODY = """
     <div><div class="bn">OpenInnoScore<sup style="font-size:10px">™</sup></div>
       <div class="bs">CEO Regulatory Focus × Board Composition Assessment</div></div></div>
   <h1 style="font-size:30px;font-weight:600;letter-spacing:-.03em;margin:0 0 8px">เลือกเวอร์ชันต้นแบบที่ต้องการเปิด</h1>
-  <p class="hsub">เก็บทุกเวอร์ชันไว้ให้เทียบก่อน–หลังได้ ไม่มีอันไหนถูกลบ ·
-    <b>แก้ไขครั้งที่ 1</b> คือ OpenInnoScore™ ที่จัดหน้าใหม่ตามเอกสารสรุปแนวทางการแก้ไขลงวันที่ 27 สิงหาคม 2569
-    โดยยังใช้โมเดลและข้อมูลชุดเดิม 209 บริษัท 928 บริษัท-ปี (2562–2566)</p>
+  <p class="hsub">สองเวอร์ชันใช้<b>โมเดล ข้อมูล และหน้าจอชุดเดียวกัน</b> — แผงข้อมูล 209 บริษัท 928 บริษัท-ปี (2562–2566) ·
+    เวอร์ชันที่ 2 คือเวอร์ชันแรกที่ยกมาปรับตามเอกสารสรุปแนวทางการแก้ไขครั้งที่ 1 ลงวันที่ 27 สิงหาคม 2569
+    ทั้งธีม โลโก้ ชื่อเรียก และการจัดหน้าเป็น Zone A / B / C · เวอร์ชันแรกยังเปิดได้ครบเหมือนเดิม ไม่ถูกลบหรือทับ</p>
 
-  <div class="cards">
-    <div class="vc cur">
-      <div class="tag" style="color:var(--blue)">เวอร์ชันที่แนะนำให้เปิดก่อน</div>
-      <h2>OpenInnoScore™ — แก้ไขครั้งที่ 1</h2>
-      <p>Workspace เดียวเรียงตามลำดับงานจริง <b>Upload → Insights → Recommendation</b>
-        พร้อมแท็บ What-if Studio · อัปโหลดเอกสารได้จริง แก้ค่าที่ระบบอ่านผิดได้ทุกช่อง แล้วคะแนนทั้งหน้าคำนวณใหม่ทันที</p>
-      <ul>
-        <li>3 Zones — Document Intelligence · Insight Generator · Board Refresh Engine</li>
-        <li>เลือกโทนข้อความ 4 แบบ — Investor · Board · Search Firm · IOD · สลับ EN / TH</li>
-        <li>What-if Studio พร้อมฉากทัศน์สำเร็จรูป 5 แบบ และแผนภาพส่วนร่วม</li>
-        <li>ระบบ token — บริษัทตัวเองฟรี · เทียบคู่แข่งและรายงานอุตสาหกรรมใช้ token</li>
-        <li>Validity remark สองระดับตามกติกาในเอกสาร</li>
-      </ul>
-      <div class="row"><a class="btn p" href="./revision-1/">เปิด OpenInnoScore</a>
-        <a class="btn s" href="./revision-1/spec.html">สเปกและแผนงาน</a>
-        <a class="btn s" href="./revision-1/previous.html">รุ่นก่อนปรับ</a></div>
-    </div>
-
+  <div class="cards two">
     <div class="vc">
-      <div class="tag" style="color:var(--ink-3)">ต้นแบบเชิงพาณิชย์</div>
+      <div class="tag" style="color:var(--ink-3)">เวอร์ชันที่ 1 · ก่อนแก้ไข</div>
       <h2>Board Signal</h2>
-      <p>ชั้นวิเคราะห์เต็มรูปแบบ ใช้แกนคำนวณเดียวกับ OpenInnoScore แต่เปิดเครื่องมือครบทุกตัวสำหรับนักวิเคราะห์</p>
+      <p>ต้นแบบเดิมตามที่คอมมิตไว้เมื่อ 27 สิงหาคม 2569 — ธีมน้ำเงิน–ทอง ชื่อเดิม เมนูเดิม
+        เก็บไว้ครบทุกหน้าเพื่อใช้เทียบก่อน–หลัง</p>
       <ul>
-        <li>เมทริกซ์ 2×2 · What-if Studio · เทียบคู่แข่ง 1 + 3</li>
-        <li>แผนภาพน้ำตก · พอร์ตลงทุน · โหมดที่ประชุม · บันทึกหน้าเดียว</li>
-        <li>ใช้ดูว่าฟีเจอร์ไหนควรยกเข้ามาในรอบถัดไป</li>
+        <li>รายงานวินิจฉัย · เมทริกซ์กลยุทธ์ 2×2 · เทียบคู่แข่ง 1 + 3</li>
+        <li>What-if Studio · ภาพรวมอุตสาหกรรม · พอร์ตลงทุน</li>
+        <li>แผนภาพน้ำตก · โหมดที่ประชุม · บันทึกหน้าเดียว</li>
+        <li>ระบบเครดิต 3 แพ็กเกจ · สลับชุดสีแบรนด์ได้ 3 ชุด</li>
       </ul>
-      <div class="row"><a class="btn d" href="./boardsignal/">เปิด Board Signal</a>
-        <a class="btn s" href="./boardsignal/requirements.html">เอกสารสรุป</a></div>
+      <div class="row"><a class="btn s" href="./boardsignal/">เปิดเวอร์ชันที่ 1</a>
+        <a class="btn s" href="./boardsignal/requirements.html">เอกสารสรุปเดิม</a></div>
     </div>
 
-    <div class="vc">
-      <div class="tag" style="color:var(--ink-3)">เก็บไว้เทียบ</div>
-      <h2>เวอร์ชันเดิม — PromoSignal DSS</h2>
-      <p>หน้าเดิมก่อน comment ครั้งที่ 1 ยังเปิดได้ครบ ไม่ถูกทับ · ใช้ดูย้อนหลังและเทียบก่อน–หลัง</p>
+    <div class="vc cur">
+      <div class="tag" style="color:var(--blue)">เวอร์ชันที่ 2 · แก้ไขครั้งที่ 1</div>
+      <h2>OpenInnoScore™</h2>
+      <p>เวอร์ชันเดียวกันที่ยกมาปรับตามเอกสาร — เปลี่ยนธีมเป็น CI ใหม่ เปลี่ยนโลโก้ เปลี่ยนฟอนต์เป็น Sarabun
+        และจัดลำดับหน้าใหม่ให้เดินตามงานจริง <b>Upload → Insights → Recommendation</b></p>
       <ul>
-        <li>flow อัปโหลด · ชุดโมเดล A / B · dashboard เดิม</li>
-        <li>คู่มือการใช้งานฉบับเดิม</li>
-        <li>ตัวเลขและโมเดลชุดเดียวกับทุกเวอร์ชัน</li>
+        <li><b>Zone A</b> Document Intelligence — อัปโหลดจริง การ์ดสรุป 4 ใบ แก้ค่าเองได้ทุกช่อง</li>
+        <li><b>Zone B</b> Insight Generator — ผลต่อคะแนนรายการ์ด เลือกโทน 4 แบบ สลับ EN / TH</li>
+        <li><b>Zone C</b> Board Refresh — Action type · Feasibility · คำค้นโปรไฟล์ · Constraint · Time horizon · Priority mode</li>
+        <li>token ตามเอกสาร — Free 3 · Pro 20 · ซื้อขั้นต่ำ 3 · What-if Studio เป็นสิทธิ์ Pro</li>
+        <li>Validity ใช้เกณฑ์ตามเอกสาร — ผลจริงคือ “Use result with cautious”</li>
       </ul>
-      <div class="row"><a class="btn s" href="./">เปิดเวอร์ชันเดิม</a>
-        <a class="btn s" href="./#p-howto">คู่มือเดิม</a></div>
+      <div class="row"><a class="btn p" href="./openinnoscore/">เปิดเวอร์ชันที่ 2</a>
+        <a class="btn s" href="./openinnoscore/spec.html">สเปกและแผนงาน</a></div>
     </div>
   </div>
 
   <div class="strip">
-    <b>แก้ไขครั้งที่ 1 เปลี่ยนอะไรบ้าง</b>
+    <b>เวอร์ชันที่ 2 เปลี่ยนอะไรจากเวอร์ชันที่ 1</b>
     <ol>
-      <li>ตั้งชื่อและตัวตนใหม่เป็น <b>OpenInnoScore™</b> พร้อมโทนสีตาม palette และฟอนต์ Sarabun ฝังในไฟล์</li>
-      <li>เครื่องหมายวงกลมสื่อ <b>Moderation Analysis</b> ชัดขึ้น — ความหนาของเส้นเชื่อมแปรตามขนาดสัมประสิทธิ์จริง</li>
-      <li>Zone A ได้การ์ดสรุป 4 ใบ · CEO text preview พับได้ · Confidence ทุกช่อง · แก้ค่าเองได้ทุกช่อง</li>
-      <li>Zone B ได้ <b>Tone Selector</b> · ผลต่อคะแนนรายการ์ด · ปุ่ม Copy / Add to Report · ส่วน Evidence · Peer context strip</li>
-      <li>Zone C ได้ Action type · Feasibility · คำค้นโปรไฟล์ · <b>Constraint toggles · Time horizon · Priority mode</b></li>
-      <li>เพิ่ม <b>What-if Studio</b> เป็นแท็บแยก พร้อมฉากทัศน์สำเร็จรูป 5 แบบและแผนภาพส่วนร่วม</li>
-      <li>Validity เปลี่ยนมาใช้ <b>เกณฑ์ตามเอกสาร</b> — ผลจริงคือ “Use result with cautious” เพราะ Spearman ปี 2565 ติดลบ</li>
+      <li><b>ธีมและ CI</b> — น้ำเงินเข้ม #1F2B37 · ฟ้า #4F76F6 · มิ้นต์ #77F2A1 · พื้นอ่อน · ฟอนต์ Sarabun ฝังในไฟล์
+        (เดิมเป็น Kanit และมีชุดสีให้เลือก 3 ชุด)</li>
+      <li><b>โลโก้</b> — เครื่องหมายวงกลมที่สื่อ Moderation Analysis · จุดกลาง = CEO Regulatory Focus ·
+        จุดรอบ = Family / Female / Political / Tenure · <b>ความหนาของเส้นแปรตามขนาดสัมประสิทธิ์จริง</b> · ลูกศรมิ้นต์ = ผลลัพธ์ Open Innovation</li>
+      <li><b>ชื่อเรียก</b> — Board Signal → OpenInnoScore™ · IPI → OI Score · เครดิต → token</li>
+      <li><b>การจัดหน้า</b> — เมนูจัดใหม่เป็น Zone A / B / C แล้วตามด้วยเครื่องมือขยายผลเดิมทั้งหมด ไม่มีหน้าไหนถูกตัดออก</li>
+      <li><b>สิ่งที่เพิ่มเข้ามา</b> — Zone A ทั้งหน้า · การ์ด insight พร้อมผลต่อคะแนนและ Evidence · โทน 4 แบบ · EN / TH ·
+        ตัวควบคุม Constraint / Time horizon / Priority mode · Candidate Brief</li>
+      <li><b>กติกาการเก็บเงินและ Validity</b> — ปรับให้ตรงกับเอกสารทั้งหมด</li>
     </ol>
   </div>
 
   <footer style="margin-top:26px">ต้นแบบเพื่อการสาธิตและการนำเสนอ · ไม่ใช่ระบบ production ·
     เอกสารที่อัปโหลดถูกอ่านในเบราว์เซอร์เท่านั้น ไม่ถูกส่งออกไปที่เซิร์ฟเวอร์ใด ·
     ผลลัพธ์เป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ และไม่คงที่ทุกปี ·
-    ไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล</footer>
+    ไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล ·
+    <a href="./revision-1/" style="color:var(--ink-3)">หน้าที่เคยทดลองไว้ระหว่างทางยังอยู่ที่ลิงก์เดิม</a></footer>
 </div>
 """
 hub = f"""<!doctype html><html lang="th"><head><meta charset="utf-8">

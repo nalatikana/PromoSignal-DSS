@@ -1,0 +1,135 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenInnoScore™ — CEO Regulatory Focus × Board Composition Assessment</title>
+<style>/*__FONT__*/</style>
+<style>/*__THEME__*/</style>
+</head>
+<body data-brand="A" data-mode="light">
+
+<!-- ==================================================== หน้าเข้าสู่ระบบ -->
+<div class="gate" id="gate">
+  <div class="gatebox">
+    <div class="gateart">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="gLogo" style="display:block;flex:none"></span>
+        <div><div style="font-weight:600;font-size:17px" id="gBrand">OpenInnoScore<sup style="font-size:9px">™</sup></div>
+          <div style="font-size:10.5px;opacity:.72">CEO Regulatory Focus × Board Composition</div></div>
+      </div>
+      <h2 style="font-size:23px;line-height:1.35;letter-spacing:-.03em;margin-top:6px">
+วัดแนวโน้ม Open Innovation<br>จาก CEO Focus และโครงสร้างคณะกรรมการ</h2>
+      <p style="font-size:12.5px;opacity:.85;margin:0;line-height:1.7">
+        อัปโหลด 56-1 One Report หรือรายงานประจำปี ระบบดึงองค์ประกอบคณะกรรมการและภาษาผู้บริหาร
+        แล้วแปลงเป็นคะแนน OI พร้อมข้อเสนอปรับโครงสร้างบอร์ดที่ใช้ในงาน Search และ Board Evaluation ได้ทันที</p>
+      <div style="margin-top:auto;display:grid;gap:9px;font-size:12px;opacity:.9">
+        <div>◇ &nbsp;Zone A — Document Intelligence ดึงข้อมูลจากเอกสารจริง</div>
+        <div>◇ &nbsp;Zone B — Automated Insight Generator เลือกโทนตามกลุ่มผู้ฟัง</div>
+        <div>◇ &nbsp;Zone C — Board Refresh Recommendation Engine</div>
+        <div>◇ &nbsp;What-if Studio · เทียบคู่แข่ง · ภาพรวมอุตสาหกรรม · โหมดที่ประชุม</div>
+      </div>
+      <div style="font-size:10.5px;opacity:.6;border-top:1px solid rgba(255,255,255,.16);padding-top:12px">
+        ต้นแบบเพื่อการนำเสนอ · ไม่ใช่ระบบจริง · ไม่ใช่คำแนะนำการลงทุน</div>
+    </div>
+
+    <div class="gateform">
+      <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:500">เข้าสู่ระบบ</div>
+      <h2 style="font-size:20px;margin:5px 0 4px">เลือกประเภทผู้ใช้สำหรับการสาธิต</h2>
+      <p style="font-size:12px;color:var(--ink-2);margin:0 0 14px">
+        ต้นแบบยังไม่เชื่อมระบบชำระเงิน — เติม token ด้วยมือได้ตลอด</p>
+      <div id="planPick" style="display:grid;gap:8px;margin-bottom:14px">
+        <label class="planopt on" data-plan="free"><input type="radio" name="plan" value="free" checked>
+          <div><b>Free User · 3 token</b><span>ดูรายงานบริษัทของตัวเองฟรี · เทียบคู่แข่งและรายงานอุตสาหกรรมใช้ token ·
+            Validity แสดงเป็น remark สองระดับ</span></div></label>
+        <label class="planopt" data-plan="pro"><input type="radio" name="plan" value="pro">
+          <div><b>Pro Plan (Token based) · 20 token</b><span>เปิด What-if Studio และตาราง Validity ฉบับเต็มรายปี ·
+            ใช้ token กับรายงานเทียบเหมือนกัน</span></div></label>
+      </div>
+      <label style="font-size:11.5px;color:var(--ink-3)">บริษัทของคุณ (ดูรายงานได้ฟรีตลอด)</label>
+      <select class="sel" id="gCo" style="width:100%;max-width:none;margin:5px 0 12px"></select>
+
+      <button class="gsign" id="btnGoogle">
+        <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l-.1.3 6.5 5 .5.1c4.1-3.8 6.6-9.4 6.6-15.7"/><path fill="#34A853" d="M24 46c5.9 0 10.9-1.9 14.5-5.3l-6.9-5.3c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9l-.3 0-6.7 5.2-.1.3C7.9 41 15.4 46 24 46"/><path fill="#FBBC05" d="M11.5 28.6c-.5-1.4-.7-2.9-.7-4.6s.3-3.2.7-4.6v-.3l-6.8-5.3-.2.1C2.9 16.9 2 20.3 2 24s.9 7.1 2.5 10.2z"/><path fill="#EB4335" d="M24 10.4c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 4.1 29.9 2 24 2 15.4 2 7.9 7 4.5 13.8l6.9 5.3c1.9-5.2 6.8-8.7 12.6-8.7"/></svg>
+        เข้าสู่ระบบด้วยบัญชี Google
+      </button>
+      <div class="divider">ต้นแบบ · จำลองการล็อกอิน</div>
+      <label style="font-size:11.5px;color:var(--ink-3)">อีเมลที่จะแสดงในระบบ</label>
+      <input class="inp" id="gMail" style="width:100%;margin:5px 0 12px" value="analyst@openinnoscore.co" spellcheck="false">
+      <button class="btn p" id="btnEnter" style="width:100%;justify-content:center">เข้าใช้งานต้นแบบ</button>
+
+      <label class="consent"><input type="checkbox" id="gConsent" checked>
+        <span>ข้าพเจ้ายินยอมให้ระบบประมวลผลเอกสารที่อัปโหลดเพื่อสร้างรายงาน ·
+          <b>เอกสารถูกอ่านในเบราว์เซอร์เท่านั้น ไม่ถูกส่งออกไปที่เซิร์ฟเวอร์ใด</b> ·
+          ข้อมูลที่ประมวลผลเป็นข้อมูลระดับบริษัท ไม่ใช่ข้อมูลรายบุคคล</span></label>
+      <div class="note" style="margin-top:14px;font-size:10.8px">
+        ระบบจริงจะยืนยันตัวตนผ่าน Google OAuth 2.0 และเก็บเฉพาะอีเมลกับรหัสผู้ใช้ ไม่เก็บรหัสผ่าน ·
+        การซื้อ token ขั้นต่ำ 3 token ต่อครั้ง · ระบบชำระเงินอยู่ใน Phase II</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================================================== ตัวระบบ -->
+<div class="app" id="app" style="display:none">
+  <aside class="side">
+    <div class="brandbox">
+      <span id="sLogo" style="display:block;flex:none"></span>
+      <div><div class="brandtxt" id="sBrand">OpenInnoScore<sup style="font-size:8px">™</sup></div>
+        <div class="brandsub">CEO Focus × Board Composition</div></div>
+    </div>
+    <div class="navsec">ลำดับการทำงาน</div>
+    <nav class="nav" id="nav1"></nav>
+    <div class="navsec">เครื่องมือขยายผล</div>
+    <nav class="nav" id="nav2"></nav>
+    <div class="navsec">ระบบและหลักฐาน</div>
+    <nav class="nav" id="nav3"></nav>
+    <div class="sidefoot">
+      <div id="sUser" style="color:var(--nav-on);font-weight:400"></div>
+      <div id="sPlan"></div>
+      <button class="btn g" id="btnOut" style="margin-top:9px;width:100%;justify-content:center;font-size:11.5px;padding:6px;border-color:rgba(255,255,255,.18);color:inherit">ออกจากระบบ</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <select class="sel" id="selInd" style="max-width:210px"></select>
+      <select class="sel" id="selCo" style="max-width:270px"></select>
+      <span class="chip" id="chipZone"></span>
+      <div class="spacer"></div>
+      <span class="chip credit" id="chipCredit"></span>
+      <button class="btn p" id="btnTopUp" style="padding:6px 13px;font-size:12px">เติมเครดิต</button>
+      <div class="seg" id="segTone" aria-label="โทนของข้อความ"></div>
+      <div class="seg" id="segLang" aria-label="ภาษา">
+        <button type="button" data-lang="EN" aria-selected="true">EN</button>
+        <button type="button" data-lang="TH" aria-selected="false">TH</button></div>
+      <button class="iconbtn" id="btnMode" title="สลับโหมดสว่าง/มืด">◐</button>
+    </header>
+
+    <div class="wrap">
+      <section class="view on" id="v-docs"></section>
+      <section class="view" id="v-fit"></section>
+      <section class="view" id="v-zonec"></section>
+      <section class="view" id="v-matrix"></section>
+      <section class="view" id="v-peer"></section>
+      <section class="view" id="v-studio"></section>
+      <section class="view" id="v-sector"></section>
+      <section class="view" id="v-billing"></section>
+      <section class="view" id="v-arch"></section>
+      <section class="view" id="v-valid"></section>
+      <div style="margin-top:26px;font-size:10.6px;color:var(--ink-3);line-height:1.65;border-top:1px solid var(--line);padding-top:14px">
+        <b style="color:var(--ink-2)" id="fBrand">OpenInnoScore</b> · เครื่องมือ <b style="color:var(--ink-2)">ประเมิน</b> (diagnostic) ไม่ใช่การพยากรณ์ ·
+        <b style="color:var(--ink-2)" id="fRemark"></b> ·
+        OI Score = ค่าผสมของ CEO Regulatory Focus และ Board Amplification จากแผงข้อมูล 209 บริษัท 928 บริษัท-ปี (2562–2566) ·
+        ตัวเลขทุกตัวเป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ
+        และไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tt" id="tt"></div>
+<script type="text/plain" id="pdfw">/*__PDFWORKER__*/</script>
+<script>/*__PDFJS__*/</script>
+<script>try{const b=new Blob([document.getElementById("pdfw").textContent],{type:"text/javascript"});pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(b);}catch(e){}</script>
+<script>const DATA = /*__DATA__*/;</script>
+<script>const LOGO_LIGHT = /*__LOGO__*/, LOGO_DARK = /*__LOGO_DARK__*/;</script>
+<script>/*__LEX__*/</script>
+<script>/*__APP__*/</script>
+<script>/*__INVEST__*/</script>
