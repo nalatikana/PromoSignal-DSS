@@ -3,14 +3,15 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+SHARED = ROOT.parent / "src"          # ฟอนต์และ vendor ที่ใช้ร่วมกับ DSS
 rd = lambda p: Path(p).read_text(encoding="utf-8")
 
 html = rd(ROOT / "src" / "app.html")
 parts = {
-    "/*__FONT__*/": rd(ROOT / "src" / "kanit_font.css"),
+    "/*__FONT__*/": rd(SHARED / "kanit_font.css"),
     "/*__THEME__*/": rd(ROOT / "src" / "theme.css"),
-    "/*__PDFWORKER__*/": rd(ROOT / "src" / "vendor" / "pdf.worker.min.js"),
-    "/*__PDFJS__*/": rd(ROOT / "src" / "vendor" / "pdf.min.js"),
+    "/*__PDFWORKER__*/": rd(SHARED / "vendor" / "pdf.worker.min.js"),
+    "/*__PDFJS__*/": rd(SHARED / "vendor" / "pdf.min.js"),
     "/*__DATA__*/": json.dumps(json.loads(rd(ROOT / "src" / "prof_data.json")), ensure_ascii=False),
     "/*__LEX__*/": rd(ROOT / "src" / "lex.js"),
     "/*__APP__*/": rd(ROOT / "src" / "app.js"),

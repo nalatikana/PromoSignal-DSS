@@ -1,0 +1,273 @@
+/* ============================================================================
+   PromoSignal DSS — Revision 1
+   หลักการจัดหน้า
+     · เรียงบนลงล่างตามลำดับงานจริง  Upload → Insights → Recommendation
+     · หนึ่ง action หลักต่อหนึ่งโซน  ปุ่มรองอยู่ต่ำกว่าเสมอ
+     · แถบข้อมูลบริษัทค้างไว้ด้านบนตลอด  ผู้ใช้ไม่หลุดบริบทระหว่างเลื่อน
+     · สีแบรนด์คุมเฉพาะส่วนตกแต่ง  สีที่ใช้แทนข้อมูลเป็นชุดตายตัวที่ผ่านการตรวจตาบอดสีแล้ว
+   ============================================================================ */
+:root{
+  --navy:#0f2233; --navy-2:#1b3a57;
+  --brand:#0f8f6d;               /* เขียว AN ปรับให้เข้มพอสำหรับตัวอักษรบนพื้นขาว */
+  --brand-soft:#e4f5ef; --brand-line:#b4e3d3;
+  --blue:#2563c9; --blue-soft:#e8f0fd;
+  --ink:#12202f; --ink-2:#4a5b6e; --ink-3:#7f8f9f;
+  --line:#dde5ed; --line-2:#eef2f6; --bg:#f4f7fa; --panel:#fff;
+  /* ชุดสีข้อมูล — ผ่านการตรวจแยกได้ทุกคู่ทั้งผู้อ่านปกติและตาบอดสี */
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --ok:#0a8a48; --ok-bg:#e6f5ec; --warn:#8a6300; --warn-bg:#fdf3e0;
+  --crit:#c0392f; --crit-bg:#fbeceb; --mute-bg:#eef2f6;
+  --q1:#e8f0fa; --q2:#c7dcf3; --q3:#9dc2e8; --q4:#6ea3d9; --q5:#4181c8; --q6:#2a5fa8;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(15,34,51,.05),0 14px 38px rgba(15,34,51,.07);
+  --shadow-sm:0 1px 2px rgba(15,34,51,.06);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Kanit,system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;font-weight:300;
+  font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;font-weight:500;letter-spacing:-.02em;line-height:1.3}
+b,strong{font-weight:500}
+p{margin:0}
+button{font-family:inherit;font-weight:300}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------------------------------------------------------------- โครงหน้า */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:0;height:100vh;overflow:auto;background:var(--navy);color:#c4d3e2;
+  padding:20px 14px;display:flex;flex-direction:column}
+.brand{display:flex;gap:10px;align-items:center;margin-bottom:16px;padding:0 4px}
+.mark{display:flex;gap:4px;flex:none}
+.mark span{width:31px;height:31px;border-radius:9px;display:grid;place-items:center;color:#fff;
+  font-size:11.5px;font-weight:600;letter-spacing:.02em}
+.brand b{display:block;font-size:15px;color:#fff;font-weight:500;line-height:1.2}
+.brand small{display:block;font-size:10.5px;color:#8ba3bb}
+.revbadge{background:rgba(23,179,135,.16);border:1px solid rgba(23,179,135,.36);color:#7ce0bd;
+  border-radius:10px;padding:9px 11px;margin-bottom:16px;font-size:11.5px;line-height:1.55}
+.navtitle{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#7f97ae;margin:15px 6px 5px}
+.nav{display:flex;flex-direction:column;gap:1px}
+.nav a{display:flex;align-items:center;gap:9px;text-decoration:none;padding:8px 11px;border-radius:9px;
+  color:#c4d3e2;font-size:13px;line-height:1.35}
+.nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav a.on{background:var(--brand);color:#fff}
+.nav .zk{width:20px;flex:none;font-size:10px;opacity:.75;text-align:center}
+.sidefoot{margin-top:auto;padding-top:16px;display:grid;gap:6px}
+.sidefoot a{display:block;text-align:center;text-decoration:none;font-size:11.5px;padding:7px 9px;
+  border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#c4d3e2}
+.sidefoot a:hover{background:rgba(255,255,255,.07);color:#fff}
+main{min-width:0;display:flex;flex-direction:column}
+
+/* ---------------------------------------------------------------- แถบบริบทบริษัท */
+.ctx{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(9px);
+  border-bottom:1px solid var(--line);padding:9px 22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ctx .co{font-size:15px;font-weight:500;letter-spacing:-.02em;white-space:nowrap}
+.ctx .cosub{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.spacer{flex:1;min-width:8px}
+.sel{font-family:inherit;font-weight:300;font-size:12.5px;padding:6px 10px;border-radius:9px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);max-width:250px}
+.sel:focus,.inp:focus{outline:2px solid var(--brand);outline-offset:-1px}
+.inp{font-family:inherit;font-weight:300;font-size:13px;padding:6px 9px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.seg{display:inline-flex;background:var(--mute-bg);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:none;color:var(--ink-2);font-size:12px;padding:5px 11px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.seg button[aria-selected="true"]{background:var(--panel);color:var(--ink);font-weight:500;box-shadow:var(--shadow-sm)}
+.tok{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;border-radius:99px;
+  background:var(--brand-soft);border:1px solid var(--brand-line);color:var(--ink);white-space:nowrap}
+.tok b{font-weight:500}
+
+/* ---------------------------------------------------------------- ปุ่ม */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  font-size:13px;padding:8px 15px;border-radius:10px;line-height:1.4;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.p{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.p:hover{filter:brightness(1.07)}
+.btn.b{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.d{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.s{background:var(--mute-bg)}
+.btn.lg{font-size:14px;padding:11px 20px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.lnk{background:none;border:0;padding:0;font:inherit;color:var(--blue);cursor:pointer;text-decoration:underline}
+
+/* ---------------------------------------------------------------- โซน */
+.wrap{padding:20px 22px 40px;max-width:1240px;width:100%}
+.zone{margin-bottom:16px}
+.zhead{position:sticky;top:52px;z-index:30;background:var(--bg);padding:12px 0 10px;
+  display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:14px}
+.zcode{display:inline-block;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--brand);font-weight:500;margin-bottom:2px}
+.zhead h2{font-size:20px}
+.zhead p{font-size:12.5px;color:var(--ink-3);margin-top:2px;max-width:70ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:17px 19px}
+.card>h3{font-size:13.5px;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.card .desc{font-size:11.5px;color:var(--ink-3);margin-bottom:12px;line-height:1.55}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.gside{grid-template-columns:minmax(0,1fr) minmax(0,330px)}
+.gside-l{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+.grid>*{min-width:0}
+
+/* ---------------------------------------------------------------- ชิ้นส่วน */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;padding:2px 9px;border-radius:99px;
+  border:1px solid transparent;white-space:nowrap;font-weight:400}
+.pill.ok{background:var(--ok-bg);color:var(--ok);border-color:#bde3cb}
+.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:#f0dcb4}
+.pill.crit{background:var(--crit-bg);color:var(--crit);border-color:#f2cdc9}
+.pill.mute{background:var(--mute-bg);color:var(--ink-3);border-color:var(--line)}
+.pill.blue{background:var(--blue-soft);color:var(--blue);border-color:#c3d9f7}
+.note{border-radius:11px;padding:11px 14px;font-size:11.8px;line-height:1.65;color:var(--ink-2);
+  background:var(--mute-bg);border:1px solid var(--line)}
+.note b{color:var(--ink)}
+.note.ok{background:var(--ok-bg);border-color:#bde3cb}
+.note.warn{background:var(--warn-bg);border-color:#f0dcb4}
+.note.crit{background:var(--crit-bg);border-color:#f2cdc9}
+.note.brand{background:var(--brand-soft);border-color:var(--brand-line)}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+.stat .k{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font-size:27px;font-weight:500;letter-spacing:-.035em;line-height:1.12;margin:2px 0}
+.stat .u{font-size:11.5px;color:var(--ink-2);line-height:1.45}
+.stat.hero{background:linear-gradient(150deg,var(--navy),var(--navy-2));border-color:transparent;color:#fff}
+.stat.hero .k{color:rgba(255,255,255,.6)} .stat.hero .u{color:rgba(255,255,255,.82)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.6px}
+th{text-align:left;font-weight:400;font-size:9.8px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 9px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.mbar{height:9px;border-radius:99px;background:var(--mute-bg);position:relative;overflow:hidden;min-width:44px}
+.mbar>span{position:absolute;top:0;bottom:0;left:0;border-radius:99px;background:var(--q4);transition:width .45s cubic-bezier(.2,.8,.3,1)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--ink-2);margin-top:9px}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.legend .dia{border-radius:2px;transform:rotate(45deg)}
+
+/* ---------------------------------------------------------------- Zone A */
+.flowbar{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:16px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.fstep{padding:14px 17px;border-right:1px solid var(--line);position:relative}
+.fstep:last-child{border-right:0}
+.fstep .fn{width:23px;height:23px;border-radius:8px;background:var(--mute-bg);color:var(--ink-3);
+  display:grid;place-items:center;font-size:11.5px;font-weight:500;margin-bottom:7px}
+.fstep h4{font-size:13.5px}
+.fstep p{font-size:11.5px;color:var(--ink-3);margin-top:3px;line-height:1.55}
+.fstep.on{background:var(--brand-soft)}
+.fstep.on .fn{background:var(--brand);color:#fff}
+.fstep.done .fn{background:var(--ok);color:#fff}
+.dz{border:2px dashed var(--line);border-radius:12px;padding:24px 18px;text-align:center;
+  background:var(--mute-bg);cursor:pointer;transition:.15s}
+.dz:hover,.dz.over{border-color:var(--brand);background:var(--brand-soft)}
+.dz .ico{font-size:26px;opacity:.4;line-height:1}
+.files{display:grid;gap:7px;margin-top:12px}
+.file{display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel);font-size:12px}
+.file .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ex{display:grid;grid-template-columns:minmax(0,1fr) 96px 108px;gap:10px;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--line-2)}
+.ex:last-child{border-bottom:0}
+.ex .lb{font-size:12.6px}
+.ex .sub{font-size:10.5px;color:var(--ink-3);line-height:1.45}
+.ex input{width:100%;text-align:right}
+.edited{border-color:var(--blue)!important;background:var(--blue-soft)}
+.ev{font-size:11.5px;line-height:1.85;max-height:186px;overflow:auto;background:var(--mute-bg);
+  border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink-2)}
+.hi{background:#c9e7d8;border-radius:3px;padding:0 2px;color:var(--ink)}
+.hi.prev{background:#fbdcc9}
+
+/* ---------------------------------------------------------------- Zone B */
+.insights{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ins{border:1px solid var(--line);border-left:4px solid var(--s3);border-radius:12px;padding:13px 15px;background:var(--panel)}
+.ins.constraint{border-left-color:var(--s2)}
+.ins.opportunity{border-left-color:var(--s1)}
+.ins.risk{border-left-color:var(--crit)}
+.ins .tag{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.ins h4{font-size:14px;margin:4px 0 5px;line-height:1.4}
+.ins p{font-size:11.8px;color:var(--ink-2);line-height:1.62}
+
+/* ---------------------------------------------------------------- Zone C */
+.cmp{display:grid;gap:9px}
+.cmprow{display:grid;grid-template-columns:118px minmax(0,1fr) 60px;gap:10px;align-items:center;font-size:12.2px}
+.cmprow .tk{height:16px;border-radius:8px;background:var(--mute-bg);position:relative;overflow:hidden}
+.cmprow .fl{position:absolute;top:0;bottom:0;left:0;border-radius:8px;background:var(--s3)}
+.cmprow .fl.now{background:var(--q3)}
+.rec{border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--panel);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.rec b{font-size:13.2px;display:block}
+.rec span{font-size:11.4px;color:var(--ink-2);line-height:1.55}
+.rec .imp{font-size:20px;font-weight:500;color:var(--ok);white-space:nowrap;text-align:right}
+.scn{background:linear-gradient(150deg,var(--navy),var(--navy-2));color:#fff;border-radius:var(--radius);padding:17px 19px}
+.scn small{color:#9fb6cc;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase}
+.scn .big{font-size:38px;font-weight:500;letter-spacing:-.04em;line-height:1.05;margin:5px 0 3px}
+.scn p{font-size:11.8px;color:#c3d4e4;line-height:1.6}
+
+/* ---------------------------------------------------------------- ผนัง token */
+.lockwrap{position:relative}
+.lockwrap .blurred{filter:blur(5px);pointer-events:none;user-select:none;opacity:.5}
+.paywall{position:absolute;inset:0;display:grid;place-items:start center;padding:34px 20px}
+.paycard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px 22px;max-width:430px;text-align:center}
+.paycard .lk{width:40px;height:40px;border-radius:12px;background:var(--brand-soft);display:grid;
+  place-items:center;margin:0 auto 10px;font-size:19px}
+
+/* ---------------------------------------------------------------- แถบปุ่มลอย · ลิ้นชัก */
+.floating{position:sticky;bottom:14px;z-index:35;margin:22px auto 0;max-width:900px;
+  background:rgba(15,34,51,.95);border-radius:14px;padding:9px;display:flex;gap:7px;
+  justify-content:center;flex-wrap:wrap;box-shadow:0 16px 40px rgba(15,34,51,.28)}
+.floating button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);
+  border-radius:9px;padding:7px 13px;font-size:12.3px;cursor:pointer}
+.floating button:hover{background:rgba(255,255,255,.19)}
+.drawer{position:fixed;right:16px;top:76px;width:314px;max-width:calc(100vw - 32px);background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 17px;display:none;z-index:60}
+.drawer.on{display:block}
+.drawer h3{font-size:14px;margin-bottom:9px}
+.tl{display:grid;gap:9px;max-height:60vh;overflow:auto}
+.tli{display:grid;grid-template-columns:26px minmax(0,1fr);gap:9px;align-items:start;font-size:11.8px}
+.tli .dot{width:24px;height:24px;border-radius:8px;background:var(--brand-soft);color:var(--brand);
+  display:grid;place-items:center;font-size:11px;font-weight:500}
+.tli b{font-size:12.4px;display:block}
+.tli span{color:var(--ink-3);line-height:1.5}
+#toast{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:200;background:var(--navy);
+  color:#fff;padding:9px 17px;border-radius:99px;font-size:12.3px;box-shadow:var(--shadow);transition:.2s}
+
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);
+  font-size:10.6px;color:var(--ink-3);line-height:1.7}
+
+/* ---------------------------------------------------------------- โหมดนำเสนอ */
+body.present aside,body.present .floating{display:none}
+body.present .shell{grid-template-columns:1fr}
+body.present .wrap{max-width:1500px;padding:22px 40px 40px}
+body.present{font-size:17px}
+body.present .zhead h2{font-size:26px}
+body.present .card>h3{font-size:16px}
+body.present .stat .v{font-size:34px}
+body.present .ins h4{font-size:17px}
+body.present .ins p{font-size:13.5px}
+body.present .scn .big{font-size:52px}
+
+/* ---------------------------------------------------------------- จอเล็ก */
+@media(max-width:1080px){.gside,.gside-l,.g3,.g4,.insights{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  aside{position:static;height:auto}
+  .zhead{top:0}
+  .flowbar{grid-template-columns:1fr}.fstep{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media(max-width:700px){
+  .g2,.g3,.g4,.gside,.gside-l,.insights{grid-template-columns:1fr}
+  .wrap{padding:16px 14px 34px}
+  .ctx{padding:9px 14px}
+  .ex{grid-template-columns:minmax(0,1fr) 84px;row-gap:4px}
+  .ex .cf{grid-column:1/-1}
+  .cmprow{grid-template-columns:96px minmax(0,1fr) 52px}
+}
+@media print{
+  aside,.ctx,.floating,.drawer,#toast{display:none!important}
+  body{background:#fff;font-size:11px}.shell{grid-template-columns:1fr}
+  .card,.stat{box-shadow:none;break-inside:avoid}.zhead{position:static}
+}
+
+.gside-l>*{align-self:start}

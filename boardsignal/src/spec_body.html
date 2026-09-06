@@ -1,0 +1,178 @@
+<header><div class="inner">
+  <div class="eyebrow">PromoSignal DSS · Revision 1 · เอกสารสเปกและแผนงาน</div>
+  <h1>สิ่งที่ต้องทำใน Revision 1<br>ขอบเขต กติกาการเก็บเงิน และแผนพัฒนา</h1>
+  <p>เอกสารนี้แยกออกจากตัวต้นแบบโดยตั้งใจ — หน้าต้นแบบมีไว้ให้ <b style="color:#fff">กดใช้งาน</b>
+    ส่วนหน้านี้มีไว้ให้ <b style="color:#fff">อ่านและตัดสินใจ</b> · เนื้อหาต่อยอดจากร่างที่คุณแอ๋มปรับไว้ โดยแก้ตัวเลขทุกตัวให้ตรงกับข้อมูลจริงในระบบ</p>
+  <div class="hbtns"><a class="hb p" href="./">เปิดต้นแบบ Revision 1</a><a class="hb" href="../hub.html">หน้าเลือกเวอร์ชัน</a></div>
+</div></header>
+
+<div class="wrap">
+
+<h2>1 · Revision 1 เปลี่ยนอะไรจากเวอร์ชันเดิม</h2>
+<p class="lead">comment ครั้งที่ 1 คือ “จัดหน้าให้ผู้ใช้ที่ไม่ใช่ทีม dev เข้าใจง่ายขึ้น” ต้นแบบจึงถูกจัดใหม่ทั้งหมด
+  โดย <b>ไม่แก้โมเดลและไม่แก้ข้อมูล</b> — ตัวเลขทุกตัวยังมาจากแผงข้อมูลชุดเดิม 209 บริษัท 928 บริษัท-ปี</p>
+<div class="tw"><table>
+  <thead><tr><th style="width:210px">ประเด็น</th><th>เวอร์ชันเดิม</th><th>Revision 1</th></tr></thead>
+  <tbody>
+    <tr><td><b>การจัดลำดับหน้าจอ</b></td><td>เมนูแยกตามชนิดเครื่องมือ ผู้ใช้ต้องรู้ก่อนว่าจะเปิดอะไร</td>
+      <td>หน้าเดียวเรียงบนลงล่างตามลำดับงานจริง <b>Upload → Insights → Recommendation</b></td></tr>
+    <tr><td><b>บริบทบริษัท</b></td><td>ต้องเลื่อนกลับขึ้นไปดูว่ากำลังดูบริษัทอะไร</td>
+      <td>แถบบริบทค้างอยู่ด้านบนตลอด ทั้งชื่อบริษัท โซน คะแนน และ token คงเหลือ</td></tr>
+    <tr><td><b>ผลจากเอกสาร</b></td><td>อัปโหลดแล้วได้คะแนนภาษา แต่แยกอยู่คนละหน้ากับข้อเสนอ</td>
+      <td>อัปโหลดแล้วคะแนนและข้อเสนอทั้งหน้าคำนวณใหม่ทันที พร้อมระบายสีคำที่นับได้ในข้อความต้นทาง</td></tr>
+    <tr><td><b>การแก้ค่าที่ระบบอ่านผิด</b></td><td>ไม่มี</td>
+      <td>แก้ได้ทุกช่องในตาราง Extracted data พร้อมป้ายบอกที่มาของทุกตัวเลข</td></tr>
+    <tr><td><b>ข้อเสนอ</b></td><td>บอกคะแนนและตำแหน่ง</td>
+      <td>จัดลำดับข้อเสนอปรับบอร์ดพร้อมผลต่อคะแนนของแต่ละข้อ และออกเป็น Candidate Brief / Board Memo ได้</td></tr>
+    <tr><td><b>ภาษา</b></td><td>ไทยอย่างเดียว</td><td>สลับ EN / TH ได้ในส่วนข้อค้นพบและข้อเสนอ โดยตั้งค่าเริ่มต้นเป็น EN</td></tr>
+  </tbody></table></div>
+
+<h2>2 · Algorithm ใน Assessment Tools</h2>
+<p class="lead">อธิบายการเชื่อม predictive model ให้คนในที่ประชุมเห็นภาพ โดยไม่ลงรายละเอียดโค้ด</p>
+<div class="tw"><table>
+  <thead><tr><th style="width:220px">ช่วงงาน</th><th>สิ่งที่ระบบทำ</th><th style="width:150px">สถานะในต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ม.ค.–พ.ค. หลังรายงานประจำปีออก</td><td>ดึง 56-1 One Report จาก SET แล้วจัดเป็น structured Excel</td>
+      <td><span class="pill warn">ออกแบบไว้ · Phase II</span></td></tr>
+    <tr><td>Structured Excel 5 ปี</td><td>ใช้แผงข้อมูลที่มีอยู่ 209 บริษัท 928 บริษัท-ปี (2562–2566) เป็นฐานของต้นแบบ</td>
+      <td><span class="pill ok">ใช้งานจริงแล้ว</span></td></tr>
+    <tr><td>STATA / R Model</td><td>สัมประสิทธิ์จาก moderation model — promotion 0.1882 · family −1.0196 · political 0.4796 · female 3.3506 · tenure −0.0085</td>
+      <td><span class="pill ok">ผูกเข้าระบบแล้ว</span></td></tr>
+    <tr><td>NLP นับภาษา CEO</td><td>นับคำเชิงรุกและคำเชิงป้องกันจากเอกสารจริง แล้วแปลงเป็นเปอร์เซ็นไทล์ด้วยสัดส่วน pro/(pro+pre)</td>
+      <td><span class="pill warn">ใช้พจนานุกรมเปิด ยังไม่ใช่ LIWC</span></td></tr>
+    <tr><td>Validation</td><td>Spearman · AUC · Decile lift · LOYO รายปีและทั้งแผง</td>
+      <td><span class="pill ok">แสดงในหน้า Validity</span></td></tr>
+    <tr><td>Result</td><td>OI Score · Insight · Recommendation · Scenario</td>
+      <td><span class="pill ok">โฟกัสของรอบนี้</span></td></tr>
+  </tbody></table></div>
+<div class="note warn"><b>ข้อที่ต้องพูดตรง ๆ ในที่ประชุม</b> — เครื่องนับคำใช้พจนานุกรมเปิด ไม่ใช่ซอฟต์แวร์ LIWC ที่มีลิขสิทธิ์
+  ให้ผลตรงกันเชิงทิศทางแต่ค่าตัวเลขไม่ตรงกับที่รายงานในงานวิจัย · ตารางจุดยึดที่ใช้แปลงเป็นเปอร์เซ็นไทล์
+  <b>ยังเป็นค่าชั่วคราว</b> ต้องปรับเทียบกับคลังเอกสารที่ให้คะแนนด้วย LIWC จริงก่อนใช้กับลูกค้า</div>
+
+<h2>3 · Lead Users</h2>
+<div class="grid g2">
+  <div class="card"><h3>Executive Search Firm</h3>
+    <p>เปลี่ยนจาก “หาคนตามสเปคทั่วไป” เป็น “หาคนที่ปิดช่องว่างเชิงโครงสร้างของบอร์ดได้จริง”
+      พร้อมเหตุผลเชิงปริมาณที่ใช้อธิบายค่าบริการที่สูงขึ้นได้</p>
+    <table><thead><tr><th>ขั้นตอนงาน</th><th>สิ่งที่ระบบให้</th></tr></thead><tbody>
+      <tr><td>รับ brief จากคณะกรรมการสรรหา</td><td>ดึงตัวแปรบอร์ดและภาษา CEO จากเอกสาร</td></tr>
+      <tr><td>วิเคราะห์ช่องว่างของบอร์ด</td><td>ระยะห่างจากค่าที่ดีที่สุดที่พบจริงในอุตสาหกรรมเดียวกัน</td></tr>
+      <tr><td>เสนอลูกค้า</td><td>Candidate Brief หนึ่งหน้า พร้อมผลต่อคะแนนของแต่ละข้อเสนอ</td></tr>
+    </tbody></table></div>
+  <div class="card"><h3>IOD / Board Advisory</h3>
+    <p>ยกระดับ Board Evaluation จาก qualitative ล้วน เป็น quantitative + qualitative
+      และเชื่อมเรื่องธรรมาภิบาลเข้ากับ open innovation ซึ่งเป็นวาระของตลาดทุนไทย</p>
+    <table><thead><tr><th>ภารกิจ</th><th>สิ่งที่ระบบให้</th></tr></thead><tbody>
+      <tr><td>Director assessment</td><td>ประเมินโครงสร้างบอร์ดปัจจุบันเทียบกลุ่มอ้างอิง</td></tr>
+      <tr><td>Nomination committee</td><td>ข้อเสนอเชิงโครงสร้างที่มีตัวเลขรองรับ</td></tr>
+      <tr><td>Research / policy</td><td>รายงานระดับอุตสาหกรรมและการส่งออกข้อมูล</td></tr>
+    </tbody></table></div>
+</div>
+<div class="note crit"><b>ข้อห้ามที่ต้องติดไปกับทุกผลลัพธ์</b> — ระบบอธิบาย<b>คุณสมบัติเชิงโครงสร้างของคณะกรรมการ</b>
+  ไม่ใช่การชี้ตัวบุคคล · <b>ห้ามนำไปใช้ให้คะแนนหรือคัดกรองกรรมการรายบุคคล</b> เพราะเพศ อายุ
+  และความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม PDPA มาตรา 26 ·
+  ระบบจึงไม่ตั้ง “กรรมการสายนโยบาย” เป็นเป้าหมายในการสรรหา แม้สัมประสิทธิ์ในโมเดลจะเป็นบวก</div>
+
+<h2>4 · MVP Phase I — สิ่งที่ต้องมีในรอบนำเสนอนี้</h2>
+<div class="grid g2">
+  <div class="card"><h3>ต้องมี</h3><ul>
+    <li>ระบบสมาชิก ยืนยันตัวตน และ consent สำหรับข้อมูลและเอกสารที่อัปโหลด</li>
+    <li>Token unlock — Free user 3 tokens · Paid user 20 tokens</li>
+    <li>ปรับ token ด้วยมือได้สำหรับการสาธิต โดยยังไม่เชื่อมการชำระเงินจริง</li>
+    <li>รายงานเทียบอุตสาหกรรม และเทียบคู่แข่งรายบริษัทไม่เกิน 3 ราย <b>ข้ามกลุ่มอุตสาหกรรมได้</b></li>
+    <li>อัปโหลดเอกสาร → นับภาษา → สรุปข้อค้นพบ → ออกรายงาน</li>
+  </ul></div>
+  <div class="card"><h3>กติกา Free / Paid ที่ทำไว้ในต้นแบบ</h3><ul>
+    <li>รายงานบริษัทของตัวเอง <b>ฟรีเสมอ</b> (บริษัทแรกที่เปิดคือบริษัทของผู้ใช้)</li>
+    <li>รายงานฉบับเต็มของบริษัทอื่น <b>1 token</b> ต่อบริษัท ปลดล็อกแล้วดูได้ตลอด</li>
+    <li>เทียบคู่แข่งสูงสุด 3 ราย <b>1 token</b> · เปลี่ยนคู่เทียบได้ไม่จำกัดหลังปลดล็อก</li>
+    <li>รายงานระดับอุตสาหกรรมพร้อมส่งออก CSV <b>3 tokens</b></li>
+    <li>ซื้อ token ขั้นต่ำ <b>3 tokens</b> ต่อครั้ง · Pro plan เป็นแบบ token-based</li>
+    <li><b>ข้อควรระวังเรื่องความแม่นไม่เคยถูกซ่อนหลังผนังจ่ายเงิน</b> — ผู้ใช้ฟรีเห็นสรุปครบ ส่วนที่ต้องจ่ายคือรายละเอียดรายปี</li>
+  </ul></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+  <div class="card"><h3>Design principles ที่ใช้จริงในหน้า</h3><ul>
+    <li>เรียงบนลงล่างตามลำดับงานจริง ไม่ใช่ตามโครงสร้างเทคนิค</li>
+    <li>หนึ่ง action หลักต่อหนึ่งโซน ปุ่มรองอยู่ต่ำกว่าเสมอ</li>
+    <li>บริบทบริษัทค้างไว้ด้านบนตลอด</li>
+    <li>หัวข้อโซนเป็น sticky header เมื่อเลื่อน จึงไม่หลุดว่าอยู่โซนไหน</li>
+    <li>สลับ TH / EN โดยตั้งค่าเริ่มต้นเป็น EN</li>
+    <li>สีแบรนด์คุมเฉพาะส่วนตกแต่ง สีที่แทนข้อมูลเป็นชุดตายตัวที่ผ่านการตรวจตาบอดสีแล้ว</li>
+  </ul></div>
+  <div class="card"><h3>Supporting elements</h3><ul>
+    <li>Floating action bar — Generate Full Report · Save Scenario · Export Candidate Brief</li>
+    <li>Activity timeline แบบลิ้นชัก เก็บประวัติ upload / แก้ค่า / ปลดล็อก / ส่งออก</li>
+    <li>สลับ Analysis Mode และ Presentation Mode ได้จากปุ่มเดียว</li>
+    <li>บนจอประชุมและแล็ปท็อป โซนจะเรียงต่อกันแนวตั้งพร้อมหัวข้อค้างด้านบน</li>
+    <li>เอกสารที่ออกได้ — Candidate Brief และ Board Memo พิมพ์เป็น A4 ได้ทันที</li>
+  </ul></div>
+</div>
+
+<h2>5 · Validity — ตัวเลขจริง ไม่ใช่คำว่า Strong ทั้งแถว</h2>
+<p class="lead">ร่างเดิมติดป้าย Strong ให้ทุกการทดสอบ ซึ่งไม่ตรงกับผลจริงและเป็นจุดที่อาจารย์ตรวจได้ทันที
+  ตารางนี้คือค่าที่ระบบคำนวณได้จริงจากแผงข้อมูลเดียวกัน</p>
+<div class="tw"><table>
+  <thead><tr><th>Test</th><th>วัดอะไร</th><th class="n">เกณฑ์ผ่าน</th><th class="n">ค่าที่ได้จริง</th><th>ผล</th></tr></thead>
+  <tbody>
+    <tr><td>Spearman</td><td>เรียงลำดับบริษัทตาม open innovation ได้ไหม</td><td class="n">&gt; 0.15</td><td class="n">0.175</td>
+      <td><span class="pill warn">ผ่านเกณฑ์ แต่เฉียด</span></td></tr>
+    <tr><td>AUC</td><td>แยกบริษัท OI สูงออกจากที่เหลือ</td><td class="n">&gt; 0.60</td><td class="n">0.613</td>
+      <td><span class="pill warn">ผ่านเกณฑ์ แต่เฉียด</span></td></tr>
+    <tr><td>Decile lift</td><td>กลุ่มคะแนนสูงสุดเทียบกลุ่มต่ำสุด</td><td class="n">&gt; 2.0×</td><td class="n">2.34×</td>
+      <td><span class="pill ok">ผ่าน</span></td></tr>
+    <tr><td>LOYO</td><td>fit 4 ปี แล้วทำนายปีที่เหลือ</td><td class="n">&gt; 0 ทุกปี</td><td class="n">+0.17</td>
+      <td><span class="pill ok">ผ่าน</span></td></tr>
+  </tbody></table></div>
+<div class="tw" style="margin-top:14px"><table>
+  <thead><tr><th>ปี</th><th class="n">n</th><th class="n">Spearman</th><th class="n">AUC</th><th class="n">Lift</th><th>ผล</th></tr></thead>
+  <tbody>
+    <tr><td>2562 (2019)</td><td class="n">209</td><td class="n">0.332</td><td class="n">0.702</td><td class="n">4.07×</td><td><span class="pill ok">ผ่านเกณฑ์</span></td></tr>
+    <tr><td>2563 (2020)</td><td class="n">155</td><td class="n">0.109</td><td class="n">0.592</td><td class="n">1.46×</td><td><span class="pill warn">อ่อน</span></td></tr>
+    <tr><td>2564 (2021)</td><td class="n">181</td><td class="n">0.214</td><td class="n">0.639</td><td class="n">3.43×</td><td><span class="pill ok">ผ่าน</span></td></tr>
+    <tr class="bad"><td><b>2565 (2022)</b></td><td class="n">187</td><td class="n"><b>−0.023</b></td><td class="n"><b>0.494</b></td><td class="n">0.90×</td>
+      <td><span class="pill crit">สัญญาณหายทั้งปี</span></td></tr>
+    <tr><td>2566 (2023)</td><td class="n">196</td><td class="n">0.200</td><td class="n">0.624</td><td class="n">3.92×</td><td><span class="pill ok">ผ่าน</span></td></tr>
+  </tbody></table></div>
+<div class="note crit"><b>ปี 2565 ต้องพูดเอง อย่ารอให้ถูกถาม</b> — AUC 0.494 แปลว่าคะแนนไม่ได้บอกอะไรเลยในปีนั้น
+  ถ้ารายงานแต่ค่าเฉลี่ยรวมจะกลบข้อนี้ไปทั้งหมด · การนำไปใช้กับลูกค้าต้องระบุว่า
+  <b>ความสัมพันธ์ไม่คงที่ทุกปี</b> และระบบเป็นเครื่องมือวินิจฉัย ไม่ใช่การพยากรณ์</div>
+
+<h2>6 · Phase II — ออกแบบเผื่อไว้ แต่ยังไม่ต้องทำรอบนี้</h2>
+<div class="grid g3">
+  <div class="card"><h3>ระบบชำระเงิน</h3><p>เติมเงิน ชำระเงิน และใบเสร็จอิเล็กทรอนิกส์
+    แยกเป็นงานเพิ่มพร้อมประเมินงบต่างหาก · รอบนี้ปรับ token ด้วยมือสำหรับสาธิต</p></div>
+  <div class="card"><h3>ดึงข้อมูลจาก SET อัตโนมัติ</h3><p>fetch / scrape 56-1 One Report แล้วแปลงเป็น structured Excel
+    · รอบนี้ใช้แผงข้อมูล 5 ปีที่มีอยู่แล้ว</p></div>
+  <div class="card"><h3>อ่านองค์ประกอบบอร์ดจาก PDF</h3><p>ดึงสัดส่วนกรรมการจากเอกสารโดยตรง
+    · รอบนี้เติมค่าจากฐานข้อมูลมาให้ก่อนแล้วให้ผู้ใช้แก้เอง</p></div>
+</div>
+
+<h2>7 · Tech Stack สำหรับตอบคำถามในที่ประชุม</h2>
+<div class="tw"><table>
+  <thead><tr><th style="width:190px">ส่วนงาน</th><th>ใช้ในต้นแบบ</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td>Data scraping</td><td>ออกแบบด้วย Python · Phase II</td><td>รอบนี้ใช้ structured Excel 5 ปี</td></tr>
+    <tr><td>NLP และการให้คะแนน</td><td>พจนานุกรมเปิด + JavaScript ในเบราว์เซอร์</td><td>เอกสารไม่ถูกส่งออกจากเครื่องผู้ใช้เลย</td></tr>
+    <tr><td>โมเดล</td><td>สัมประสิทธิ์จาก STATA / R ฝังเป็นค่าคงที่</td><td>เปลี่ยนชุดสัมประสิทธิ์ได้จากไฟล์เดียว</td></tr>
+    <tr><td>Backtesting</td><td>Python · ย้อนหลัง 5 ปี</td><td>ระดับ TRL 6</td></tr>
+    <tr><td>Frontend</td><td>HTML / CSS / JavaScript ไฟล์เดียว</td><td>เปิดบน GitHub Pages ได้ทันที ไม่ต้องมีเซิร์ฟเวอร์</td></tr>
+    <tr><td>Fake door validation</td><td>GitHub Pages หรือ Framer + Google Sheets</td><td>เก็บ lead ก่อนสร้างระบบเต็ม</td></tr>
+  </tbody></table></div>
+
+<h2>8 · สิ่งที่ยังรอการตัดสินใจ</h2>
+<div class="note brand"><ol style="margin:0;padding-left:20px">
+  <li><b>CI ของแบรนด์</b> — สี ชื่อระบบ และโลโก้ · ต้นแบบใช้ชุด AN · RC ไปก่อน</li>
+  <li><b>นิยาม Innovation Intensity</b> และรายชื่อตัวแปรอิสระชุดใหม่ ยังรอยืนยัน</li>
+  <li><b>การแสดงชื่อบริษัทจริง</b> — ต้นแบบแสดงชื่อจริงเพราะการเทียบคู่แข่งจะไม่มีความหมายถ้าไม่มีชื่อ
+    ควรปรึกษาฝ่ายกฎหมายก่อนเปิดสาธารณะ</li>
+  <li><b>งบประมาณ</b> — ตัวเลข 58,000 บาทรวมงานออกแบบที่ระบุไว้ในร่างเดิม ยังไม่ได้ยืนยันร่วมกัน</li>
+  <li><b>วันล็อกขอบเขต</b> — ถ้าจะรักษาวัน user testing เดือนธันวาคม ขอบเขตต้องถูกล็อกในที่ประชุมรอบนี้
+    ทุกฟีเจอร์ที่เพิ่มหลังจากนั้นจะดันวันทดสอบออกไป จึงควรใช้ที่ประชุม <b>ตัดออก</b> มากกว่าเพิ่มเข้า</li>
+</ol></div>
+
+</div>
+<footer>PromoSignal DSS · Revision 1 · เอกสารประกอบการนำเสนอ ไม่ใช่ระบบจริง ·
+  ตัวเลขความแม่นทุกตัวคำนวณจากแผงข้อมูล 209 บริษัท 928 บริษัท-ปี (2562–2566) ·
+  ความสัมพันธ์เป็นเชิงสหสัมพันธ์ ไม่ใช่เชิงสาเหตุ และไม่คงที่ทุกปี ·
+  ไม่ใช่คำแนะนำการลงทุนหรือการจ้างงาน · ห้ามนำไปใช้ให้คะแนนรายบุคคล</footer>
