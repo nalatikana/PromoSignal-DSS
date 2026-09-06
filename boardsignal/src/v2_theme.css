@@ -345,3 +345,11 @@ details.blk .bd{padding:0 12px 11px}
 }
 
 .ins{align-self:start}
+
+/* ---------- โลโก้จริง OpenInnoScore (ภาพ PNG พื้นโปร่ง) ---------- */
+.logochip{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  background:#fff;border-radius:50%;padding:0;box-shadow:0 1px 3px rgba(15,25,35,.18);overflow:hidden}
+.logochip img{width:78%;height:78%;object-fit:contain;display:block}
+.logochip.plain{background:transparent;box-shadow:none}
+.logochip.plain img{width:100%;height:100%}
+.brandbox .logochip,.gateart .logochip{margin:0}

@@ -645,9 +645,11 @@ function memoHtml(c) {
   const up = w.steps.filter(x => x.d > 0).sort((x, y) => y.d - x.d), dn = w.steps.filter(x => x.d < 0).sort((x, y) => x.d - y.d);
   return `<div class="mm">
     <div class="mmhead">
-      <div><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)">บันทึกสำหรับที่ประชุมลงทุน · Board Signal</div>
+      <div style="display:flex;gap:9px;align-items:flex-start">
+      <img src="${LOGO_SMALL}" alt="" style="width:26px;height:26px;flex:none;margin-top:1px">
+      <div><div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)">บันทึกสำหรับที่ประชุมลงทุน · OpenInnoScore™</div>
         <div class="mmt">${esc(c.t)} · ${esc(c.n)}</div>
-        <div class="mmn">${esc(IND[c.ind])} · อันดับ ${rk} จาก ${pool.length} ในอุตสาหกรรม · ข้อมูลปี 2566 · ${esc(z.l)}</div></div>
+        <div class="mmn">${esc(IND[c.ind])} · อันดับ ${rk} จาก ${pool.length} ในอุตสาหกรรม · ข้อมูลปี 2566 · ${esc(z.l)}</div></div></div>
       <div><div class="mmipi">${c.ipi}</div>
         <div style="font-size:9px;color:var(--ink-3);text-align:right;line-height:1.5">OI วันนี้<br>
           ${u.delta > 0 ? "เพดานเชิงโครงสร้าง " + fmt(u.best) + " (+" + fmt(u.delta) + ")" : "ถึงเพดานของกลุ่มแล้ว"}<br>
@@ -983,17 +985,22 @@ S.docs = S.docs || [];
 const setOv = (k, v) => { (S.ov[S.t] = S.ov[S.t] || {})[k] = v; save(); };
 const clearOv = () => { delete S.ov[S.t]; S.ceo = null; S.docs = []; S.wi = null; save(); };
 
-function viewDocs() {
-  const c = cur(), ist = DATA.indstats[c.ind];
-  const st = (S.docs.length || S.ceo) ? (isEdited() ? 2 : 1) : 0;
+// แถบลำดับงาน Upload → Insights → Recommendation — ให้เห็นตำแหน่งเดียวกันทั้ง Zone A / B / C
+function flowBar(st) {
   const steps = [
     { h: T("Upload documents", "อัปโหลดเอกสาร"), p: T("56-1 One Report · Annual Report · CEO letter · meeting transcript", "56-1 One Report · รายงานประจำปี · สารจาก CEO · transcript การประชุม") },
     { h: T("Generate insights", "สรุปเป็นข้อค้นพบ"), p: T("The model scores the firm and explains what drives it, in the tone you choose.", "โมเดลคิดคะแนนแล้วอธิบายว่าอะไรเป็นตัวขับ ด้วยโทนที่เลือกได้") },
     { h: T("Recommend action", "เสนอสิ่งที่ควรทำ"), p: T("Ranked board-refresh actions with the score impact and feasibility of each.", "จัดลำดับการปรับบอร์ด พร้อมผลต่อคะแนนและความยากง่ายของแต่ละข้อ") },
   ];
-  const flow = `<div class="flowbar">${steps.map((s, i) =>
-    `<div class="fstep ${i < st ? "done" : i === st ? "on" : ""}"><div class="fn">${i < st ? "✓" : i + 1}</div>
+  return `<div class="flowbar">${steps.map((s, i) =>
+    `<div class="fstep ${i < st ? "done" : i === st ? "on" : ""}"><div class="fn">${i < st ? "\u2713" : i + 1}</div>
       <h4>${esc(s.h)}</h4><p>${esc(s.p)}</p></div>`).join("")}</div>`;
+}
+
+function viewDocs() {
+  const c = cur(), ist = DATA.indstats[c.ind];
+  const st = (S.docs.length || S.ceo) ? (isEdited() ? 2 : 1) : 0;
+  const flow = flowBar(st);
 
   const cards = EXTRACT.map(f => {
     const cf = confOf(f.k), v = c[f.k], ed = ((S.ov || {})[S.t] || {})[f.k] !== undefined;
@@ -1270,6 +1277,7 @@ function scenarioOf(c) {
 }
 
 function viewZoneC() {
+  const flow = flowBar(2);
   const c = cur(), sc = scenarioOf(c), rec = recL(c), tg = optimalBoard(c), pool = indComps(c.ind);
   const F = flagsL(c), e = engagement(c), w = waterfall(c);
   const bars = [
@@ -1304,7 +1312,7 @@ function viewZoneC() {
   return pageHead("Zone C", "Board Refresh Recommendation Engine",
     T("Actionable recommendations ranked by the score impact each change would produce, filtered by the constraints and time horizon you set.",
       "ข้อเสนอที่ทำต่อได้ จัดลำดับตามผลต่อคะแนน และกรองด้วยข้อจำกัดกับกรอบเวลาที่ตั้งไว้"))
-    + `<div class="grid gzc">
+    + flow + `<div class="grid gzc">
     <div style="display:grid;gap:14px;align-content:start">
       <div class="card"><h3>${T("Current vs recommended", "ปัจจุบันเทียบกับที่แนะนำ")}</h3>
         <p class="desc">${T(`Reference group: ${pool.length} firms in ${indL(c.ind)}. Targets are values observed in the group, not ideals.`,
@@ -1408,10 +1416,12 @@ function printDoc(title, inner) {
 function briefHtml(c) {
   const sc = scenarioOf(c), pool = indComps(c.ind), rm = validRemark();
   return `<div class="mm">
-    <div class="mmhead"><div>
+    <div class="mmhead"><div style="display:flex;gap:9px;align-items:flex-start">
+      <img src="${LOGO_SMALL}" alt="" style="width:26px;height:26px;flex:none;margin-top:1px">
+      <div>
       <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand)">Candidate Brief · โจทย์การสรรหากรรมการ · OpenInnoScore™</div>
       <div class="mmt">${esc(c.t)} · ${esc(c.n)}</div>
-      <div class="mmn">${esc(IND[c.ind])} · กลุ่มอ้างอิง ${pool.length} บริษัท · ข้อมูลปี 2566 · กรอบเวลา ${esc(sc.hz.th)}</div></div>
+      <div class="mmn">${esc(IND[c.ind])} · กลุ่มอ้างอิง ${pool.length} บริษัท · ข้อมูลปี 2566 · กรอบเวลา ${esc(sc.hz.th)}</div></div></div>
       <div><div class="mmipi">${c.ipi}</div>
         <div style="font-size:9px;color:var(--ink-3);text-align:right">OI Score วันนี้<br>ฉากทัศน์ที่แนะนำ ${fmt(sc.after)}</div></div></div>
     <div class="mmb"><h4>โจทย์ของการสรรหารอบนี้</h4>
@@ -1463,7 +1473,11 @@ NAV.push(
   { id: "valid", g: 3, ico: "✓", lab: "Validity" },
 );
 VIEWS.docs = viewDocs; VIEWS.zonec = viewZoneC;
-viewFit = function () { return _viewFit() + (isUnlocked("report") ? insightCards(cur()) : ""); };
+viewFit = function () {
+  const h = _viewFit(), i = h.indexOf("</div>", h.indexOf('class="pagehead"'));
+  const body = i > 0 ? h.slice(0, i + 6) + flowBar(1) + h.slice(i + 6) : flowBar(1) + h;
+  return body + (isUnlocked("report") ? insightCards(cur()) : "");
+};
 VIEWS.fit = viewFit;
 
 const WIRES2 = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio, sector: wireSector,
@@ -1494,8 +1508,8 @@ render = function () {
 
 /* ---------------------------------------------------------------- เริ่มระบบชั้นแก้ไขครั้งที่ 1 */
 (function initV2() {
-  if ($("#sLogo")) $("#sLogo").innerHTML = LOGO_DARK.replace('width="120" height="120"', 'width="32" height="32"');
-  if ($("#gLogo")) $("#gLogo").innerHTML = LOGO_DARK.replace('width="120" height="120"', 'width="40" height="40"');
+  if ($("#sLogo")) $("#sLogo").innerHTML = logoChip(34);
+  if ($("#gLogo")) $("#gLogo").innerHTML = logoChip(42);
   const opts = COMPS.slice().sort((a, b) => b.ipi - a.ipi)
     .map(x => `<option value="${esc(x.t)}">${esc(x.t)} · ${esc(x.n)}</option>`).join("");
   const gco = $("#gCo"); if (gco) { gco.innerHTML = opts; gco.value = S.freeCo || S.t; }

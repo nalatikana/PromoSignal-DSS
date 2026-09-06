@@ -4,9 +4,15 @@ ROOT = Path(__file__).resolve().parent
 SHARED = ROOT.parent / "src"
 rd = lambda p: Path(p).read_text(encoding="utf-8")
 FONT = rd(SHARED / "sarabun_font.css")
-MARK = rd(ROOT / "src" / "logo_mark.svg")
-MARK_D = rd(ROOT / "src" / "logo_mark_dark.svg")
-sized = lambda svg, n: svg.replace('width="120" height="120"', f'width="{n}" height="{n}"')
+import base64
+b64png = lambda p: "data:image/png;base64," + base64.b64encode(Path(p).read_bytes()).decode()
+MARK_PNG = b64png(ROOT / "src" / "brandsrc" / "ois_mark_256.png")
+LOCKUP_PNG = b64png(ROOT / "src" / "brandsrc" / "ois_lockup_480.png")
+# โลโก้จริงของ OpenInnoScore™ (PNG พื้นโปร่ง) — บนพื้นเข้มวางในวงกลมขาว
+chip = lambda n: (f'<span class="logochip" style="width:{n}px;height:{n}px">'
+                  f'<img src="{MARK_PNG}" alt="OpenInnoScore"></span>')
+plain = lambda n: f'<img class="logoplain" src="{MARK_PNG}" alt="OpenInnoScore" style="width:{n}px;height:{n}px">'
+lockup = lambda n: f'<img src="{LOCKUP_PNG}" alt="OpenInnoScore" style="width:{n}px;height:auto;display:block">' 
 
 BASE = """
 :root{--navy:#1F2B37;--navy-2:#2E4257;--blue:#4F76F6;--blue-2:#3559D9;--mint:#77F2A1;--mint-ink:#0E8C4E;
@@ -15,6 +21,10 @@ BASE = """
  --crit:#C0392F;--crit-bg:#FBECEB;--crit-line:#F2CDC9;--blue-soft:#EBF0FE;--blue-line:#C2D2FC;
  --shadow:0 1px 2px rgba(31,43,55,.05),0 14px 38px rgba(31,43,55,.07)}
 *{box-sizing:border-box}
+.logochip{display:inline-flex;align-items:center;justify-content:center;flex:none;background:#fff;
+ border-radius:50%;overflow:hidden;box-shadow:0 1px 3px rgba(15,25,35,.18)}
+.logochip img{width:78%;height:78%;object-fit:contain;display:block}
+.logoplain{display:block;object-fit:contain}
 body{margin:0;background:var(--bg);color:var(--ink);
  font-family:Sarabun,"TH SarabunPSK","Leelawadee UI",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
  font-weight:300;font-size:15.5px;line-height:1.72}
@@ -83,8 +93,8 @@ footer{max-width:1060px;margin:32px auto 0;padding:18px 24px 40px;border-top:1px
 
 # ---------------------------------------------------------------- หน้าสเปก
 BODY = rd(ROOT / "src" / "ois_spec_body.html")
-BODY = BODY.replace('<span id="hdrLogo"></span>', sized(MARK_D, 44))
-BODY = BODY.replace('<span id="specLogo"></span>', sized(MARK, 104))
+BODY = BODY.replace('<span id="hdrLogo"></span>', chip(44))
+BODY = BODY.replace('<span id="specLogo"></span>', plain(104))
 spec = f"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OpenInnoScore™ — สเปกและแผนงาน Prototype Phase I</title>
@@ -168,8 +178,9 @@ HUB_BODY = """
     <ol>
       <li><b>ธีมและ CI</b> — น้ำเงินเข้ม #1F2B37 · ฟ้า #4F76F6 · มิ้นต์ #77F2A1 · พื้นอ่อน · ฟอนต์ Sarabun ฝังในไฟล์
         (เดิมเป็น Kanit และมีชุดสีให้เลือก 3 ชุด)</li>
-      <li><b>โลโก้</b> — เครื่องหมายวงกลมที่สื่อ Moderation Analysis · จุดกลาง = CEO Regulatory Focus ·
-        จุดรอบ = Family / Female / Political / Tenure · <b>ความหนาของเส้นแปรตามขนาดสัมประสิทธิ์จริง</b> · ลูกศรมิ้นต์ = ผลลัพธ์ Open Innovation</li>
+      <li><b>โลโก้</b> — ใช้<b>ไฟล์โลโก้จริงของ OpenInnoScore™</b> ที่ส่งมา ไม่ได้วาดใหม่ ·
+        จุดกลาง = CEO Regulatory Focus · จุดรอบ = Family / Female / Political / Tenure ·
+        ลูกศรมิ้นต์ = ผลลัพธ์ Open Innovation</li>
       <li><b>ชื่อเรียก</b> — Board Signal → OpenInnoScore™ · IPI → OI Score · เครดิต → token</li>
       <li><b>การจัดหน้า</b> — เมนูจัดใหม่เป็น Zone A / B / C แล้วตามด้วยเครื่องมือขยายผลเดิมทั้งหมด ไม่มีหน้าไหนถูกตัดออก</li>
       <li><b>สิ่งที่เพิ่มเข้ามา</b> — Zone A ทั้งหน้า · การ์ด insight พร้อมผลต่อคะแนนและ Evidence · โทน 4 แบบ · EN / TH ·
@@ -188,7 +199,7 @@ HUB_BODY = """
 hub = f"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OpenInnoScore™ — เลือกเวอร์ชันต้นแบบ</title>
-<style>{FONT}</style><style>{BASE}{HUB_CSS}</style></head><body>{HUB_BODY.replace("__LOGO__", sized(MARK, 46))}</body></html>"""
+<style>{FONT}</style><style>{BASE}{HUB_CSS}</style></head><body>{HUB_BODY.replace("__LOGO__", plain(48))}</body></html>"""
 (ROOT / "out" / "hub.html").write_text(hub, encoding="utf-8")
 for f in ["OpenInnoScore_Spec.html", "hub.html"]:
     p = ROOT / "out" / f
