@@ -415,7 +415,7 @@ function viewFit() {
 
   const body = `
   <div class="grid g-side">
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card" style="text-align:center">
         <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Innovation Propensity Index</div>
         ${gauge(c.ipi, "เปอร์เซ็นไทล์ในตลาด", medIPI)}
@@ -445,7 +445,7 @@ function viewFit() {
       </div>
     </div>
 
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card">
         <h3><span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span>การวินิจฉัย · ${z.th}</h3>
         <p style="font-size:13.5px;color:var(--ink);margin:8px 0 15px;line-height:1.7">${z.d}</p>

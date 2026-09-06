@@ -89,8 +89,13 @@ button{font-family:inherit}
 .main{min-width:0;display:flex;flex-direction:column}
 .topbar{
   position:sticky;top:0;z-index:40;background:var(--panel);border-bottom:1px solid var(--line);
-  display:flex;align-items:center;gap:12px;padding:11px 22px;flex-wrap:wrap
+  display:flex;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 22px;flex-wrap:wrap
 }
+.tgroup{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.tgroup.end{justify-content:flex-end}
+.segwrap{display:inline-flex;align-items:center;gap:6px}
+.seglab{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:500;white-space:nowrap}
+@media(max-width:1150px){.seglab{display:none}}
 .wrap{padding:22px;max-width:1240px;width:100%}
 .pagehead{margin-bottom:18px}
 .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:600;margin-bottom:5px}
@@ -105,8 +110,10 @@ button{font-family:inherit}
 .sel:focus,.inp:focus{outline:2px solid var(--brand);outline-offset:-1px}
 .btn{
   font-size:13px;font-weight:400;border:1px solid transparent;border-radius:9px;padding:8px 15px;
-  cursor:pointer;transition:.13s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap
+  cursor:pointer;transition:.13s;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  white-space:nowrap;max-width:100%
 }
+@media(max-width:1120px){.btn{white-space:normal;text-align:center;line-height:1.35}}
 .btn.p{background:var(--brand);color:var(--brand-ink)}
 .btn.p:hover{filter:brightness(1.08)}
 .btn.s{background:var(--panel-2);color:var(--ink);border-color:var(--line)}
@@ -140,6 +147,9 @@ button{font-family:inherit}
 .g-side{grid-template-columns:minmax(0,320px) minmax(0,1fr)}
 .g-side-r{grid-template-columns:minmax(0,1fr) minmax(0,340px)}
 .grid>*{min-width:0}
+/* คอลัมน์ซ้อนในกริด — บังคับแทร็กเดียวกว้างเท่าคอลัมน์ ไม่ให้ยืดตามเนื้อหา */
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.stack>*{min-width:0}
 @media(max-width:1080px){.g-side,.g-side-r,.g3,.g4{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.app{grid-template-columns:1fr}.side{position:static;height:auto}
   .g2,.g3,.g4,.g-side,.g-side-r{grid-template-columns:1fr}
@@ -317,12 +327,13 @@ details.blk .bd{padding:0 12px 11px}
 .ins h4{font-size:14.5px;margin:4px 0 5px;line-height:1.42}
 .ins p{font-size:12.4px;color:var(--ink-2);line-height:1.66;margin:0}
 .ins .imp{font-size:16px;font-weight:600;white-space:nowrap}
-.gzc{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr) minmax(0,320px);gap:14px}
+.gzc{display:grid;grid-template-columns:minmax(0,322px) minmax(0,1fr) minmax(0,320px);gap:14px}
 .gzc>*{align-self:start}
 @media(max-width:1180px){.gzc{grid-template-columns:1fr 1fr}.gzc>:last-child{grid-column:1/-1}}
 @media(max-width:760px){.gzc{grid-template-columns:1fr}.flowbar{grid-template-columns:1fr}
   .fstep{border-right:0;border-bottom:1px solid var(--line)}}
-.cmprow{display:grid;grid-template-columns:112px minmax(0,1fr) 66px;gap:10px;align-items:center;font-size:12.2px;margin:5px 0}
+.cmprow{display:grid;grid-template-columns:minmax(0,104px) minmax(0,1fr) minmax(52px,auto);gap:9px;align-items:center;font-size:12.2px;margin:5px 0}
+.cmprow>*{min-width:0;overflow-wrap:anywhere}
 .cmprow .tk{height:14px;border-radius:8px;background:var(--panel-2);position:relative;overflow:hidden}
 .cmprow .fl{position:absolute;top:0;bottom:0;left:0;border-radius:8px;background:var(--ok)}
 .cmprow .fl.now{background:var(--q3)}
@@ -346,12 +357,17 @@ details.blk .bd{padding:0 12px 11px}
 /* ---------------------------------------------- แท็บเล็ตและจอประชุม
    ตามเอกสาร: โซนเรียงต่อกันแนวตั้ง หัวข้อค้างด้านบน และการ์ดข้อเสนอกว้างเต็ม */
 @media(max-width:900px){
-  .grid.g2,.grid.g3,.grid.g4,.grid.g-side,.grid.g-side-r,.gzc{grid-template-columns:1fr!important}
+  .grid.g2,.grid.g-side,.grid.g-side-r,.gzc{grid-template-columns:1fr!important}
+  .grid.g3,.grid.g4{grid-template-columns:1fr 1fr!important}   /* ตัวเลขสรุปยังอ่านเป็นตารางได้ ไม่ต้องยืดเป็นแถบยาว */
   .flowbar{grid-template-columns:1fr}
   .fstep{border-right:0;border-bottom:1px solid var(--line)}
   .excard input,.excard select{min-width:0;max-width:100%}
   .wrap{max-width:100%}
   table{min-width:0}
+}
+@media(max-width:600px){
+  .grid.g3,.grid.g4{grid-template-columns:1fr!important}
+  .grid.g4.tight,.grid.g3.tight{grid-template-columns:1fr 1fr!important}
 }
 
 .ins{align-self:start}
@@ -450,17 +466,19 @@ details.blk .bd{padding:0 12px 11px}
 
   <div class="main">
     <header class="topbar">
-      <select class="sel" id="selInd" style="max-width:210px"></select>
-      <select class="sel" id="selCo" style="max-width:270px"></select>
-      <span class="chip" id="chipZone"></span>
-      <div class="spacer"></div>
-      <span class="chip credit" id="chipCredit"></span>
-      <button class="btn p" id="btnTopUp" style="padding:6px 13px;font-size:12px">เติมเครดิต</button>
-      <div class="seg" id="segTone" aria-label="โทนของข้อความ"></div>
-      <div class="seg" id="segLang" aria-label="ภาษา">
-        <button type="button" data-lang="EN" aria-selected="true">EN</button>
-        <button type="button" data-lang="TH" aria-selected="false">TH</button></div>
-      <button class="iconbtn" id="btnMode" title="สลับโหมดสว่าง/มืด">◐</button>
+      <div class="tgroup">
+        <select class="sel" id="selInd" style="max-width:210px"></select>
+        <select class="sel" id="selCo" style="max-width:270px"></select>
+        <span class="chip" id="chipZone"></span>
+      </div>
+      <div class="tgroup end">
+        <span class="chip credit" id="chipCredit"></span>
+        <button class="btn p" id="btnTopUp" style="padding:6px 13px;font-size:12px">เติมเครดิต</button>
+        <span class="seg" id="segLang" role="group" aria-label="ภาษา / Language">
+          <button type="button" data-lang="EN" aria-selected="true">EN</button>
+          <button type="button" data-lang="TH" aria-selected="false">TH</button></span>
+        <button class="iconbtn" id="btnMode" title="สลับโหมดสว่าง/มืด" aria-label="สลับโหมดสว่าง/มืด">◐</button>
+      </div>
     </header>
 
     <div class="wrap">
@@ -1056,7 +1074,7 @@ function viewFit() {
 
   const body = `
   <div class="grid g-side">
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card" style="text-align:center">
         <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">Innovation Propensity Index</div>
         ${gauge(c.ipi, "เปอร์เซ็นไทล์ในตลาด", medIPI)}
@@ -1086,7 +1104,7 @@ function viewFit() {
       </div>
     </div>
 
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card">
         <h3><span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span>การวินิจฉัย · ${z.th}</h3>
         <p style="font-size:13.5px;color:var(--ink);margin:8px 0 15px;line-height:1.7">${z.d}</p>
@@ -2480,7 +2498,7 @@ function investBlock(c) {
         เพราะเป็นคุณสมบัติที่ไม่ควรตั้งเป็นเกณฑ์ในการสรรหากรรมการ · ตัวเลขทั้งหมดเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การรับประกันผล</div>
     </div>
 
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card">
         <h3>ลำดับการเข้าพบ</h3>
         <p class="desc">ควรคุยกับบริษัทไหนก่อน — รวมศักยภาพที่เพิ่มได้ ความพร้อมของผู้นำ และระยะห่างจากผู้นำในกลุ่ม</p>
@@ -3143,7 +3161,7 @@ const LEVEL_EN = { "สูง": "High", "ปานกลาง": "Moderate", "�
 const levelL = l => S.lang === "EN" ? (LEVEL_EN[l] || l) : l;
 const TONES = [
   { k: "investor", en: "Investor", th: "นักลงทุน" }, { k: "board", en: "Board", th: "คณะกรรมการ" },
-  { k: "search", en: "Search Firm", th: "Search Firm" }, { k: "iod", en: "IOD", th: "IOD" },
+  { k: "search", en: "Search Firm", th: "บริษัทสรรหา" }, { k: "iod", en: "IOD", th: "IOD" },
 ];
 const TONE_IMPL = {
   investor: {
@@ -3303,7 +3321,7 @@ function viewDocs() {
           ${T("The year-on-year comparison needs the firm-level panel for every year, which is Phase II. The prototype uses the 2023 snapshot.",
       "การเทียบกับปีก่อนต้องใช้แผงข้อมูลรายบริษัทรายปี ซึ่งอยู่ใน Phase II · ต้นแบบใช้ภาพปี 2566")}</div>
       </div>
-      <div style="display:grid;gap:14px;align-content:start">
+      <div class="stack">
         <div class="card">
           <h3>${T("Extracted data summary", "สรุปข้อมูลที่ดึงได้")}
             ${isEdited() ? `<span class="pill blue">${S.ceo ? T("updated from document", "อัปเดตจากเอกสาร") : T("edited by hand", "แก้ด้วยมือ")}</span>` : ""}</h3>
@@ -3428,6 +3446,13 @@ function insightList(c) {
       ["Spearman", fmt(DATA.validYear.all.sp, 3)], ["AUC", fmt(DATA.validYear.all.auc, 3)]] });
   return out;
 }
+/** ตัวเลือกโทนของข้อความ — อยู่ในโซนที่มันเปลี่ยนผลจริง ไม่ใช่ในแถบบน */
+function toneBar() {
+  return `<span class="segwrap"><span class="seglab">${T("Tone", "โทน")}</span>
+    <span class="seg" role="group" aria-label="${T("Tone of voice", "โทนของข้อความ")}">${TONES.map(t =>
+    `<button type="button" data-tone="${t.k}" aria-selected="${S.tone === t.k}">${esc(T(t.en, t.th))}</button>`).join("")}</span></span>`;
+}
+
 function insightCards(c) {
   const list = insightList(c).slice().sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
   const ist = DATA.indstats[c.ind], pool = indComps(c.ind), med = k => qAt(pool.map(x => x[k]), .5);
@@ -3442,7 +3467,8 @@ function insightCards(c) {
       <div><h3>Zone B · Automated Insight Generator</h3>
         <p class="desc" style="margin-bottom:0">${T("Model output turned into decision-ready statements, in the tone of the audience in the room. Sorted by impact.",
     "แปลผลของโมเดลเป็นข้อความที่ตัดสินใจต่อได้ ด้วยโทนของผู้ฟังในห้องนั้น เรียงตามขนาดของผล")}</p></div>
-      <button class="btn s" id="btnRegen">${T("Regenerate", "สร้างใหม่")}</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${toneBar()}
+        <button class="btn s" id="btnRegen">${T("Regenerate", "สร้างใหม่")}</button></div>
     </div>
     <div class="peerstrip">${cells.map(x => `<div class="pcell"><div class="k">${esc(x.k)}</div>
       <div class="v num">${x.v}</div><div class="d" style="color:${x.d > 0 ? "var(--ok)" : x.d < 0 ? "var(--crit)" : "var(--ink-3)"}">
@@ -3555,8 +3581,9 @@ function viewZoneC() {
   return pageHead("Zone C", "Board Refresh Recommendation Engine",
     T("Actionable recommendations ranked by the score impact each change would produce, filtered by the constraints and time horizon you set.",
       "ข้อเสนอที่ทำต่อได้ จัดลำดับตามผลต่อคะแนน และกรองด้วยข้อจำกัดกับกรอบเวลาที่ตั้งไว้"))
+    + `<div style="display:flex;justify-content:flex-end;margin:-8px 0 12px">${toneBar()}</div>`
     + flow + `<div class="grid gzc">
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="card"><h3>${T("Current vs recommended", "ปัจจุบันเทียบกับที่แนะนำ")}</h3>
         <p class="desc">${T(`Reference group: ${pool.length} firms in ${indL(c.ind)}. Targets are values observed in the group, not ideals.`,
       `กลุ่มอ้างอิง ${pool.length} บริษัทในกลุ่ม${IND[c.ind]} · เป้าหมายเป็นค่าที่พบจริง ไม่ใช่ค่าอุดมคติ`)}</p>${cmp}</div>
@@ -3602,7 +3629,7 @@ function viewZoneC() {
         ${waterfallSvg(c)}</div>
     </div>
 
-    <div style="display:grid;gap:14px;align-content:start">
+    <div class="stack">
       <div class="scn"><small>${T("Scenario impact", "ผลของฉากทัศน์")}</small>
         <div class="big">${sc.now} <span style="opacity:.5">→</span> <em>${fmt(sc.after)}</em></div>
         <p>${sc.after > sc.now
@@ -3723,6 +3750,198 @@ viewFit = function () {
 };
 VIEWS.fit = viewFit;
 
+
+/* ============================================================================
+   What-if Studio · โหมดทดลองสำหรับผู้ใช้ Free
+   เปิดให้เล่นจริง 1 ตัวแปร ด้วยเอนจินตัวเดียวกับ Pro — ไม่ใช่ภาพเบลอ
+   ============================================================================ */
+const TZ_LABEL = { fem: { th: "สัดส่วนกรรมการหญิง", en: "Female directors" },
+  fam: { th: "สัดส่วนกรรมการครอบครัว", en: "Family-affiliated directors" },
+  ten: { th: "อายุงานเฉลี่ยของบอร์ด", en: "Average board tenure" } };
+const TZ_WHY = {
+  fem: { th: "สัมประสิทธิ์ปฏิสัมพันธ์ของกรรมการหญิงสูงที่สุดในโมเดล (β = 3.35) จึงเป็นคันโยกที่ขยับคะแนนได้มากที่สุด",
+    en: "Female representation carries the largest interaction coefficient in the model (β = 3.35), so it moves the score most." },
+  fam: { th: "สัดส่วนกรรมการที่ผูกกับครอบครัวมีสัมประสิทธิ์เป็นลบ (β = −1.02) การลดลงจึงเพิ่มคะแนน",
+    en: "Family-affiliated seats carry a negative coefficient (β = −1.02), so reducing them raises the score." },
+  ten: { th: "อายุงานเฉลี่ยที่ยาวขึ้นลดการขยายสัญญาณเล็กน้อย (β = −0.009) การหมุนเวียนจึงช่วยได้",
+    en: "Longer average tenure slightly dampens amplification (β = −0.009), so rotation helps." } };
+
+/** เลือกตัวแปรที่ให้ผลบวกมากที่สุดจริง ๆ ของบริษัทนี้มาเปิดให้ทดลองฟรี */
+function teaserKey(c) {
+  const up = leversV2(c).filter(x => x.d > 0);
+  return up.length ? up[0].k : "fem";
+}
+/** ช่วงที่ให้ทดลอง = จากค่าจริงของบริษัท ไปถึงค่าที่ดีที่สุดเท่าที่พบจริงในอุตสาหกรรม
+ *  ไม่ให้เลื่อนเกินเพดานนั้น เพื่อให้ "ตัวเดียว" ไม่มีวันมากกว่า "ครบทุกตัว" */
+function tzRange(c, k) {
+  const tg = optimalBoard(c);
+  return { lo: Math.min(c[k], tg[k]), hi: Math.max(c[k], tg[k]) };
+}
+function tzState(c) {
+  const k = teaserKey(c), r = tzRange(c, k);
+  if (!S.tz || S.tz.t !== c.t || S.tz.k !== k) S.tz = { t: c.t, k, v: c[k] };
+  S.tz.v = clamp(S.tz.v, r.lo, r.hi);
+  return S.tz;
+}
+const tzProfile = (c, k, v) => Object.assign(profOf(c), { [k]: v });
+
+function studioTeaser(c) {
+  const z = tzState(c), k = z.k, ctrl = WI_CTRL.find(x => x.k === k) || WI_CTRL[0], rg = tzRange(c, k);
+  const sim = ipiAt(c, tzProfile(c, k, z.v)), d = sim - c.ipi;
+  const amp1 = ampOf(k === "fam" ? z.v : c.fam, c.pol, k === "fem" ? z.v : c.fem, k === "ten" ? z.v : c.ten);
+  const z0 = zoneOf(c.promo, c.amp), z1 = zoneOf(c.promo, amp1);
+  const u = upsideOf(c), lab = T(TZ_LABEL[k].en, TZ_LABEL[k].th);
+  const best = Math.max(u.best, sim);
+  const dc = v => v > 0 ? "var(--ok)" : v < 0 ? "var(--crit)" : "var(--ink)";
+
+  const proItems = [
+    { h: T("All four board levers at once", "ปรับครบทั้งสี่คันโยกพร้อมกัน"),
+      p: T("Female · family · tenure · policy network — combined, not one at a time.", "หญิง · ครอบครัว · อายุงาน · เครือข่ายเชิงนโยบาย — รวมกัน ไม่ใช่ทีละตัว") },
+    { h: T("CEO language from your own files", "วัดภาษา CEO จากไฟล์ของคุณเอง"),
+      p: T("Drop in a 56-1 or an annual report; the wording is scored in your browser, never uploaded.", "วางไฟล์ 56-1 หรือรายงานประจำปี ระบบนับคำในเบราว์เซอร์ของคุณเอง ไม่ส่งขึ้นเซิร์ฟเวอร์") },
+    { h: T("Scenarios pushed in from Zone C", "รับฉากทัศน์จาก Zone C มาต่อยอด"),
+      p: T("Send a ranked recommendation straight into the simulator and keep tuning it.", "ส่งข้อเสนอที่จัดลำดับแล้วเข้าเครื่องจำลองแล้วปรับต่อได้ทันที") },
+    { h: T("Validity broken out by year", "ตาราง Validity แยกรายปี"),
+      p: T("See which year the model holds up in and which year it does not.", "เห็นว่าปีไหนโมเดลอยู่ ปีไหนไม่อยู่ แทนที่จะเห็นแค่ผลสรุป") },
+  ];
+
+  return `<div class="grid g-side-r">
+    <div class="stack">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);font-weight:500">
+              ${T("Live trial · real engine", "โหมดทดลอง · ใช้เอนจินตัวจริง")}</div>
+            <h3 style="margin:3px 0 0">${T(`Try one lever — ${lab}`, `ลองปรับ ${lab}`)}
+              <span style="color:var(--ink-3);font-weight:300">· ${esc(c.t)}</span></h3>
+          </div>
+          <span class="pill ok">${T("free", "ฟรี")}</span>
+        </div>
+        <p class="desc">${T(
+    "This is not a mock-up. The slider runs the same moderation equation Pro users run — only the other variables are pinned to this firm's real values.",
+    "นี่ไม่ใช่ภาพจำลอง ตัวเลื่อนนี้คิดด้วยสมการ moderation ตัวเดียวกับที่ผู้ใช้ Pro ใช้ — ต่างกันแค่ตัวแปรอื่นถูกตรึงไว้ที่ค่าจริงของบริษัท")}</p>
+
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin:14px 0 4px">
+          <span>${esc(lab)}</span>
+          <span class="num"><b>${ctrl.fmt(z.v)}</b>
+            <span style="color:var(--ink-3);font-size:10.5px">${T("actual", "ค่าจริง")} ${ctrl.fmt(c[k])}</span></span></div>
+        <input type="range" id="tzSl" min="${rg.lo}" max="${rg.hi}" step="${ctrl.step}" value="${z.v}"
+          style="width:100%;accent-color:var(--brand)">
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3);margin-top:3px">
+          <span>${ctrl.fmt(rg.lo)}${rg.lo === c[k] ? " · " + T("this firm today", "ค่าจริงวันนี้") : ""}</span>
+          <span>${ctrl.fmt(rg.hi)}${rg.hi !== c[k] ? " · " + T("best seen in this industry", "ดีที่สุดที่พบในอุตสาหกรรมนี้") : ""}</span></div>
+
+        <div class="grid g4 tight" style="gap:10px;margin:15px 0 12px">
+          <div class="stat"><div class="k">${T("OI today", "OI ปัจจุบัน")}</div><div class="v num">${c.ipi}</div>
+            <div class="u">${esc(ZONES[z0].l)}</div></div>
+          <div class="stat hero"><div class="k">${T("OI simulated", "OI จำลอง")}</div><div class="v num">${sim}</div>
+            <div class="u">${esc(ZONES[z1].l)}</div></div>
+          <div class="stat"><div class="k">${T("Change", "เปลี่ยนแปลง")}</div>
+            <div class="v num" style="color:${dc(d)}">${d > 0 ? "+" : ""}${d}</div>
+            <div class="u">${d > 0 ? T("▲ better", "▲ ดีขึ้น") : d < 0 ? T("▼ worse", "▼ แย่ลง") : T("unchanged", "เท่าเดิม")}</div></div>
+          <div class="stat"><div class="k">${T("Zone", "โซนกลยุทธ์")}</div>
+            <div class="v" style="font-size:16px;color:${z1 !== z0 ? "var(--ok)" : "var(--ink)"}">
+              ${z1 !== z0 ? T("moves", "ย้าย") : T("same", "อยู่โซนเดิม")}</div>
+            <div class="u">${z1 !== z0 ? esc(ZONES[z0].l) + " → " + esc(ZONES[z1].l) : esc(ZONES[z0].l)}</div></div>
+        </div>
+        ${boxplot(IPI_ALL, sim, T("OI · 196 firms", "OI · 196 บริษัท"))}
+        <div class="legend"><span><i class="dia" style="background:var(--ink)"></i>${T("simulated", "ค่าจำลอง")} ${sim}</span>
+          <span style="color:var(--ink-3)">${T("actual", "ค่าจริง")} ${c.ipi}</span></div>
+        <div class="note" style="margin-top:12px">${T(
+      "The other three variables stay at this firm's real values, so this understates what a full board refresh can do.",
+      "ตัวแปรอีกสามตัวยังถูกตรึงไว้ที่ค่าจริงของบริษัท ตัวเลขนี้จึงต่ำกว่าที่การปรับบอร์ดทั้งชุดทำได้")}</div>
+      </div>
+
+      <div class="card">
+        <h3>${T("Why this lever", "ทำไมระบบหยิบตัวแปรนี้มาให้ลอง")}</h3>
+        <p class="desc" style="margin-bottom:0">${T(TZ_WHY[k].en, TZ_WHY[k].th)} —
+          ${T("and among the levers this firm can actually move, it is the one with the largest score impact.",
+        "และในบรรดาคันโยกที่บริษัทนี้ขยับได้จริง ตัวนี้ให้ผลต่อคะแนนมากที่สุด")}</p>
+        <div class="note warn" style="margin-top:12px"><b>${T("Political ties are never a recommendation.",
+          "ระบบไม่เสนอเรื่องเครือข่ายเชิงนโยบาย")}</b>
+          ${T("The coefficient is positive but the engine excludes it on purpose — and no result here may be used to score an individual director.",
+        "แม้สัมประสิทธิ์จะเป็นบวก แต่เอนจินตัดออกโดยตั้งใจ — และห้ามใช้ผลนี้ประเมินกรรมการรายบุคคล")}</div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="scn">
+        <small>${T("Pro plan", "สิทธิ์ของแผน Pro")}</small>
+        <div class="big">${c.ipi} <span style="opacity:.5">→</span> <em>${fmt(best)}</em></div>
+        <p>${u.delta <= 0
+      ? T("This board already sits at the best structural values observed in its industry — Pro is where you test CEO language and read the year-by-year validity instead.",
+        "โครงสร้างบอร์ดของบริษัทนี้อยู่ที่ค่าที่ดีที่สุดเท่าที่พบในอุตสาหกรรมแล้ว — Pro จึงมีไว้ทดสอบภาษาผู้บริหารและอ่าน Validity รายปีแทน")
+      : d === 0
+        ? T(`Slide the control on the left to see this move. Taking every lever to the best value actually observed in ${indL(c.ind)} reaches ${fmt(u.best)} — ${sgn(u.delta)} points from today.`,
+          `ลองเลื่อนตัวควบคุมด้านซ้ายเพื่อดูผล · ปรับครบทุกคันโยกไปที่ค่าที่ดีที่สุดเท่าที่พบจริงใน${indL(c.ind)} จะถึง ${fmt(u.best)} — ${sgn(u.delta)} จุดจากวันนี้`)
+        : T(`One lever moves the score ${sgn(d)}. Taking every lever to the best value actually observed in ${indL(c.ind)} reaches ${fmt(u.best)} — ${sgn(u.delta)} points from today.`,
+          `ปรับตัวเดียวขยับคะแนน ${sgn(d)} จุด · ปรับครบทุกคันโยกไปที่ค่าที่ดีที่สุดเท่าที่พบจริงใน${indL(c.ind)} จะถึง ${fmt(u.best)} — ${sgn(u.delta)} จุดจากวันนี้`)}</p>
+        <div style="display:grid;gap:8px;margin-top:14px">
+          ${[{ l: T("today", "วันนี้"), v: c.ipi, c: "rgba(255,255,255,.34)" },
+      { l: T("your trial", "ที่คุณลองเลื่อน"), v: sim, c: "rgba(119,242,161,.72)" },
+      { l: T("full board refresh", "ปรับบอร์ดทั้งชุด"), v: best, c: "var(--mint)" }]
+      .map(b => `<div style="display:grid;grid-template-columns:104px 1fr 30px;align-items:center;gap:9px;font-size:11px;color:#C3D4E4">
+            <span>${esc(b.l)}</span>
+            <span style="height:8px;border-radius:99px;background:rgba(255,255,255,.13);display:block;overflow:hidden">
+              <i style="display:block;height:100%;border-radius:99px;background:${b.c};width:${clamp(b.v, 2, 100)}%"></i></span>
+            <b class="num" style="color:#fff;text-align:right">${b.v}</b></div>`).join("")}</div>
+        <div style="display:grid;gap:7px;margin-top:14px">
+          <button class="btn m" data-pro="1">${T("Switch to Pro", "เปลี่ยนเป็นแผน Pro")}</button>
+          <button class="btn s" data-goto="billing">${T("See what the plan covers", "ดูรายละเอียดแผน")}</button></div>
+        <div style="font-size:10.4px;color:#9FB6CC;margin-top:9px;line-height:1.6">
+          ${T("Your slider position carries over — the studio opens exactly where you left it.",
+        "ค่าที่คุณเลื่อนไว้จะถูกยกไปด้วย เปิด Studio แล้วอยู่ตรงจุดเดิม")}</div>
+      </div>
+
+      <div class="card">
+        <h3>${T("What Pro adds here", "แผน Pro เปิดอะไรเพิ่มในหน้านี้")}</h3>
+        <div style="display:grid;gap:11px;margin-top:9px">
+          ${proItems.map(it => `<div style="display:flex;gap:9px;align-items:flex-start">
+            <span style="flex:none;width:17px;height:17px;border-radius:50%;background:var(--ok-bg);color:var(--ok);
+              display:grid;place-items:center;font-size:11px;margin-top:1px">✓</span>
+            <div><div style="font-size:12.7px;font-weight:500;line-height:1.4">${esc(it.h)}</div>
+              <div style="font-size:11.6px;color:var(--ink-2);line-height:1.55">${esc(it.p)}</div></div></div>`).join("")}
+        </div>
+        <div class="note brand" style="margin-top:13px">${T(
+        "Reports are still paid per token on Pro — the plan only opens the deep tools. Nothing you have already unlocked is lost.",
+        "อยู่แผน Pro แล้วค่ารายงานยังคิดเป็น token เท่าเดิม แผนเปิดเฉพาะเครื่องมือเชิงลึก · สิทธิ์ที่ปลดไว้แล้วไม่หายไปไหน")}</div>
+      </div>
+    </div>
+  </div>`;
+}
+function wireTeaser(h) {
+  const c = cur(), z = tzState(c), sl = h.querySelector("#tzSl");
+  if (sl) sl.oninput = () => { z.v = +sl.value; render(); };
+}
+
+const _viewStudio = viewStudio, _wireStudio = wireStudio;
+viewStudio = function () {
+  if (isUnlocked("studio")) return _viewStudio();
+  const c = cur();
+  return pageHead(T("Simulation", "จำลองสถานการณ์"), "What-if Studio",
+    T("Move the board and the CEO's language together, then see where the OI score lands and whether the firm changes zone.",
+      "ปรับได้ทั้งสองด้านพร้อมกัน — ภาษาของ CEO จากเอกสารจริง และองค์ประกอบคณะกรรมการ — แล้วดูว่า OI ขยับไปเท่าไหร่และย้ายโซนหรือไม่"))
+    + studioTeaser(c);
+};
+VIEWS.studio = viewStudio;
+wireStudio = function (h) { return isUnlocked("studio") ? _wireStudio(h) : wireTeaser(h); };
+
+/** คัดลอกข้อความ — เผื่อกรณีเบราว์เซอร์ปิด Clipboard API (เช่นเปิดไฟล์แบบ file://) */
+function copyText(txt) {
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:-9999px;opacity:0";
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length);
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    ta.remove();
+    toast(ok ? T("Copied", "คัดลอกแล้ว") : T("Copy blocked by the browser — select the text and copy manually",
+      "เบราว์เซอร์ไม่อนุญาตให้คัดลอก — กรุณาลากเลือกข้อความแล้วคัดลอกเอง"));
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => toast(T("Copied", "คัดลอกแล้ว"))).catch(fallback);
+  } else fallback();
+}
+
 const WIRES2 = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio, sector: wireSector,
   billing: wireBilling, port: wirePort, ic: wireIC, docs: wireDocs, zonec: wireZoneC };
 render = function () {
@@ -3732,16 +3951,20 @@ render = function () {
   wireActions(host);
   (WIRES2[S.view] || (() => { }))(host);
   wireInvestCommon(host);
-  host.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => { goPro(); render(); });
+  host.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => {
+    const c = cur(), z = S.tz;                       // ยกค่าที่ผู้ใช้ลองเลื่อนไว้ไปตั้งต้นใน Studio ตัวเต็ม
+    goPro();
+    if (z && z.t === c.t) { const w = wiInit(true); w[z.k] = z.v; }
+    render();
+  });
+  host.querySelectorAll("[data-tone]").forEach(b => b.onclick = () => { S.tone = b.dataset.tone; save(); render(); });
   host.querySelectorAll("#btnRegen").forEach(b => b.onclick = () => { render();
     toast(T("Insights regenerated with the current tone", "สร้างข้อค้นพบใหม่ตามโทนปัจจุบัน")); });
   host.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
     const list = insightList(cur()).slice().sort((x, y) => Math.abs(y.impact) - Math.abs(x.impact));
     const i = list[+b.dataset.copy];
     const txt = `[${i.tag}] ${i.h}\n${i.p}\n→ ${toneImpl(i.kind)}\n(${sgn(i.impact)} OI pts · OpenInnoScore™)`;
-    try { navigator.clipboard.writeText(txt); toast(T("Copied", "คัดลอกแล้ว")); }
-    catch (e) { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select();
-      try { document.execCommand("copy"); toast(T("Copied", "คัดลอกแล้ว")); } catch (x) { } ta.remove(); }
+    copyText(txt);
   });
   syncChrome();
   const fr = $("#fRemark"); if (fr) { const rm = validRemark(); fr.textContent = rm.l; fr.style.color = rm.k === "ok" ? "var(--ok)" : "var(--warn)"; }
@@ -3769,9 +3992,7 @@ render = function () {
   if ($("#btnEnter")) $("#btnEnter").onclick = goIn;
   if ($("#btnGoogle")) $("#btnGoogle").onclick = goIn;
   /* โทนและภาษา */
-  const st = $("#segTone");
-  if (st) { st.innerHTML = TONES.map(t => `<button type="button" data-tone="${t.k}" aria-selected="${S.tone === t.k}">${esc(S.lang === "EN" ? t.en : t.th)}</button>`).join("");
-    st.onclick = e => { const b = e.target.closest("[data-tone]"); if (b) { S.tone = b.dataset.tone; save(); render(); } }; }
+
   const sl = $("#segLang");
   if (sl) sl.onclick = e => { const b = e.target.closest("[data-lang]"); if (b) { S.lang = b.dataset.lang; save(); render(); } };
   const _sync = syncChrome;
@@ -3780,7 +4001,6 @@ render = function () {
     const c = cur();
     $("#chipCredit").innerHTML = `<span aria-hidden="true">◈</span> ${S.plan === "pro" ? "Pro" : "Free"} · <b>${S.credits}</b> token`;
     $("#sPlan").textContent = `${S.plan === "pro" ? "Pro Plan" : "Free User"} · ${S.credits} token · บริษัทของคุณ ${S.freeCo || "—"}`;
-    if ($("#segTone")) $$("#segTone button").forEach(b => b.setAttribute("aria-selected", b.dataset.tone === S.tone));
     if ($("#segLang")) $$("#segLang button").forEach(b => b.setAttribute("aria-selected", b.dataset.lang === S.lang));
     const z = ZONES[zoneOf(c.promo, c.amp)];
     $("#chipZone").innerHTML = `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${esc(z.l)} · OI <b>${c.ipi}</b>`

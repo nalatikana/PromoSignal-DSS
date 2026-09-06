@@ -89,17 +89,19 @@
 
   <div class="main">
     <header class="topbar">
-      <select class="sel" id="selInd" style="max-width:210px"></select>
-      <select class="sel" id="selCo" style="max-width:270px"></select>
-      <span class="chip" id="chipZone"></span>
-      <div class="spacer"></div>
-      <span class="chip credit" id="chipCredit"></span>
-      <button class="btn p" id="btnTopUp" style="padding:6px 13px;font-size:12px">เติมเครดิต</button>
-      <div class="seg" id="segTone" aria-label="โทนของข้อความ"></div>
-      <div class="seg" id="segLang" aria-label="ภาษา">
-        <button type="button" data-lang="EN" aria-selected="true">EN</button>
-        <button type="button" data-lang="TH" aria-selected="false">TH</button></div>
-      <button class="iconbtn" id="btnMode" title="สลับโหมดสว่าง/มืด">◐</button>
+      <div class="tgroup">
+        <select class="sel" id="selInd" style="max-width:210px"></select>
+        <select class="sel" id="selCo" style="max-width:270px"></select>
+        <span class="chip" id="chipZone"></span>
+      </div>
+      <div class="tgroup end">
+        <span class="chip credit" id="chipCredit"></span>
+        <button class="btn p" id="btnTopUp" style="padding:6px 13px;font-size:12px">เติมเครดิต</button>
+        <span class="seg" id="segLang" role="group" aria-label="ภาษา / Language">
+          <button type="button" data-lang="EN" aria-selected="true">EN</button>
+          <button type="button" data-lang="TH" aria-selected="false">TH</button></span>
+        <button class="iconbtn" id="btnMode" title="สลับโหมดสว่าง/มืด" aria-label="สลับโหมดสว่าง/มืด">◐</button>
+      </div>
     </header>
 
     <div class="wrap">
