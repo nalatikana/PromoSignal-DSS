@@ -189,26 +189,30 @@ const RP_WI_INFO = {
   reg: { ev: [...RP_EV_FEM, "แนวทางของ ตลท. ที่อ้างอิงและปีที่มีผล"], as: ["สัดส่วนกรรมการหญิงอย่างน้อย 30% ตามแนวทางกำกับ", "ภาษา CEO คงเปอร์เซ็นไทล์เดิม"] },
   new: { ev: [...RP_EV_CEO, ...RP_EV_FEM], as: ["CEO Promotion Focus อยู่ที่เปอร์เซ็นไทล์ 75", "สัดส่วนกรรมการหญิงขึ้นไปที่ p90 ของอุตสาหกรรม"] },
 };
-const RP_AS_COMMON = ["กรรมการครอบครัว political ties และอายุงานตรึงไว้ที่ค่าจริง (ข้อมูลบริบท ไม่ใช่คันโยก)",
+const RP_AS_COMMON = ["ฉากทัศน์สำเร็จรูปตรึงกรรมการครอบครัวและ political ties ไว้ที่ค่าจริง (ข้อมูลบริบท ไม่ใช่คันโยก) · อายุงานไม่มีผลต่อคะแนน (δT = 0)",
   "ฐานอ้างอิง REF-928 และสูตรไม่เปลี่ยน", "บริษัทอื่นในฐานอ้างอิงไม่เปลี่ยนตำแหน่ง"];
 const RP_CAVEAT = "ผลตามสูตรเชิงความสัมพันธ์ ไม่ใช่การรับประกันว่าปรับแล้วจะเกิดผล";
-function rpScen(c, fem, dp) {
+function rpScen(c, fem, dp, fam, pol) {
+  fam = fam ?? c.fam; pol = pol ?? c.pol;
   const promo = dp === c.dp ? c.promo : promoAtPct(dp);
-  const amp = ampOf(c.fam, c.pol, fem, c.ten), B = signalB(promo, amp), ois = oisOf(B);
+  const amp = ampOf(fam, pol, fem, c.ten), B = signalB(promo, amp), ois = oisOf(B);
+  const ctx = Math.abs(fam - c.fam) > 1e-9 || pol !== c.pol;
   let band = null;
-  if (dp === c.dp && Math.abs(fem - c.fem) < 1e-9 && c.band) band = c.band;          // ไม่ขยับคันโยก → ใช้ช่วงเดียวกับทุกหน้า
-  else try { band = band90(promo, c.fam, c.pol, fem); } catch (e) { }
+  if (dp === c.dp && Math.abs(fem - c.fem) < 1e-9 && !ctx && c.band) band = c.band;          // ไม่ขยับคันโยก → ใช้ช่วงเดียวกับทุกหน้า
+  else try { band = band90(promo, fam, pol, fem); } catch (e) { }
   return { fem, dp, ois, ipi: Math.round(ois), tier: tierOf(ois), quad: quadOf(cpOf(promo), amp), band };
 }
 let RP_WI = [];
 function whatIfReport(c, w) {
   if (typeof WI_PRESETS === "undefined") return "";
   const base = { l: "ปัจจุบัน (ค่าจริง)", fem: c.fem, dp: c.dp, ois: c.ois ?? c.ipi, ipi: c.ipi, tier: rpTier(c), quad: rpQuad(c), band: c.band };
-  const sim = rpScen(c, w.fem, w.dp);
+  const sim = rpScen(c, w.fem, w.dp, w.fam, w.pol);
+  const ctxMoved = Math.abs((w.fam ?? c.fam) - c.fam) > 1e-9 || (w.pol ?? c.pol) !== c.pol;
   const simEv = [...(Math.abs(w.fem - c.fem) > 1e-9 ? RP_EV_FEM : []), ...(w.dp !== c.dp ? RP_EV_CEO : [])];
   const simAs = [Math.abs(w.fem - c.fem) > 1e-9 ? `สัดส่วนกรรมการหญิง ${pct1(w.fem)} (ค่าจริง ${pct1(c.fem)})` : "สัดส่วนกรรมการหญิงคงค่าจริง",
-    w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง"];
-  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: "ค่าที่ตั้งไว้บนหน้านี้", ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
+    w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง",
+    ...(ctxMoved ? [`ตัวแปรบริบทถูกขยับ: กรรมการครอบครัว ${pct1(w.fam)} (ค่าจริง ${pct1(c.fam)}) · political ties ${w.pol} (ค่าจริง ${c.pol}) — ผลจากตัวแปรบริบท ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย`] : [])];
+  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: ctxMoved ? "ค่าที่ตั้งไว้บนหน้านี้ · ผลจากตัวแปรบริบท — ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย" : "ค่าที่ตั้งไว้บนหน้านี้", ctx: ctxMoved, ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
   WI_PRESETS.filter(p => p.k !== "cur").forEach(p => {
     const v = p.f(c), info = RP_WI_INFO[p.k] || { ev: [], as: [p.d || ""] };
     RP_WI.push({ k: p.k, l: p.th, d: p.d || "", ev: info.ev, as: info.as, s: rpScen(c, v.fem, v.dp) });
@@ -225,7 +229,7 @@ function whatIfReport(c, w) {
         <div><div class="rp-k">สมมติฐานที่ใช้</div><ul class="rp-ctx">${a.as.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
         <div><div class="rp-k">หลักฐานที่ต้องมีก่อนดำเนินการ</div><ul class="rp-ctx">${a.ev.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
       </div>
-      <button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>
+      ${a.ctx ? `<span class="pill warn">ผลจากตัวแปรบริบท — ไม่ใช่ทางเลือกเชิงนโยบาย จึงไม่เพิ่มเข้าแผน</span>` : `<button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>`}
     </div>`).join("");
   return `<div class="card rp-block rp-wi" style="margin-top:14px">
     <div class="rp-print-head">OpenInnoScore · What-if Report · ${esc(c.n)} (${esc(c.t)}) · ${esc(rpNow())}</div>
@@ -308,6 +312,22 @@ function fuSet(key, f, v) {
     r[map[f]] = v; rpPilotSave(P);
   }
 }
+/* ร่าง 56-1 ต้องไม่มีชื่อบริษัทอื่น — แทนชื่อย่อหลักทรัพย์ด้วยคำกลาง (keep = ชื่อย่อที่อนุญาต เช่น บริษัทที่จัดทำแบบ 56-1 เอง) */
+let _rpTK = null;
+function rpAnon(t, keep) {
+  if (!_rpTK) _rpTK = new Set(COMPS.map(c => String(c.t).toUpperCase()).filter(t => !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
+  const k = keep ? String(keep).toUpperCase() : null;
+  let out = String(t ?? "").replace(/[A-Za-z][A-Za-z0-9&.\-]*/g, w => (_rpTK.has(w.toUpperCase()) && w.toUpperCase() !== k) ? "บริษัทในกลุ่มเปรียบเทียบ" : w);
+  // ชื่อเต็มของบริษัทอื่น (ภาษาไทย/อังกฤษ) ก็ต้องไม่ปรากฏ
+  COMPS.forEach(c => { if (c.n && c.n.length > 3 && String(c.t).toUpperCase() !== k && out.includes(c.n)) out = out.split(c.n).join("บริษัทในกลุ่มเปรียบเทียบ"); });
+  return out;
+}
+/** รายการที่ "เสร็จ" และมีมติ — ใช้ร่วมกับหน้า Template 56-1 (v2_tiers.js) · co = จำกัดเฉพาะบริษัทเดียว (แถวข้อสั่งการที่ไม่ระบุบริษัทนับรวม) */
+function fuDoneItems(co) {
+  const rows = fuRows().filter(r => r.st === "done" && String(r.dec || "").trim() && (!co || !r.co || r.co === co));
+  return rows.map(r => ({ co: r.co, src: r.src, issue: rpAnon(r.issue.replace(/^\[[^\]]+\]\s*/, ""), co), dec: rpAnon(r.dec, co), concl: rpAnon(r.concl, co) }));
+}
+window.fuDoneItems = fuDoneItems; window.rpAnon = rpAnon; window.fuRows = fuRows;
 function fu561(rows) {
   const ok = rows.filter(r => r.st === "done" && String(r.dec || "").trim());
   if (!ok.length) return `<p class="rp-hint" style="margin:0">ยังไม่มีรายการที่มีสถานะ “เสร็จ” และมีมติบันทึกไว้ — ส่วนนี้จะแสดงเฉพาะรายการที่ครบทั้งสองเงื่อนไข</p>`;
@@ -318,8 +338,7 @@ function fu561(rows) {
   const lead = `ในรอบปีที่ผ่านมา คณะกรรมการได้ใช้ผลการประเมินด้านการกำกับดูแลนวัตกรรมประกอบการหารือ และกำหนดประเด็นพัฒนารวม ${ok.length} เรื่อง`
     + ` ซึ่งได้ดำเนินการแล้วเสร็จตามมติหรือข้อสรุปของที่ประชุม โดยมีที่มาจาก${Object.keys(bySrc).map(s => (srcTh[s] || s) + ` (${bySrc[s].length} เรื่อง)`).join(" ")}`;
   /* ร่าง 56-1 ต้องไม่มีชื่อบริษัทอื่น — แทนชื่อย่อหลักทรัพย์ด้วยคำกลาง */
-  const TK = new Set(COMPS.map(c => String(c.t).toUpperCase()).filter(t => !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
-  const anon = t => String(t).replace(/[A-Za-z][A-Za-z0-9&.\-]*/g, w => TK.has(w.toUpperCase()) ? "บริษัทในกลุ่มเปรียบเทียบ" : w);
+  const anon = t => rpAnon(t);
   const items = ok.map(r => `${anon(r.issue.replace(/^\[[^\]]+\]\s*/, ""))} — การดำเนินการตามมติ: ${anon(r.dec)}`);
   RP_561 = [lead + (cos.length > 1 ? ` (รวม ${cos.length} บริษัทในแฟ้มนี้ — ใช้เฉพาะรายการของบริษัทที่จัดทำแบบ 56-1)` : ""), ...items.map((x, i) => `${i + 1}. ${x}`)].join("\n");
   return `<p class="rp-561-lead">${esc(lead)}</p><ol class="rp-561">${items.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
@@ -384,6 +403,7 @@ function viewFollowup() {
         ข้อความเขียนเป็นภาพรวม ไม่ระบุชื่อบุคคลหรือตำแหน่งผู้รับผิดชอบ · ตำแหน่งบน Grid เพียงอย่างเดียวไม่ใช่หลักฐานว่าบอร์ดพัฒนาประสิทธิผลสำเร็จ ·
         ตรวจถ้อยคำในมติอีกครั้งว่าไม่มีชื่อบุคคลก่อนนำไปใช้</p>
       ${fu561(rows)}
+      <div class="rp-noprint" style="margin-top:9px"><button class="btn s" data-goto="t561">เปิดหน้า ร่าง 56-1 · Template และการอนุมัติ →</button></div>
     </div>
     <p class="rp-foot">ผลประเมินเป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่เหตุ-ผล · ห้ามนำผลไปให้คะแนนกรรมการรายบุคคล ·
       พิมพ์จาก OpenInnoScore ต้นแบบ · ${esc(rpThDate(rpToday()))}</p>

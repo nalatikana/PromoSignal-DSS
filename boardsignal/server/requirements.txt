@@ -1,0 +1,7 @@
+# เซิร์ฟเวอร์ OpenInnoScore — ทดสอบแล้วกับชุดเวอร์ชันนี้ (Python 3.12–3.13)
+# ใช้ Starlette (แกนเดียวกับ FastAPI) โดยตรง เพื่อให้ dependency น้อยที่สุด · การเรียก AI/OCR ใช้ urllib ของ Python
+# ชั้นคำนวณ (server/ois_engine.py) เป็น pure Python ไม่ต้องใช้ numpy
+starlette==1.6.0
+uvicorn==0.53.0
+itsdangerous==2.2.0
+python-multipart==0.0.32

@@ -1,0 +1,31 @@
+# Render Blueprint — OpenInnoScore™ เซิร์ฟเวอร์ส่วนตัว
+# วางไฟล์นี้ที่ "รากของ repo" PromoSignal-DSS (Render อ่าน render.yaml จากรากเท่านั้น)
+# ถ้าโฟลเดอร์ boardsignal/ ถูกแยกออกมาเป็น repo ของตัวเอง ให้ลบบรรทัด rootDir ออก
+services:
+  - type: web
+    name: openinnoscore
+    runtime: python
+    plan: starter            # free ใช้ได้แต่หลับหลังไม่มีคนใช้ 15 นาที (เปิดครั้งแรกรอ ~1 นาที)
+    region: singapore
+    rootDir: boardsignal
+    buildCommand: pip install -r server/requirements.txt && python build_v2.py --server
+    startCommand: uvicorn server.app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: APP_PASSWORD
+        sync: false          # Render จะถามค่าตอนสร้าง Blueprint — ห้ามเขียนรหัสลงไฟล์นี้
+      - key: APP_USERS
+        sync: false          # ไม่บังคับ: "ชื่อ1:รหัส1,ชื่อ2:รหัส2"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OCR_PROVIDER
+        sync: false
+      - key: OCR_API_KEY
+        sync: false

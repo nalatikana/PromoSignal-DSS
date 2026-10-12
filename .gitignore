@@ -14,3 +14,6 @@ data/unit_overrides.csv
 
 # ชุด REF-928 ที่ให้คะแนนแล้ว (NDA) — build_ois_data.py อ่านจากที่นี่ แต่ไม่ commit
 boardsignal/ref/
+
+# ผล build (Render สร้างเองตอน deploy)
+boardsignal/out/

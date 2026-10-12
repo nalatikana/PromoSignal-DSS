@@ -674,3 +674,155 @@ tr.pl-done td{opacity:.55}
 .cmp .cmp-grid{min-height:330px}
 .cmp .cmp-ylab{font-size:9.6px;line-height:1.25}
 @media print{.gx-lens,.gx-add,.gx-qpick,.gx-tools .seg{display:none!important}}
+
+/* ============================================================================
+   แก้ไขครั้งที่ 2.2 · สิทธิ์ 3 ระดับ · Template 56-1 · คู่มือ (v2_tiers.js) — คลาสขึ้นต้น .tr- เท่านั้น
+   ============================================================================ */
+.nav .lockb[data-k="pro"]{background:color-mix(in srgb,var(--brand) 55%,transparent);color:#fff}
+.nav .lockb[data-k="max"]{background:color-mix(in srgb,var(--accent) 30%,transparent);color:#fff}
+.nav .lockb[data-k="cost"]{background:rgba(255,255,255,.16)}
+.tr-sm{font-size:11px;color:var(--ink-3);line-height:1.55;margin:7px 0 0}
+.tr-k{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 6px}
+.tr-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:500;margin-bottom:4px}
+.tr-skel{height:11px;border-radius:6px;background:var(--panel-2);margin:11px 0}
+.tr-x{color:var(--ink-3);font-weight:600}
+.tr-tbl{font-size:12px}
+.tr-tbl td,.tr-tbl th{vertical-align:top}
+.tr-tbl tr.hl td{background:color-mix(in srgb,var(--brand) 6%,var(--panel))}
+.tr-locked{opacity:.8;border-style:dashed!important}
+.tr-auto{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px}
+.tr-auto .btn{font-size:11.3px}
+/* ตรวจภาษา CEO · Free */
+.tr-wc{margin-top:6px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--warn);font-weight:500}
+.tr-wc.ok{color:var(--ok)}
+.tr-rfq,.tr-up-lock{border-style:dashed}
+/* What-if · ตัวแปรบริบท */
+.tr-ctxh{font-size:10.6px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:4px 0 7px}
+.tr-ctx{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);margin-bottom:9px}
+.tr-ctx.locked{opacity:.6}
+.tr-warn{margin-top:5px;font-size:10.8px;line-height:1.5;color:var(--warn);font-weight:500}
+.tr-banklock{font-size:11px;margin:0 0 9px}
+.tr-ctxchip{display:inline-block;margin:6px 0 2px;padding:5px 11px;border-radius:99px;font-size:11.4px;line-height:1.45;
+  background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);color:var(--ink)}
+.tr-lockcard{border-style:dashed;background:color-mix(in srgb,var(--brand) 3%,var(--panel))}
+.tr-qnote{font-size:11.2px}
+/* Strategy Grid · ชั้นเสริม */
+.tr-layers{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 8px}
+.tr-layers .btn{font-size:11.3px;padding:4px 10px}
+.tr-tog{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:var(--panel-2);cursor:pointer}
+.tr-tog input{accent-color:var(--brand)}
+.tr-pathcard{margin-top:12px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--brand) 4%,var(--panel))}
+.tr-pathh{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:12.4px;margin-bottom:9px;line-height:1.5}
+.tr-refois{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tr-refois .num{font-size:30px;font-weight:600;letter-spacing:-.03em;color:var(--brand)}
+.tr-refois span:last-child{font-size:11.5px;color:var(--ink-2)}
+.tr-shares{display:grid;gap:6px}
+.tr-share{display:grid;grid-template-columns:150px 1fr 44px 80px;gap:9px;align-items:center;font-size:12px}
+@media(max-width:640px){.tr-share{grid-template-columns:1fr 1fr}}
+/* ประตูสิทธิ์ · ภาพรวมอุตสาหกรรม */
+.tr-gate{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;border-color:color-mix(in srgb,var(--brand) 40%,var(--line))}
+.tr-gate-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.tr-buy{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.tr-maxnote{margin-bottom:14px}
+/* หน้าเครดิตและแผน */
+.tr-plans{gap:12px}
+.tr-plan{border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;display:flex;flex-direction:column;gap:4px;background:var(--panel)}
+.tr-plan.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 5%,var(--panel));box-shadow:0 0 0 1px var(--brand) inset}
+.tr-plan-h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.tr-lv{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.tr-plan-n{font-size:17px}
+.tr-plan-s{font-size:11.5px;color:var(--brand)}
+.tr-plan p{font-size:12px;color:var(--ink-2);line-height:1.6;margin:4px 0;flex:1}
+.tr-plan-t{font-size:11px;color:var(--ink-3)}
+.tr-plan .btn{margin-top:8px;justify-content:center}
+.tr-perm th[scope="row"]{font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600;white-space:normal;min-width:140px}
+.tr-perm td{font-size:12px;line-height:1.5;vertical-align:top}
+.tr-perm thead th{white-space:normal}
+.tr-perm .tr-cur{background:color-mix(in srgb,var(--brand) 8%,var(--panel));box-shadow:inset 1px 0 0 color-mix(in srgb,var(--brand) 40%,transparent),inset -1px 0 0 color-mix(in srgb,var(--brand) 40%,transparent)}
+.tr-perm thead .tr-cur{color:var(--brand);font-weight:600}
+.tr-packs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:640px){.tr-packs{grid-template-columns:1fr}}
+.tr-pack{position:relative;border:1px solid var(--line);border-radius:12px;padding:15px 12px 12px;display:flex;flex-direction:column;gap:3px}
+.tr-pack.best{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 5%,var(--panel))}
+.tr-pack .btn{margin-top:9px;justify-content:center;font-size:11.5px}
+.tr-tag{position:absolute;top:-9px;left:12px;font-size:10px;padding:1px 8px;border-radius:99px;background:var(--brand);color:var(--brand-ink)}
+.tr-pack-n{font-size:26px;font-weight:600;letter-spacing:-.03em}
+.tr-pack-n span{font-size:12px;color:var(--ink-3);font-weight:300}
+.tr-pack-b{font-size:14px}
+/* ร่าง 56-1 */
+.tr-t5grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:1080px){.tr-t5grid{grid-template-columns:1fr}}
+.tr-edh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.tr-ph{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:10px 0}
+.tr-chip{font:inherit;font-size:11px;padding:2px 8px;border-radius:7px;border:1px dashed color-mix(in srgb,var(--brand) 50%,var(--line));background:color-mix(in srgb,var(--brand) 6%,var(--panel));color:var(--brand);cursor:pointer}
+.tr-chip:hover{background:color-mix(in srgb,var(--brand) 14%,var(--panel))}
+.tr-sec{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:9px;background:var(--panel-2)}
+.tr-sec-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tr-sec-h .pill{margin-right:auto}
+.tr-sec-h .btn{font-size:11px;padding:2px 8px}
+.tr-sec textarea{font-size:12.3px;line-height:1.6}
+.tr-rules{font-size:11.2px;line-height:1.6}
+.tr-doc{margin-top:10px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:12.8px;line-height:1.8;max-height:520px;overflow:auto}
+.tr-doc h4{font-size:13.2px;margin:12px 0 6px;line-height:1.5}
+.tr-doc h4:first-child{margin-top:0}
+.tr-doc p{margin:0 0 8px}
+.tr-ai{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.tr-aiout{margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));background:color-mix(in srgb,var(--brand) 4%,var(--panel))}
+.tr-aiout.off{border-color:var(--line);background:var(--panel-2)}
+.tr-aitxt{font-size:12.4px;line-height:1.7}
+.tr-flow{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:6px 0 10px}
+.tr-flow li{display:flex;align-items:center;gap:6px;font-size:11.6px;padding:4px 10px 4px 4px;border-radius:99px;border:1px solid var(--line);color:var(--ink-3)}
+.tr-flow li b{width:20px;height:20px;border-radius:99px;display:grid;place-items:center;font-size:10.5px;background:var(--panel-2);color:var(--ink-2)}
+.tr-flow li.done{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.tr-flow li.done b{background:var(--ok);color:#fff}
+.tr-flow li.on{color:var(--ink);border-color:var(--brand);font-weight:600}
+.tr-flow li.on b{background:var(--brand);color:var(--brand-ink)}
+.tr-flow li.ret{border-color:var(--warn);color:var(--warn)}
+.tr-flow li.ret b{background:var(--warn);color:#fff}
+.tr-mail{border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px}
+.tr-mail-h{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:7px 11px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.tr-mail-h>span:first-child{width:38px;color:var(--ink-3)}
+.tr-mail-b{padding:10px 12px;line-height:1.7}
+.tr-mail-btns{display:flex;gap:8px;margin:8px 0 4px}
+.tr-mail-btns span{padding:4px 12px;border-radius:7px;border:1px solid var(--line);font-size:11.5px}
+.tr-mail-btns span:first-child{background:var(--ok);color:#fff;border-color:transparent}
+.tr-links{display:grid;gap:8px}
+.tr-link{font:inherit;text-align:left;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tr-link span{font-size:11.3px;color:var(--ink-2)}
+.tr-link:hover{border-color:var(--brand)}
+.tr-link.off{border-style:dashed;opacity:.85}
+@media print{body.tr-print-561 .side,body.tr-print-561 .topbar,body.tr-print-561 .pagehead,body.tr-print-561 .rp-chain,
+  body.tr-print-561 .tr-ed,body.tr-print-561 .tr-appr,body.tr-print-561 .tr-lockcard,body.tr-print-561 .tr-exp,body.tr-print-561 .tr-ai,
+  body.tr-print-561 .tr-rules,body.tr-print-561 .tr-edh .pill,body.tr-print-561 .tr-t5grid>.stack:first-child{display:none!important}
+  body.tr-print-561 .tr-t5grid{display:block}
+  body.tr-print-561 .tr-doc{max-height:none;border:0;padding:0}}
+/* คู่มือ */
+.tr-man{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.tr-man{grid-template-columns:1fr}}
+.tr-toc{position:sticky;top:76px;display:flex;flex-direction:column;gap:2px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+@media(max-width:900px){.tr-toc{position:static;flex-direction:row;flex-wrap:wrap}}
+.tr-toc button{font:inherit;font-size:12px;text-align:left;padding:6px 9px;border:0;border-radius:8px;background:none;color:var(--ink-2);cursor:pointer}
+.tr-toc button:hover{background:var(--panel-2);color:var(--ink)}
+.tr-mbody{display:grid;gap:14px}
+.tr-mbody section{scroll-margin-top:80px}
+.tr-ol{margin:6px 0 0;padding-left:20px;font-size:12.8px;line-height:1.75;color:var(--ink-2)}
+.tr-ol code,.tr-ol code{font-size:11px;background:var(--panel-2);padding:1px 5px;border-radius:5px}
+.tr-steps{margin:6px 0 0;padding-left:0;list-style:none;display:grid;gap:8px}
+.tr-steps li{padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:12.6px;line-height:1.6}
+.tr-steps li>div{color:var(--ink-2);margin-top:2px}
+.tr-steps li .lnk{font-size:11.5px;margin-left:6px}
+.tr-steps li:target,.tr-flash{box-shadow:0 0 0 2px var(--brand)}
+.tr-dl{display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr);gap:6px 14px;margin:6px 0 0;font-size:12.5px;line-height:1.6}
+.tr-dl dt{font-weight:600}
+.tr-dl dd{margin:0;color:var(--ink-2)}
+@media(max-width:640px){.tr-dl{grid-template-columns:1fr}.tr-dl dd{margin-bottom:6px}}
+.tr-faq{border-top:1px solid var(--line);padding:8px 0}
+.tr-faq summary{cursor:pointer;font-size:12.8px;font-weight:600}
+.tr-faq p{margin:6px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+/* ปุ่ม "?" บนหัวหน้า */
+.pagehead:has(.tr-help){position:relative;padding-right:40px}
+.pagehead .tr-help{position:absolute;top:0;right:0;width:26px;height:26px;border-radius:99px;border:1px solid var(--line);background:var(--panel);
+  color:var(--brand);font-weight:700;font-size:13px;cursor:pointer;display:grid;place-items:center}
+.pagehead .tr-help:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,var(--panel))}
+@media print{.tr-help,.tr-layers{display:none!important}}
+.nav .lockb[data-k]{white-space:nowrap}

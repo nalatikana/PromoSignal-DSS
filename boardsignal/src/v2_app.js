@@ -19,8 +19,12 @@ const pct1 = v => fmt(v * 100, 1) + "%";
    สมการ E1–E13 ของเอกสาร SignalB_OpenInnoScore_Equations_Workflow_20261005_v2
    ฐานอ้างอิง = REF-928 ที่ freeze แล้ว (928 firm-years) — ไม่ใช่ snapshot 196 บริษัทอีกต่อไป
    ความลับทางการค้า: parameter card, V̂f และฐานอ้างอิงอยู่ใน OIS (ois_model.json) — ห้ามแสดงค่าตัวเลขเหล่านี้บนหน้าจอ
-   ฉบับใช้งานจริงต้องย้ายชั้นนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์ */
-const OPAR = OIS.par, OM = OIS.mean, OCUT = OIS.cut;
+   ฉบับใช้งานจริงต้องย้ายชั้นนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์
+   โหมดเซิร์ฟเวอร์ (OIS.server — ไฟล์ OpenInnoScore_server.html): ไม่มี par / chol ในไฟล์ ·
+   ampOf / ampT1 / band90 ส่งต่อให้ OIS_REMOTE (src/v2_remote.js) ซึ่งเรียก /api/amp และ /api/band
+   โหมดออฟไลน์ (ไม่มี OIS.server): ทำงานเหมือนเดิมทุกตำแหน่ง */
+const OIS_SRV = !!OIS.server;
+const OPAR = OIS_SRV ? OIS_REMOTE.par : OIS.par, OM = OIS.mean, OCUT = OIS.cut;
 const IND = DATA.ind, COMPS = DATA.comps;
 const byT = Object.fromEntries(COMPS.map(c => [c.t, c]));
 
@@ -47,11 +51,12 @@ const cen = (P, F, G, W) => ({ P: wins(P, "P") - OM.P, F: wins(F, "F") - OM.F,
 /** E4 · Board Amplification Signal = ความชันของ promotion focus ภายใต้บอร์ดนี้
  *  amp = β1 + δF·cF + δG·cG + δW·cW   (δT ถูกปิดด้วย evidence gate g_T = 0 — อายุงานไม่มีผลต่อคะแนน) */
 function ampOf(fam, pol, fem, ten) {
+  if (OIS_SRV) return OIS_REMOTE.ampOf(fam, pol, fem);
   const z = cen(0, fam, pol, fem);
   return OPAR.b1 + OPAR.dF * z.F + OPAR.dG * z.G + OPAR.dW * z.W;
 }
 /** สูตรทางเลือก B_T1 (H1 + H4 เท่านั้น) — แนวทาง Pilot Use case 2 ให้แสดงคู่กับป้าย Caution */
-function ampT1(fem) { const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
+function ampT1(fem) { if (OIS_SRV) return OIS_REMOTE.ampT1(fem); const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
 /** E5 · Signal B = cP × amp */
 const cpOf = promo => wins(promo, "P") - OM.P;
 const signalB = (promo, amp) => cpOf(promo) * amp;
@@ -62,6 +67,7 @@ const REF_T1 = OIS.refT1;
 const REF_AMP = OIS.refAmp;                   // amp ของ 928 แถว (เรียงแล้ว)
 const REF_PROMO = OIS.refP;                   // P หลัง winsorise ของ 928 แถว (เรียงแล้ว)
 const REF_PTS = OIS.pts;                      // [P_w, amp, quad, tier, ind, year, cF, cG, cW] × 928 (ไม่มีชื่อบริษัท)
+                                              // โหมดเซิร์ฟเวอร์: cF/cG/cW เรียงแยกทีละคอลัมน์ (คงการกระจาย แต่ไม่ผูกกับ amp ของแถว)
 const ampPct = a => Math.round(midRank(REF_AMP, q8(a)) * 10) / 10;            // board_amp_pct (แกน y)
 const promoPct = p => Math.round(midRank(REF_PROMO, q8(wins(p, "P"))) * 10) / 10;  // ceo_drive_pct (แกน x)
 const oisOf = b => midRank(REF_B, q8(b));
@@ -117,7 +123,7 @@ const QN = OIS.qn;
 /* E11 · ช่วง 90% ของ OpenInnoScore — Krinsky & Robb (1986) 500 ชุด
    θ^(r) ~ N(θ̂, V̂f) สร้างจาก Cholesky ของ V̂f ด้วย seed คงที่ เพื่อให้ผลซ้ำได้
    บริษัทในฐาน REF-928 ใช้ช่วงจากไฟล์ STATA โดยตรง (OIS.co[t].band); ค่าป้อนที่ผู้ใช้แก้คำนวณสดด้วยชุดเดียวกัน */
-const KR = (() => {
+const KR = OIS_SRV ? [] : (() => {               // โหมดเซิร์ฟเวอร์: ชุด θ^(r) อยู่บนเซิร์ฟเวอร์ (server/ois_engine.py)
   const L = OIS.chol, mu = [OPAR.b1, OPAR.dF, OPAR.dG, OPAR.dW];
   let s = OIS.seed % 2147483647 || 1;
   const u = () => (s = (s * 48271) % 2147483647) / 2147483647;
@@ -140,6 +146,7 @@ function krRef() {
 }
 /** [ขอบล่าง, ขอบบน] ของช่วง 90% สำหรับค่าป้อนชุดหนึ่ง */
 function band90(promo, fam, pol, fem) {
+  if (OIS_SRV) return OIS_REMOTE.band90(promo, fam, pol, fem);
   const v = cen(promo, fam, pol, fem), out = [], R = krRef();
   for (let r = 0; r < KR.length; r++) {
     const t = KR[r];

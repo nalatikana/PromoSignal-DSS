@@ -684,6 +684,158 @@ tr.pl-done td{opacity:.55}
 .cmp .cmp-grid{min-height:330px}
 .cmp .cmp-ylab{font-size:9.6px;line-height:1.25}
 @media print{.gx-lens,.gx-add,.gx-qpick,.gx-tools .seg{display:none!important}}
+
+/* ============================================================================
+   แก้ไขครั้งที่ 2.2 · สิทธิ์ 3 ระดับ · Template 56-1 · คู่มือ (v2_tiers.js) — คลาสขึ้นต้น .tr- เท่านั้น
+   ============================================================================ */
+.nav .lockb[data-k="pro"]{background:color-mix(in srgb,var(--brand) 55%,transparent);color:#fff}
+.nav .lockb[data-k="max"]{background:color-mix(in srgb,var(--accent) 30%,transparent);color:#fff}
+.nav .lockb[data-k="cost"]{background:rgba(255,255,255,.16)}
+.tr-sm{font-size:11px;color:var(--ink-3);line-height:1.55;margin:7px 0 0}
+.tr-k{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 6px}
+.tr-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:500;margin-bottom:4px}
+.tr-skel{height:11px;border-radius:6px;background:var(--panel-2);margin:11px 0}
+.tr-x{color:var(--ink-3);font-weight:600}
+.tr-tbl{font-size:12px}
+.tr-tbl td,.tr-tbl th{vertical-align:top}
+.tr-tbl tr.hl td{background:color-mix(in srgb,var(--brand) 6%,var(--panel))}
+.tr-locked{opacity:.8;border-style:dashed!important}
+.tr-auto{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px}
+.tr-auto .btn{font-size:11.3px}
+/* ตรวจภาษา CEO · Free */
+.tr-wc{margin-top:6px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--warn);font-weight:500}
+.tr-wc.ok{color:var(--ok)}
+.tr-rfq,.tr-up-lock{border-style:dashed}
+/* What-if · ตัวแปรบริบท */
+.tr-ctxh{font-size:10.6px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:4px 0 7px}
+.tr-ctx{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);margin-bottom:9px}
+.tr-ctx.locked{opacity:.6}
+.tr-warn{margin-top:5px;font-size:10.8px;line-height:1.5;color:var(--warn);font-weight:500}
+.tr-banklock{font-size:11px;margin:0 0 9px}
+.tr-ctxchip{display:inline-block;margin:6px 0 2px;padding:5px 11px;border-radius:99px;font-size:11.4px;line-height:1.45;
+  background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);color:var(--ink)}
+.tr-lockcard{border-style:dashed;background:color-mix(in srgb,var(--brand) 3%,var(--panel))}
+.tr-qnote{font-size:11.2px}
+/* Strategy Grid · ชั้นเสริม */
+.tr-layers{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 8px}
+.tr-layers .btn{font-size:11.3px;padding:4px 10px}
+.tr-tog{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;background:var(--panel-2);cursor:pointer}
+.tr-tog input{accent-color:var(--brand)}
+.tr-pathcard{margin-top:12px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--brand) 4%,var(--panel))}
+.tr-pathh{display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:12.4px;margin-bottom:9px;line-height:1.5}
+.tr-refois{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tr-refois .num{font-size:30px;font-weight:600;letter-spacing:-.03em;color:var(--brand)}
+.tr-refois span:last-child{font-size:11.5px;color:var(--ink-2)}
+.tr-shares{display:grid;gap:6px}
+.tr-share{display:grid;grid-template-columns:150px 1fr 44px 80px;gap:9px;align-items:center;font-size:12px}
+@media(max-width:640px){.tr-share{grid-template-columns:1fr 1fr}}
+/* ประตูสิทธิ์ · ภาพรวมอุตสาหกรรม */
+.tr-gate{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px;border-color:color-mix(in srgb,var(--brand) 40%,var(--line))}
+.tr-gate-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--accent) 20%,transparent)}
+.tr-buy{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.tr-maxnote{margin-bottom:14px}
+/* หน้าเครดิตและแผน */
+.tr-plans{gap:12px}
+.tr-plan{border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;display:flex;flex-direction:column;gap:4px;background:var(--panel)}
+.tr-plan.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 5%,var(--panel));box-shadow:0 0 0 1px var(--brand) inset}
+.tr-plan-h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.tr-lv{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.tr-plan-n{font-size:17px}
+.tr-plan-s{font-size:11.5px;color:var(--brand)}
+.tr-plan p{font-size:12px;color:var(--ink-2);line-height:1.6;margin:4px 0;flex:1}
+.tr-plan-t{font-size:11px;color:var(--ink-3)}
+.tr-plan .btn{margin-top:8px;justify-content:center}
+.tr-perm th[scope="row"]{font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600;white-space:normal;min-width:140px}
+.tr-perm td{font-size:12px;line-height:1.5;vertical-align:top}
+.tr-perm thead th{white-space:normal}
+.tr-perm .tr-cur{background:color-mix(in srgb,var(--brand) 8%,var(--panel));box-shadow:inset 1px 0 0 color-mix(in srgb,var(--brand) 40%,transparent),inset -1px 0 0 color-mix(in srgb,var(--brand) 40%,transparent)}
+.tr-perm thead .tr-cur{color:var(--brand);font-weight:600}
+.tr-packs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:640px){.tr-packs{grid-template-columns:1fr}}
+.tr-pack{position:relative;border:1px solid var(--line);border-radius:12px;padding:15px 12px 12px;display:flex;flex-direction:column;gap:3px}
+.tr-pack.best{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 5%,var(--panel))}
+.tr-pack .btn{margin-top:9px;justify-content:center;font-size:11.5px}
+.tr-tag{position:absolute;top:-9px;left:12px;font-size:10px;padding:1px 8px;border-radius:99px;background:var(--brand);color:var(--brand-ink)}
+.tr-pack-n{font-size:26px;font-weight:600;letter-spacing:-.03em}
+.tr-pack-n span{font-size:12px;color:var(--ink-3);font-weight:300}
+.tr-pack-b{font-size:14px}
+/* ร่าง 56-1 */
+.tr-t5grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:1080px){.tr-t5grid{grid-template-columns:1fr}}
+.tr-edh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.tr-ph{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:10px 0}
+.tr-chip{font:inherit;font-size:11px;padding:2px 8px;border-radius:7px;border:1px dashed color-mix(in srgb,var(--brand) 50%,var(--line));background:color-mix(in srgb,var(--brand) 6%,var(--panel));color:var(--brand);cursor:pointer}
+.tr-chip:hover{background:color-mix(in srgb,var(--brand) 14%,var(--panel))}
+.tr-sec{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:9px;background:var(--panel-2)}
+.tr-sec-h{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tr-sec-h .pill{margin-right:auto}
+.tr-sec-h .btn{font-size:11px;padding:2px 8px}
+.tr-sec textarea{font-size:12.3px;line-height:1.6}
+.tr-rules{font-size:11.2px;line-height:1.6}
+.tr-doc{margin-top:10px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font-size:12.8px;line-height:1.8;max-height:520px;overflow:auto}
+.tr-doc h4{font-size:13.2px;margin:12px 0 6px;line-height:1.5}
+.tr-doc h4:first-child{margin-top:0}
+.tr-doc p{margin:0 0 8px}
+.tr-ai{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.tr-aiout{margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));background:color-mix(in srgb,var(--brand) 4%,var(--panel))}
+.tr-aiout.off{border-color:var(--line);background:var(--panel-2)}
+.tr-aitxt{font-size:12.4px;line-height:1.7}
+.tr-flow{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:6px 0 10px}
+.tr-flow li{display:flex;align-items:center;gap:6px;font-size:11.6px;padding:4px 10px 4px 4px;border-radius:99px;border:1px solid var(--line);color:var(--ink-3)}
+.tr-flow li b{width:20px;height:20px;border-radius:99px;display:grid;place-items:center;font-size:10.5px;background:var(--panel-2);color:var(--ink-2)}
+.tr-flow li.done{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.tr-flow li.done b{background:var(--ok);color:#fff}
+.tr-flow li.on{color:var(--ink);border-color:var(--brand);font-weight:600}
+.tr-flow li.on b{background:var(--brand);color:var(--brand-ink)}
+.tr-flow li.ret{border-color:var(--warn);color:var(--warn)}
+.tr-flow li.ret b{background:var(--warn);color:#fff}
+.tr-mail{border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12px}
+.tr-mail-h{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:7px 11px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.tr-mail-h>span:first-child{width:38px;color:var(--ink-3)}
+.tr-mail-b{padding:10px 12px;line-height:1.7}
+.tr-mail-btns{display:flex;gap:8px;margin:8px 0 4px}
+.tr-mail-btns span{padding:4px 12px;border-radius:7px;border:1px solid var(--line);font-size:11.5px}
+.tr-mail-btns span:first-child{background:var(--ok);color:#fff;border-color:transparent}
+.tr-links{display:grid;gap:8px}
+.tr-link{font:inherit;text-align:left;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tr-link span{font-size:11.3px;color:var(--ink-2)}
+.tr-link:hover{border-color:var(--brand)}
+.tr-link.off{border-style:dashed;opacity:.85}
+@media print{body.tr-print-561 .side,body.tr-print-561 .topbar,body.tr-print-561 .pagehead,body.tr-print-561 .rp-chain,
+  body.tr-print-561 .tr-ed,body.tr-print-561 .tr-appr,body.tr-print-561 .tr-lockcard,body.tr-print-561 .tr-exp,body.tr-print-561 .tr-ai,
+  body.tr-print-561 .tr-rules,body.tr-print-561 .tr-edh .pill,body.tr-print-561 .tr-t5grid>.stack:first-child{display:none!important}
+  body.tr-print-561 .tr-t5grid{display:block}
+  body.tr-print-561 .tr-doc{max-height:none;border:0;padding:0}}
+/* คู่มือ */
+.tr-man{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.tr-man{grid-template-columns:1fr}}
+.tr-toc{position:sticky;top:76px;display:flex;flex-direction:column;gap:2px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+@media(max-width:900px){.tr-toc{position:static;flex-direction:row;flex-wrap:wrap}}
+.tr-toc button{font:inherit;font-size:12px;text-align:left;padding:6px 9px;border:0;border-radius:8px;background:none;color:var(--ink-2);cursor:pointer}
+.tr-toc button:hover{background:var(--panel-2);color:var(--ink)}
+.tr-mbody{display:grid;gap:14px}
+.tr-mbody section{scroll-margin-top:80px}
+.tr-ol{margin:6px 0 0;padding-left:20px;font-size:12.8px;line-height:1.75;color:var(--ink-2)}
+.tr-ol code,.tr-ol code{font-size:11px;background:var(--panel-2);padding:1px 5px;border-radius:5px}
+.tr-steps{margin:6px 0 0;padding-left:0;list-style:none;display:grid;gap:8px}
+.tr-steps li{padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:12.6px;line-height:1.6}
+.tr-steps li>div{color:var(--ink-2);margin-top:2px}
+.tr-steps li .lnk{font-size:11.5px;margin-left:6px}
+.tr-steps li:target,.tr-flash{box-shadow:0 0 0 2px var(--brand)}
+.tr-dl{display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr);gap:6px 14px;margin:6px 0 0;font-size:12.5px;line-height:1.6}
+.tr-dl dt{font-weight:600}
+.tr-dl dd{margin:0;color:var(--ink-2)}
+@media(max-width:640px){.tr-dl{grid-template-columns:1fr}.tr-dl dd{margin-bottom:6px}}
+.tr-faq{border-top:1px solid var(--line);padding:8px 0}
+.tr-faq summary{cursor:pointer;font-size:12.8px;font-weight:600}
+.tr-faq p{margin:6px 0 0;font-size:12.5px;color:var(--ink-2);line-height:1.7}
+/* ปุ่ม "?" บนหัวหน้า */
+.pagehead:has(.tr-help){position:relative;padding-right:40px}
+.pagehead .tr-help{position:absolute;top:0;right:0;width:26px;height:26px;border-radius:99px;border:1px solid var(--line);background:var(--panel);
+  color:var(--brand);font-weight:700;font-size:13px;cursor:pointer;display:grid;place-items:center}
+.pagehead .tr-help:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,var(--panel))}
+@media print{.tr-help,.tr-layers{display:none!important}}
+.nav .lockb[data-k]{white-space:nowrap}
 </style>
 </head>
 <body data-brand="A" data-mode="light">
@@ -809,6 +961,8 @@ tr.pl-done td{opacity:.55}
       <section class="view" id="v-syslog"></section>
       <section class="view" id="v-integr"></section>
       <section class="view" id="v-followup"></section>
+      <section class="view" id="v-t561"></section>
+      <section class="view" id="v-manual"></section>
       <div style="margin-top:26px;font-size:10.6px;color:var(--ink-3);line-height:1.65;border-top:1px solid var(--line);padding-top:14px">
         <b style="color:var(--ink-2)" id="fBrand">OpenInnoScore</b> · เครื่องมือ <b style="color:var(--ink-2)">ประเมิน</b> (diagnostic) ไม่ใช่การพยากรณ์ ·
         <b style="color:var(--ink-2)" id="fRemark"></b> ·
@@ -998,8 +1152,12 @@ const pct1 = v => fmt(v * 100, 1) + "%";
    สมการ E1–E13 ของเอกสาร SignalB_OpenInnoScore_Equations_Workflow_20261005_v2
    ฐานอ้างอิง = REF-928 ที่ freeze แล้ว (928 firm-years) — ไม่ใช่ snapshot 196 บริษัทอีกต่อไป
    ความลับทางการค้า: parameter card, V̂f และฐานอ้างอิงอยู่ใน OIS (ois_model.json) — ห้ามแสดงค่าตัวเลขเหล่านี้บนหน้าจอ
-   ฉบับใช้งานจริงต้องย้ายชั้นนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์ */
-const OPAR = OIS.par, OM = OIS.mean, OCUT = OIS.cut;
+   ฉบับใช้งานจริงต้องย้ายชั้นนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์
+   โหมดเซิร์ฟเวอร์ (OIS.server — ไฟล์ OpenInnoScore_server.html): ไม่มี par / chol ในไฟล์ ·
+   ampOf / ampT1 / band90 ส่งต่อให้ OIS_REMOTE (src/v2_remote.js) ซึ่งเรียก /api/amp และ /api/band
+   โหมดออฟไลน์ (ไม่มี OIS.server): ทำงานเหมือนเดิมทุกตำแหน่ง */
+const OIS_SRV = !!OIS.server;
+const OPAR = OIS_SRV ? OIS_REMOTE.par : OIS.par, OM = OIS.mean, OCUT = OIS.cut;
 const IND = DATA.ind, COMPS = DATA.comps;
 const byT = Object.fromEntries(COMPS.map(c => [c.t, c]));
 
@@ -1026,11 +1184,12 @@ const cen = (P, F, G, W) => ({ P: wins(P, "P") - OM.P, F: wins(F, "F") - OM.F,
 /** E4 · Board Amplification Signal = ความชันของ promotion focus ภายใต้บอร์ดนี้
  *  amp = β1 + δF·cF + δG·cG + δW·cW   (δT ถูกปิดด้วย evidence gate g_T = 0 — อายุงานไม่มีผลต่อคะแนน) */
 function ampOf(fam, pol, fem, ten) {
+  if (OIS_SRV) return OIS_REMOTE.ampOf(fam, pol, fem);
   const z = cen(0, fam, pol, fem);
   return OPAR.b1 + OPAR.dF * z.F + OPAR.dG * z.G + OPAR.dW * z.W;
 }
 /** สูตรทางเลือก B_T1 (H1 + H4 เท่านั้น) — แนวทาง Pilot Use case 2 ให้แสดงคู่กับป้าย Caution */
-function ampT1(fem) { const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
+function ampT1(fem) { if (OIS_SRV) return OIS_REMOTE.ampT1(fem); const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
 /** E5 · Signal B = cP × amp */
 const cpOf = promo => wins(promo, "P") - OM.P;
 const signalB = (promo, amp) => cpOf(promo) * amp;
@@ -1041,6 +1200,7 @@ const REF_T1 = OIS.refT1;
 const REF_AMP = OIS.refAmp;                   // amp ของ 928 แถว (เรียงแล้ว)
 const REF_PROMO = OIS.refP;                   // P หลัง winsorise ของ 928 แถว (เรียงแล้ว)
 const REF_PTS = OIS.pts;                      // [P_w, amp, quad, tier, ind, year, cF, cG, cW] × 928 (ไม่มีชื่อบริษัท)
+                                              // โหมดเซิร์ฟเวอร์: cF/cG/cW เรียงแยกทีละคอลัมน์ (คงการกระจาย แต่ไม่ผูกกับ amp ของแถว)
 const ampPct = a => Math.round(midRank(REF_AMP, q8(a)) * 10) / 10;            // board_amp_pct (แกน y)
 const promoPct = p => Math.round(midRank(REF_PROMO, q8(wins(p, "P"))) * 10) / 10;  // ceo_drive_pct (แกน x)
 const oisOf = b => midRank(REF_B, q8(b));
@@ -1096,7 +1256,7 @@ const QN = OIS.qn;
 /* E11 · ช่วง 90% ของ OpenInnoScore — Krinsky & Robb (1986) 500 ชุด
    θ^(r) ~ N(θ̂, V̂f) สร้างจาก Cholesky ของ V̂f ด้วย seed คงที่ เพื่อให้ผลซ้ำได้
    บริษัทในฐาน REF-928 ใช้ช่วงจากไฟล์ STATA โดยตรง (OIS.co[t].band); ค่าป้อนที่ผู้ใช้แก้คำนวณสดด้วยชุดเดียวกัน */
-const KR = (() => {
+const KR = OIS_SRV ? [] : (() => {               // โหมดเซิร์ฟเวอร์: ชุด θ^(r) อยู่บนเซิร์ฟเวอร์ (server/ois_engine.py)
   const L = OIS.chol, mu = [OPAR.b1, OPAR.dF, OPAR.dG, OPAR.dW];
   let s = OIS.seed % 2147483647 || 1;
   const u = () => (s = (s * 48271) % 2147483647) / 2147483647;
@@ -1119,6 +1279,7 @@ function krRef() {
 }
 /** [ขอบล่าง, ขอบบน] ของช่วง 90% สำหรับค่าป้อนชุดหนึ่ง */
 function band90(promo, fam, pol, fem) {
+  if (OIS_SRV) return OIS_REMOTE.band90(promo, fam, pol, fem);
   const v = cen(promo, fam, pol, fem), out = [], R = krRef();
   for (let r = 0; r < KR.length; r++) {
     const t = KR[r];
@@ -3029,6 +3190,31 @@ boot();
    ต่อท้าย app.js — ใช้ตัวช่วยที่ประกาศไว้แล้วทั้งหมด
    ============================================================================ */
 
+/* ---------------------------------------------------------------- ระดับสิทธิ์ (แก้ไขครั้งที่ 2.2)
+   Level 1 Free · Level 2 Pro (Pay-Per-Use) · Level 3 Pro Max (Subscription, add-on จาก Pro)
+   ประกาศไว้ที่นี่เพราะไฟล์นี้ render ตั้งแต่ตอนโหลด (ก่อน v2_tiers.js) — ตารางสิทธิ์เต็มอยู่ใน v2_tiers.js */
+const PLAN_RANK = { free: 0, pro: 1, max: 2 };
+const PLAN_LAB = { free: "Free", pro: "Pro", max: "Pro Max" };
+const tierRank = () => PLAN_RANK[S.plan] ?? 0;
+/** มุมมองธนาคาร (Pilot) — ล็อกตัวแปรบริบทใน What-if */
+const wiCtxLocked = () => { try { return typeof ucLens === "function" && ["credit", "bankbod"].includes(ucLens().id); } catch (e) { return false; } };
+/** นับคำของข้อความไทย + อังกฤษ — ใช้ Intl.Segmenter ถ้ามี ไม่งั้นนับคำละตินด้วยช่องว่าง และประมาณคำไทยด้วยจำนวนอักขระ / 4.5 */
+function wordCount(txt) {
+  const s = String(txt || "");
+  if (!s.trim()) return 0;
+  try {
+    if (typeof Intl !== "undefined" && Intl.Segmenter) {
+      let n = 0;
+      for (const seg of new Intl.Segmenter("th", { granularity: "word" }).segment(s)) if (seg.isWordLike) n++;
+      return n;
+    }
+  } catch (e) { }
+  const thai = (s.match(/[฀-๿]/g) || []).length;
+  const latin = s.replace(/[฀-๿]+/g, " ").split(/\s+/).filter(w => /[A-Za-z0-9]/.test(w)).length;
+  return latin + Math.round(thai / 4.5);
+}
+const FREE_MIN_WORDS = 2000;
+
 /* ---------------------------------------------------------------- เครื่องมือสถิติ */
 /** ควอนไทล์ของอาร์เรย์ (ไม่ต้องเรียงมาก่อน) */
 function qAt(arr, p) {
@@ -4141,8 +4327,8 @@ function viewDocs() {
     T("Fast data extraction from uploaded files — every field can be corrected by hand and every number says where it came from.",
       "ดึงข้อมูลจากเอกสารที่อัปโหลดอย่างรวดเร็ว — แก้ค่าเองได้ทุกช่อง และทุกตัวเลขบอกที่มา"))
     + flow + `<div class="grid g-side">
-      <div class="card">
-        <h3>${T("Upload", "อัปโหลดเอกสาร")}</h3>
+      ${tierRank() < 1 ? docsFreeCard() : `<div class="card">
+        <h3>${T("Upload", "อัปโหลดเอกสาร")} <span class="pill ok" style="font-size:10px">${PLAN_LAB[S.plan]}</span></h3>
         <p class="desc">${T("PDF or text · read in your browser only, never sent to a server.", "PDF หรือไฟล์ข้อความ · อ่านในเบราว์เซอร์เท่านั้น ไม่ถูกส่งออกไปที่เซิร์ฟเวอร์ใด")}</p>
         <div class="dz" id="dzA" tabindex="0" role="button">
           <div style="font-size:24px;opacity:.4">⬆</div>
@@ -4158,7 +4344,10 @@ function viewDocs() {
         <div class="note" style="margin-top:11px;font-size:10.8px">
           ${T("The year-on-year comparison needs the firm-level panel for every year, which is Phase II. The prototype uses the 2023 snapshot.",
       "การเทียบกับปีก่อนต้องใช้แผงข้อมูลรายบริษัทรายปี ซึ่งอยู่ใน Phase II · ต้นแบบใช้ภาพปี 2566")}</div>
-      </div>
+        <div class="tr-auto">
+          <button class="btn g" disabled title="เฟสถัดไป · ต้องเชื่อม One Report / SET">⇣ ดึงรายงานประจำปีอัตโนมัติ (เฟสถัดไป · ต้องเชื่อม One Report/SET)</button>
+          <span class="pill ${tierRank() >= 2 ? "blue" : "mute"}" style="font-size:10px">${tierRank() >= 2 ? "Pro Max · เตรียมไว้" : "สิทธิ์ Pro Max"}</span></div>
+      </div>`}
       <div class="stack">
         <div class="card">
           <h3>${T("Extracted data summary", "สรุปข้อมูลที่ดึงได้")}
@@ -4208,6 +4397,49 @@ function viewDocs() {
       </div>
     </div>`;
 }
+/** Level 1 · Free — ตรวจภาษา CEO ได้จากข้อความที่พิมพ์/วางเอง (≥ 2,000 คำ) หรือแบบสอบถาม RFQ · อัปโหลด PDF/TXT เป็นสิทธิ์ Pro */
+let _freeBuf = "";
+function docsFreeCard() {
+  const n = wordCount(_freeBuf), ok = n >= FREE_MIN_WORDS;
+  return `<div class="stack"><div class="card">
+      <h3>ตรวจภาษา CEO · พิมพ์หรือวางข้อความเอง <span class="pill mute" style="font-size:10px">Free</span></h3>
+      <p class="desc">ระดับ Free ตรวจได้จากข้อความที่พิมพ์หรือวางเอง <b>อย่างน้อย ${fmt(FREE_MIN_WORDS)} คำ</b>
+        (สารจากประธาน/CEO ทั้งฉบับ) เพื่อให้สัดส่วนคำมีความเสถียรพอ · ข้อความถูกนับในเบราว์เซอร์ ไม่ถูกส่งออก</p>
+      <textarea class="inp" id="trFreeTxt" rows="8" style="width:100%;resize:vertical;font-size:12.5px"
+        placeholder="วางสารจากประธานกรรมการ / CEO ทั้งฉบับที่นี่ (ภาษาไทยหรืออังกฤษ)">${esc(_freeBuf)}</textarea>
+      <div class="tr-wc ${ok ? "ok" : ""}" id="trFreeWc" aria-live="polite">${fmt(n)} / ${fmt(FREE_MIN_WORDS)} คำ${ok ? " · พร้อมวิเคราะห์" : ` · ขาดอีก ${fmt(FREE_MIN_WORDS - n)} คำ`}</div>
+      <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">
+        <button class="btn p" id="trFreeRun"${ok ? "" : " disabled"}>วิเคราะห์ข้อความ</button>
+        ${(S.ceo || isEdited() || S.docs.length) ? `<button class="btn g" id="btnResetA">คืนค่าจากฐานข้อมูล</button>` : ""}</div>
+      <p class="tr-sm" id="trFreeMsg">${ok ? "" : `ข้อความยังไม่ถึง ${fmt(FREE_MIN_WORDS)} คำ — ระบบจะยังไม่วิเคราะห์ เพราะข้อความสั้นทำให้สัดส่วนคำแกว่งมาก`}</p>
+    </div>
+    <div class="card tr-rfq">
+      <h3>แบบสอบถาม RFQ <span class="pill warn" style="font-size:10px">รอแบบฟอร์ม</span></h3>
+      <p class="desc" style="margin:0">แบบสอบถาม RFQ — รอแบบฟอร์มจากผู้ว่าจ้าง · เมื่อได้รับแบบฟอร์มแล้วจะเปิดให้ตอบแทนการวางข้อความได้</p>
+      <button class="btn g" disabled style="margin-top:9px">เริ่มทำแบบสอบถาม (รอแบบฟอร์ม)</button></div>
+    <div class="card tr-up-lock">
+      <h3>อัปโหลด PDF / TXT <span class="pill blue" style="font-size:10px">Pro</span></h3>
+      <p class="desc" style="margin:0">ระดับ Pro อัปโหลดรายงานประจำปี (PDF/TXT) ให้ระบบสแกนคำอัตโนมัติ · Pro Max เพิ่มการดึงรายงานประจำปีให้อัตโนมัติ (เฟสถัดไป)</p>
+      <button class="btn s" data-setplan="pro" style="margin-top:9px">เปลี่ยนเป็น Pro (Pay-Per-Use)</button></div></div>`;
+}
+function wireDocsFree(h) {
+  const ta = h.querySelector("#trFreeTxt"); if (!ta) return;
+  const wc = h.querySelector("#trFreeWc"), run = h.querySelector("#trFreeRun"), msg = h.querySelector("#trFreeMsg");
+  let tm;
+  const upd = () => {
+    _freeBuf = ta.value;
+    const n = wordCount(_freeBuf), ok = n >= FREE_MIN_WORDS;
+    wc.textContent = `${fmt(n)} / ${fmt(FREE_MIN_WORDS)} คำ` + (ok ? " · พร้อมวิเคราะห์" : ` · ขาดอีก ${fmt(FREE_MIN_WORDS - n)} คำ`);
+    wc.classList.toggle("ok", ok); run.disabled = !ok;
+    msg.textContent = ok ? "" : `ข้อความยังไม่ถึง ${fmt(FREE_MIN_WORDS)} คำ — ระบบจะยังไม่วิเคราะห์ เพราะข้อความสั้นทำให้สัดส่วนคำแกว่งมาก`;
+  };
+  ta.addEventListener("input", () => { clearTimeout(tm); tm = setTimeout(upd, 120); });
+  run.onclick = () => {
+    upd();
+    if (wordCount(_freeBuf) < FREE_MIN_WORDS) return toast(`ต้องมีอย่างน้อย ${fmt(FREE_MIN_WORDS)} คำ`);
+    analyseDoc(_freeBuf.slice(0, 120000), "ข้อความที่พิมพ์/วางเอง");
+  };
+}
 function analyseDoc(txt, name) {
   if (!txt || !txt.trim()) return toast(T("Nothing to analyse", "ไม่มีข้อความให้วิเคราะห์"));
   const r = analyseText(txt);
@@ -4232,6 +4464,7 @@ function exportCeoTxt() {
   render();
 }
 function wireDocs(h) {
+  wireDocsFree(h);
   const dz = h.querySelector("#dzA"), fi = h.querySelector("#fileA");
   if (dz && fi) {
     dz.onclick = () => fi.click();
@@ -4703,20 +4936,29 @@ VIEWS.fit = viewFit;
 
 
 /* ============================================================================
-   What-if Studio — ฉบับแก้ไขครั้งที่ 2
-   คันโยกมีสองตัวเท่านั้น: สัดส่วนกรรมการหญิง (fem) และภาษา CEO (dp)
-   กรรมการครอบครัว / political ties / อายุงาน แสดงเป็นข้อมูลบริบท อ่านอย่างเดียว (R6, δT = 0)
+   What-if Studio — ฉบับแก้ไขครั้งที่ 2.2
+   คันโยกที่ระบบเสนอมีสองตัว: สัดส่วนกรรมการหญิง (fem) และภาษา CEO (dp)
+   ระดับ Pro ปรับตัวแปรบอร์ดได้ 3 ตัว (หญิง · ครอบครัว · political ties) ตามที่ผู้ว่าจ้างเลือก
+   แต่ครอบครัวและ political ties ติดป้ายเตือนถาวร และผลจากสองตัวนี้เป็น "ตัวแปรบริบท" ไม่ใช่ทางเลือกเชิงนโยบาย
+   ฉากทัศน์สำเร็จรูปและ Zone C ยังขยับเฉพาะ fem และ dp · อายุงานเป็นบริบท (δT = 0)
    ============================================================================ */
 const TZ_LABEL = { fem: { th: "สัดส่วนกรรมการหญิง", en: "Female directors" } };
 const TZ_WHY = {
   fem: { th: "สัดส่วนกรรมการหญิงเป็นตัวแปรที่สัมพันธ์กับการหนุนสัญญาณมากที่สุดในสูตร E4 (ทิศทางบวก) และเป็นคันโยกเดียวด้านองค์ประกอบบอร์ดที่ระบบพิจารณา",
     en: "Female representation is the variable most strongly associated with amplification in formula E4 (positive direction), and the only board-composition lever the engine examines." } };
 const WI_CTRL2 = [{ k: "fem", l: "สัดส่วนกรรมการหญิง", min: 0, max: .7, step: .01, fmt: v => pct1(v) }];
+const FAM_MAX = 0.6127;                                 // ช่วงที่พบจริงใน REF-928
+const WARN_FAM = "ข้อมูลบริบท — ความสัมพันธ์ไม่ทนต่อการวิเคราะห์ fixed-effects (H2) · ไม่ใช่คำแนะนำให้ปรับ";
+const WARN_POL = "ไม่ใช้เป็นเหตุผลเชิงบวก (R6) · ความสัมพันธ์ไม่ทนต่อ fixed-effects (H3) · ไม่ใช่เป้าการสรรหา";
+const CHIP_CTX = "ผลจากตัวแปรบริบท — ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย";
+const LOCK_BANK = "ล็อกในมุมมองธนาคาร ตามแนวทาง Pilot";
+/** สถานะจำลองขยับตัวแปรบริบท (ครอบครัว / political ties) ออกจากค่าจริงหรือไม่ */
+const wiCtxMoved = (c, w) => Math.abs((w.fam ?? c.fam) - c.fam) > 1e-9 || (w.pol ?? c.pol) !== c.pol;
 
 /** OpenInnoScore ของสถานะจำลอง — ใช้ค่าดิบจริงเมื่อ dp ไม่เปลี่ยน เพื่อให้ "Current" ตรงกับทุกหน้า */
 function wiScore(c, w) {
   const promo = w.dp === c.dp ? c.promo : promoAtPct(w.dp);
-  const amp = ampOf(c.fam, c.pol, w.fem, c.ten);
+  const amp = ampOf(w.fam ?? c.fam, w.pol ?? c.pol, w.fem, c.ten);   // ten ไม่เข้าสูตร (δT = 0)
   return { promo, amp, ipi: Math.round(oisOf(signalB(promo, amp))), zone: zoneOf(promo, amp) };
 }
 /** ฉากทัศน์สำเร็จรูป (F3) — ขยับเฉพาะ fem และ dp */
@@ -4732,15 +4974,19 @@ function wiInit2(force) {
   const c = cur();
   if (!S.wi || S.wi.t !== c.t || force)
     S.wi = { t: c.t, fem: c.fem, fam: c.fam, ten: c.ten, pol: c.pol, dp: c.dp, src: "ค่าจริงของบริษัท", preset: "cur" };
-  // ตัวแปรบริบทตรึงไว้ที่ค่าจริงเสมอ (ไม่ใช่คันโยก)
-  S.wi.fam = c.fam; S.wi.ten = c.ten; S.wi.pol = c.pol;
+  // อายุงานตรึงไว้เสมอ (δT = 0) · ครอบครัว / political ties ตรึงไว้ในมุมมองธนาคาร หรือเมื่อยังไม่เคยตั้ง
+  S.wi.ten = c.ten;
+  if (S.wi.fam === undefined || wiCtxLocked()) S.wi.fam = c.fam;
+  if (S.wi.pol === undefined || wiCtxLocked()) S.wi.pol = c.pol;
+  S.wi.fam = clamp(S.wi.fam, 0, Math.max(FAM_MAX, c.fam));
+  S.wi.pol = S.wi.pol ? 1 : 0;
   return S.wi;
 }
 wiInit = wiInit2;
 /** ฉากทัศน์เปรียบเทียบ — เฉพาะคันโยกที่พิจารณา */
 function wiScenarios2(c, w) {
   const base = wiScore(c, w).ipi, out = [];
-  const mk = (l, why, fem, dp) => { const v = wiScore(c, { fem, dp }).ipi; if (v !== base) out.push({ l, why, v, d: v - base }); };
+  const mk = (l, why, fem, dp) => { const v = wiScore(c, { fem, dp, fam: w.fam, pol: w.pol }).ipi; if (v !== base) out.push({ l, why, v, d: v - base }); };
   mk("สัดส่วนกรรมการหญิง +10 จุด", "คันโยกด้านบอร์ดที่สัมพันธ์กับคะแนนมากที่สุดตามสูตร", clamp(w.fem + .1, 0, 1), w.dp);
   mk("สัดส่วนกรรมการหญิงถึง p90 ของอุตสาหกรรม", "ค่าที่ดีที่สุดที่พบจริงในกลุ่ม", Math.max(w.fem, femQ(c.ind, .9)), w.dp);
   if (w.fem < .3) mk("สัดส่วนกรรมการหญิง 30% (แนวทาง ตลท.)", "ขั้นต่ำตามแนวทางกำกับ", .3, w.dp);
@@ -4787,6 +5033,75 @@ function ctxRows(c) {
       <span class="num"><b>${fmt(c.ten, 1)} ปี</b> <span style="color:var(--ink-3);font-size:10.5px">${esc(TEN_NOTE)}</span></span></div>`;
 }
 
+/** ตัวแปรบริบทที่ปรับได้ในระดับ Pro — ครอบครัว (ตัวเลื่อนในช่วง REF-928) และ political ties (สลับ 0/1 เท่านั้น) พร้อมป้ายเตือนถาวร */
+function ctxCtrls(c, w) {
+  const lk = wiCtxLocked(), dis = lk ? " disabled aria-disabled=\"true\"" : "";
+  return `<div class="tr-ctxh">ตัวแปรบริบท — ปรับได้เพื่อเข้าใจโมเดล ไม่ใช่คันโยกที่ระบบเสนอ</div>
+    ${lk ? `<div class="note warn tr-banklock">🔒 ${esc(LOCK_BANK)} — ครอบครัวและ political ties ตรึงไว้ที่ค่าจริง</div>` : ""}
+    <div class="tr-ctx${lk ? " locked" : ""}">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span>สัดส่วนกรรมการครอบครัว</span>
+        <span class="num"><b>${pct1(w.fam)}</b> <span style="color:var(--ink-3);font-size:10.5px">เดิม ${pct1(c.fam)}</span></span></div>
+      <input type="range" id="wiFam" min="0" max="${Math.max(FAM_MAX, c.fam)}" step="any" value="${w.fam}"${dis}
+        style="width:100%;accent-color:var(--ink-3)" aria-describedby="wiFamWarn">
+      <div class="tr-warn" id="wiFamWarn">⚠ ${esc(WARN_FAM)}</div>
+      <div style="font-size:10.5px;color:var(--ink-3)">ช่วงตัวเลื่อน 0–${pct1(FAM_MAX)} = ช่วงที่พบจริงในฐานอ้างอิง REF-928</div>
+    </div>
+    <div class="tr-ctx${lk ? " locked" : ""}">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px;gap:8px">
+        <span>political ties <span style="color:var(--ink-3);font-size:10.5px">เดิม ${c.pol ? "1 · มี" : "0 · ไม่มี"}</span></span>
+        <div class="seg" role="radiogroup" aria-label="political ties">
+          <button data-wipol="0" role="radio" aria-selected="${!w.pol}"${dis}>0 · ไม่มี</button>
+          <button data-wipol="1" role="radio" aria-selected="${!!w.pol}"${dis}>1 · มี</button></div></div>
+      <div class="tr-warn">⚠ ${esc(WARN_POL)}</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:8px 0 12px">
+      <span>อายุงานเฉลี่ยของบอร์ด</span>
+      <span class="num"><b>${fmt(c.ten, 1)} ปี</b> <span style="color:var(--ink-3);font-size:10.5px">${esc(TEN_NOTE)}</span></span></div>`;
+}
+/** ฉากทัศน์ขาลง (Downside) — สิทธิ์ Pro Max · คิดจากค่าจริงของบริษัท ด้วยสูตรและช่วง 90% ชุดเดียวกับทุกหน้า */
+function downsideRows(c) {
+  const bs = c.bsize || 11, fn = Math.round(c.fem * bs), fy = c.fy || FY_SHOWN;
+  const dp25 = clamp(c.dp - 25, 0, 100);
+  const mk = (l, as, femN, dp) => {
+    const fem = clamp(femN / bs, 0, 1), promo = dp === c.dp ? c.promo : promoAtPct(dp);
+    const amp = ampOf(c.fam, c.pol, fem, c.ten), ois = oisOf(signalB(promo, amp));
+    let band = null; try { const b = band90(promo, c.fam, c.pol, fem); if (Array.isArray(b)) band = b; } catch (e) { }
+    const quad = quadOf(cpOf(promo), amp);
+    const flag = inDomainOf(c.ind) && quad === "A" && !!band && band[0] >= 50 && REGIME[fy] !== "FAIL";
+    return { l, as, ois, tier: tierOf(ois), quad, band, flag };
+  };
+  const base = mk("ปัจจุบัน (ค่าจริง)", "—", fn, c.dp);
+  const rows = [];
+  if (fn >= 1) rows.push(mk("กรรมการหญิงลาออก 1 คน", `แทนที่ด้วยกรรมการชาย · ขนาดบอร์ด ${bs} คนเท่าเดิม`, fn - 1, c.dp));
+  if (fn >= 2) rows.push(mk("กรรมการหญิงลาออก 2 คน", `แทนที่ด้วยกรรมการชาย · ขนาดบอร์ด ${bs} คนเท่าเดิม`, fn - 2, c.dp));
+  rows.push(mk("สารถึงผู้ถือหุ้นปีถัดไประมัดระวังขึ้น", `CEO Promotion Focus −25 เปอร์เซ็นไทล์ (${c.dp} → ${dp25})`, fn, dp25));
+  if (fn >= 1) rows.push(mk("ทั้งสองอย่าง", `กรรมการหญิงลาออก ${fn >= 2 ? "2" : "1"} คน + CEO Promotion Focus −25 เปอร์เซ็นไทล์`, Math.max(0, fn - 2), dp25));
+  return { base, rows, bs, fn, assumedSize: !c.bsize };
+}
+function downsideBlock(c) {
+  if (tierRank() < 2) return `<div class="card tr-lockcard" style="margin-bottom:14px">
+      <h3>ฉากทัศน์ขาลง (Downside) <span class="pill blue">Pro Max</span></h3>
+      <p class="desc" style="margin:0">จำลองกรณีกรรมการหญิงลาออก 1–2 คน หรือสารถึงผู้ถือหุ้นปีถัดไประมัดระวังขึ้น แล้วดูว่า tier / quadrant เปลี่ยนหรือไม่ และธงสัญญาณ OI หายไปหรือไม่ — เป็นสิทธิ์ของ Pro Max (Subscription)</p>
+      <button class="btn s" data-setplan="max" style="margin-top:10px">ดูสิทธิ์ Pro Max</button></div>`;
+  const d = downsideRows(c), b = d.base;
+  const flagTxt = r => b.flag ? (r.flag ? `<span class="pill ok">ยังคงอยู่</span>` : `<span class="pill crit">หายไป</span>`)
+    : (r.flag ? `<span class="pill ok">ปรากฏ</span>` : `<span class="pill mute">ไม่มีตั้งแต่ต้น</span>`);
+  const dT = r => { const x = Math.round(r.ois) - Math.round(b.ois); return x > 0 ? `+${x}` : x < 0 ? `${x}` : "±0"; };
+  return `<div class="card tr-down" style="margin-bottom:14px">
+    <h3>ฉากทัศน์ขาลง (Downside) <span class="pill blue">Pro Max</span></h3>
+    <p class="desc">ตั้งต้นจากค่าจริงของ ${esc(c.t)} (ไม่ใช่สถานะจำลองด้านบน) · ตัวแปรบริบทตรึงไว้ที่ค่าจริง · ผลตามสูตรเชิงความสัมพันธ์ ไม่ใช่การพยากรณ์</p>
+    ${d.assumedSize ? `<div class="note warn" style="margin-bottom:10px;font-size:11px">ยังไม่มีจำนวนกรรมการของบริษัทนี้ — สมมติขนาดบอร์ด ${d.bs} คน (กรอกได้ใน Zone A)</div>` : ""}
+    <div class="tw"><table class="tr-tbl"><thead><tr><th>ฉากทัศน์</th><th>สมมติฐาน</th><th class="n">OIS</th><th class="n">เทียบปัจจุบัน</th><th class="n">Tier</th><th>quadrant</th><th>ธงสัญญาณ OI</th></tr></thead>
+      <tbody><tr class="hl"><td><b>${esc(b.l)}</b></td><td>กรรมการหญิง ≈ ${d.fn} คน จาก ${d.bs} · CEO PF ${c.dp}</td><td class="n"><b>${fmt(b.ois, 1)}</b></td><td class="n">—</td>
+        <td class="n">${b.tier}</td><td>${esc(ZONES[b.quad].l)}</td><td>${b.flag ? `<span class="pill ok">มี</span>` : `<span class="pill mute">ไม่มี</span>`}</td></tr>
+      ${d.rows.map(r => `<tr><td><b>${esc(r.l)}</b></td><td>${esc(r.as)}</td><td class="n">${fmt(r.ois, 1)}</td><td class="n">${dT(r)}</td>
+        <td class="n">${r.tier}${r.tier !== b.tier ? ` <span class="pill warn">เปลี่ยน</span>` : ""}</td>
+        <td>${esc(ZONES[r.quad].l)}${r.quad !== b.quad ? ` <span class="pill warn">ย้ายช่อง</span>` : ""}</td><td>${flagTxt(r)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="note tr-qnote" style="margin-top:10px">การคำนวณรายไตรมาสต้องใช้ข้อมูลรายไตรมาสซึ่งงานวิจัยยังไม่มี (ข้อมูลเป็นรายปี) — เตรียมไว้สำหรับเฟสถัดไป</div>
+  </div>`;
+}
+
 function viewStudioPro() {
   const c = cur(), w = wiInit2();
   const s1 = wiScore(c, w), ipi1 = s1.ipi, d = ipi1 - c.ipi;
@@ -4795,7 +5110,7 @@ function viewStudioPro() {
   <div class="card" style="margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div><h3 style="margin:0">ฉากทัศน์สำเร็จรูป</h3>
-        <p class="desc" style="margin:2px 0 0">ขยับเฉพาะสัดส่วนกรรมการหญิงและภาษา CEO · กรรมการครอบครัว political ties และอายุงานไม่ใช่คันโยก</p></div>
+        <p class="desc" style="margin:2px 0 0">ฉากทัศน์สำเร็จรูปขยับเฉพาะสัดส่วนกรรมการหญิงและภาษา CEO (และคืนตัวแปรบริบทเป็นค่าจริง) · กรรมการครอบครัว political ties และอายุงานไม่ใช่คันโยกที่ระบบเสนอ</p></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${WI_PRESETS.map(p => `<button class="btn ${w.preset === p.k ? "p" : "g"}" data-preset="${p.k}"
         title="${esc(p.d || "")}" style="font-size:11.5px;padding:5px 11px">${esc(T(p.en, p.th))}</button>`).join("")}</div></div>
   </div>
@@ -4823,8 +5138,8 @@ function viewStudioPro() {
     </div>
 
     <div class="card">
-      <h3>② องค์ประกอบคณะกรรมการ</h3>
-      <p class="desc">เลื่อนเพื่อจำลองสัดส่วนกรรมการหญิงของบอร์ดชุดใหม่ · ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตร E4–E7 ไม่ใช่การพยากรณ์</p>
+      <h3>② องค์ประกอบคณะกรรมการ · 3 ตัวแปร</h3>
+      <p class="desc">กรรมการหญิง · กรรมการครอบครัว · political ties — ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตร E4–E7 ไม่ใช่การพยากรณ์ · คันโยกที่ระบบเสนอมีเฉพาะกรรมการหญิง</p>
       ${WI_CTRL2.map(v => `<div style="margin-bottom:13px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
           <span>${v.l} <span class="hlp" title="ตัวแปรที่สัมพันธ์กับการหนุนสัญญาณมากที่สุดในสูตร">ⓘ</span></span>
@@ -4832,13 +5147,14 @@ function viewStudioPro() {
         <input type="range" data-wi="${v.k}" min="${v.min}" max="${v.max}" step="${v.step}" value="${w[v.k]}" style="width:100%;accent-color:var(--brand)">
       </div>`).join("")}
       ${c.bsize ? `<div style="font-size:10.8px;color:${femaleN(w.fem, c.bsize) < CRIT_N ? "var(--warn)" : "var(--ink-3)"};margin:-6px 0 12px">${esc(critMassLine(Object.assign({}, c, { fem: w.fem })))}</div>` : `<div style="font-size:10.8px;color:var(--ink-3);margin:-6px 0 12px">${esc(critMassLine(c))}</div>`}
-      ${ctxRows(c)}
+      ${ctxCtrls(c, w)}
       <button class="btn s" id="btnWiReset" style="width:100%;justify-content:center">↺ กลับไปใช้โครงสร้างบอร์ดจริง</button>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:14px">
     <h3>ผลลัพธ์จำลอง <span style="font-weight:300;color:var(--ink-3);font-size:12px">· ตามสูตร เชิงความสัมพันธ์</span></h3>
+    ${wiCtxMoved(c, w) ? `<div class="tr-ctxchip" role="note">⚠ ${esc(CHIP_CTX)} · ครอบครัว ${pct1(c.fam)} → ${pct1(w.fam)} · political ties ${c.pol} → ${w.pol}</div>` : ""}
     <div class="grid g4 tight" style="gap:10px;margin:10px 0 14px">
       <div class="stat"><div class="k">OpenInnoScore ปัจจุบัน</div><div class="v num">${c.ipi}</div><div class="u">${ZONES[z0].l}</div></div>
       <div class="stat hero"><div class="k">OpenInnoScore จำลอง</div><div class="v num">${ipi1}</div><div class="u">${ZONES[zone1].l}</div></div>
@@ -4859,6 +5175,7 @@ function viewStudioPro() {
     ], { lw: 175, h: 10, max: 100 })}
   </div>
 
+  ${downsideBlock(c)}
   <div class="grid g-side-r">
     <div class="card">
       <h3>ฉากทัศน์เปรียบเทียบ</h3>
@@ -4883,13 +5200,16 @@ function wireStudioPro(h) {
   h.querySelectorAll("[data-wi]").forEach(r => r.oninput = () => { w[r.dataset.wi] = +r.value; w.preset = null; render(); });
   h.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
     const p = WI_PRESETS.find(x => x.k === b.dataset.preset); if (!p) return;
-    const v = p.f(c); w.fem = v.fem; w.dp = v.dp; w.preset = p.k;
+    const v = p.f(c); w.fem = v.fem; w.dp = v.dp; w.preset = p.k; w.fam = c.fam; w.pol = c.pol;   // ฉากทัศน์ไม่ขยับตัวแปรบริบท
     w.src = p.k === "cur" || p.k === "sq" ? "ค่าจริงของบริษัท" : `ฉากทัศน์ “${T(p.en, p.th)}”`;
     if (p.k === "cur") { S.ceo = null; _ceoBuf = ""; }
     toast(`ฉากทัศน์ · ${T(p.en, p.th)}`); render();
   });
   const dp = h.querySelector("#slDp");
   if (dp) dp.oninput = () => { w.dp = +dp.value; w.src = "ปรับด้วยตัวเลื่อนเอง"; w.preset = null; render(); };
+  const fam = h.querySelector("#wiFam");
+  if (fam) fam.oninput = () => { if (wiCtxLocked()) return; w.fam = +fam.value; w.preset = null; render(); };
+  h.querySelectorAll("[data-wipol]").forEach(b => b.onclick = () => { if (wiCtxLocked()) return toast(LOCK_BANK); w.pol = +b.dataset.wipol; w.preset = null; render(); });
   const rs = h.querySelector("#btnWiReset");
   if (rs) rs.onclick = () => { const k = wiInit2(true); k.dp = w.dp; k.src = w.src; render(); };
   const cr = h.querySelector("#btnCeoReset");
@@ -4949,8 +5269,8 @@ function studioTeaser(c) {
   const dc = v => v > 0 ? "var(--ok)" : v < 0 ? "var(--crit)" : "var(--ink)";
 
   const proItems = [
-    { h: T("Both levers together", "ปรับสองคันโยกพร้อมกัน"),
-      p: T("Female representation and CEO language — the only two inputs the engine treats as levers — moved at the same time, plus preset scenarios.", "สัดส่วนกรรมการหญิงและภาษา CEO — สองคันโยกเดียวที่ระบบพิจารณา — ขยับพร้อมกัน พร้อมฉากทัศน์สำเร็จรูป") },
+    { h: T("Three board variables + CEO language", "ปรับบอร์ด 3 ตัวแปร + ภาษา CEO"),
+      p: T("Female, family and political-ties variables plus CEO language; family and political ties carry permanent warnings and are never recommended.", "กรรมการหญิง กรรมการครอบครัว political ties และภาษา CEO · ครอบครัวและ political ties ติดป้ายเตือนถาวร และไม่อยู่ในข้อเสนอ") },
     { h: T("CEO language from your own files", "วัดภาษา CEO จากไฟล์ของคุณเอง"),
       p: T("Drop in a 56-1 or an annual report; the wording is scored in your browser, never uploaded.", "วางไฟล์ 56-1 หรือรายงานประจำปี ระบบนับคำในเบราว์เซอร์ของคุณเอง ไม่ส่งขึ้นเซิร์ฟเวอร์") },
     { h: T("Scenarios pushed in from Zone C", "รับฉากทัศน์จาก Zone C มาต่อยอด"),
@@ -5037,7 +5357,10 @@ function studioTeaser(c) {
               <i style="display:block;height:100%;border-radius:99px;background:${b.c};width:${clamp(b.v, 2, 100)}%"></i></span>
             <b class="num" style="color:#fff;text-align:right">${b.v}</b></div>`).join("")}</div>
         <div style="display:grid;gap:7px;margin-top:14px">
-          <button class="btn m" data-pro="1">${T("Switch to Pro", "เปลี่ยนเป็นแผน Pro")}</button>
+          ${tierRank() >= 1
+            ? `<button class="btn m" data-unlock="studio">ปลดล็อก What-if Studio ของ ${esc(c.t)} · ใช้ ${PRICE.studio} เครดิต</button>
+               <div style="font-size:10.4px;color:#9FB6CC;line-height:1.5">รวมการตรวจภาษา CEO · ปลดล็อกครั้งเดียวใช้กับบริษัทนี้ได้ตลอด · Pro Max ใช้ได้ทุกบริษัท</div>`
+            : `<button class="btn m" data-pro="1">${T("Switch to Pro", "เปลี่ยนเป็นแผน Pro")}</button>`}
           <button class="btn s" data-goto="billing">${T("See what the plan covers", "ดูรายละเอียดแผน")}</button></div>
         <div style="font-size:10.4px;color:#9FB6CC;margin-top:9px;line-height:1.6">
           ${T("Your slider position carries over — the studio opens exactly where you left it.",
@@ -5080,9 +5403,13 @@ wireStudio = function (h) { return isUnlocked("studio") ? wireStudioPro(h) : wir
 const _viewPeer = viewPeer, _wirePeer = wirePeer;
 viewPeer = function () {
   const c = cur();
+  if (tierRank() < 2 && S.peerAll) { S.peerAll = false; S.peers = []; }      // ข้ามอุตสาหกรรม = สิทธิ์ Pro Max
   if (!S.peers.length) S.peers = autoPeers(c).map(x => x.t);
   let h = _viewPeer();
-  const tog = `<button class="btn ${S.peerAll ? "p" : "g"}" id="btnPeerAll" style="font-size:12px;padding:6px 12px" title="เลือกบริษัทจากทุกอุตสาหกรรม">${S.peerAll ? "✓ " : ""}ข้ามอุตสาหกรรม</button>
+  const tog = tierRank() >= 2
+    ? `<button class="btn ${S.peerAll ? "p" : "g"}" id="btnPeerAll" style="font-size:12px;padding:6px 12px" title="เลือกบริษัทจากทุกอุตสาหกรรม / ข้ามประเภทธุรกิจ">${S.peerAll ? "✓ " : ""}ข้ามอุตสาหกรรม</button>`
+    : `<button class="btn g tr-locked" id="btnPeerAllLk" style="font-size:12px;padding:6px 12px" aria-disabled="true"
+        title="เทียบข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ เป็นสิทธิ์ Pro Max">🔒 ข้ามอุตสาหกรรม · Pro Max</button>
       <button class="btn g" id="btnPeerAuto"`;
   h = h.replace('<button class="btn g" id="btnPeerAuto"', tog);
   if (S.peerAll) {
@@ -5107,7 +5434,9 @@ wirePeer = function (h) {
     });
   }
   const tg = h.querySelector("#btnPeerAll");
-  if (tg) tg.onclick = () => { S.peerAll = !S.peerAll; if (!S.peerAll) S.peers = []; save(); render(); };
+  if (tg) tg.onclick = () => { if (tierRank() < 2) return; S.peerAll = !S.peerAll; if (!S.peerAll) S.peers = []; save(); render(); };
+  const lk = h.querySelector("#btnPeerAllLk");
+  if (lk) lk.onclick = () => toast("เทียบข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ เป็นสิทธิ์ Pro Max — ดูได้ที่หน้า เครดิตและแผน");
 };
 
 
@@ -5211,8 +5540,8 @@ render = function () {
   syncChrome = function () {
     _sync();
     const c = cur();
-    $("#chipCredit").innerHTML = `<span aria-hidden="true">◈</span> ${S.plan === "pro" ? "Pro" : "Free"} · <b>${S.credits}</b> token`;
-    $("#sPlan").textContent = `${S.plan === "pro" ? "Pro Plan" : "Free User"} · ${S.credits} token · บริษัทของคุณ ${S.freeCo || "—"}`;
+    $("#chipCredit").innerHTML = `<span aria-hidden="true">◈</span> ${PLAN_LAB[S.plan] || "Free"} · <b>${S.credits}</b> เครดิต`;
+    $("#sPlan").textContent = `${({ free: "Level 1 · Free", pro: "Level 2 · Pro", max: "Level 3 · Pro Max" })[S.plan] || "Free"} · ${S.credits} เครดิต · บริษัทของคุณ ${S.freeCo || "—"}`;
     if ($("#segLang")) $$("#segLang button").forEach(b => b.setAttribute("aria-selected", b.dataset.lang === S.lang));
     const z = ZONES[zoneOf(c.promo, c.amp)];
     $("#chipZone").innerHTML = `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${esc(z.l)} · OIS <b>${c.ipi}</b>`
@@ -5226,7 +5555,9 @@ render = function () {
 <script>/* ============================================================================
    Board Strategy Compass — Strategy Grid 2×2 และรายงานประเด็นสำหรับบอร์ด
    ตามข้อเสนอของลูกค้า (เอกสาร 2×2 grid · แก้ไขครั้งที่ 2.1)
-     · Grid คือ "ประเด็นที่บอร์ดควรหารือ" ไม่ใช่ "ช่องที่ควรย้ายไป" — ไม่มีเส้นทาง/เป้าหมาย
+     · Grid คือ "ประเด็นที่บอร์ดควรหารือ" ไม่ใช่ "ช่องที่ควรย้ายไป"
+       (แก้ไขครั้งที่ 2.2: ชั้น "จุดอ้างอิงและเส้นทางย้ายโซน" เป็นตัวเลือกเสริมของ Pro/Pro Max ปิดไว้เป็นค่าเริ่มต้น
+        จุดอ้างอิง = ค่ามัธยฐานช่อง Deliver ในอุตสาหกรรมเดียวกัน — ไม่ใช่เป้าหมายที่ระบบแนะนำ)
      · ใต้กราฟ = ประเด็นสำหรับบอร์ด 6 ส่วน: สิ่งที่ข้อมูลแสดง / สิ่งที่ยังสรุปไม่ได้ /
        คำถามสำหรับหารือ (3 ข้อ) / หลักฐานที่ควรตรวจ / เรื่องที่ให้บอร์ดพิจารณา / ผลหลังประชุม
      · ระบบเติมได้เฉพาะ 5 ส่วนแรก — "ผลหลังประชุม" มติ ผู้รับผิดชอบ ต้องมาจากการประชุมจริงและผู้ใช้กรอกเอง
@@ -5418,12 +5749,14 @@ const LS_GX = LS + "_gx";
   try { const o = JSON.parse(localStorage.getItem(LS_GX) || "null") || {};
     if (S.uc === undefined) S.uc = USECASES.some(u => u.id === o.uc) ? o.uc : "board";
     if (S.gxTable === undefined) S.gxTable = !!o.tb;
-  } catch (e) { S.uc = S.uc || "board"; S.gxTable = !!S.gxTable; }
+    if (S.gxPath === undefined) S.gxPath = !!o.pa;
+    if (S.gxIndCmp === undefined) S.gxIndCmp = !!o.ic;
+  } catch (e) { S.uc = S.uc || "board"; S.gxTable = !!S.gxTable; S.gxPath = !!S.gxPath; S.gxIndCmp = !!S.gxIndCmp; }
 })();
 const _saveGx = save;
 save = function () {
   _saveGx();
-  try { localStorage.setItem(LS_GX, JSON.stringify({ uc: S.uc || "board", tb: !!S.gxTable })); } catch (e) { }
+  try { localStorage.setItem(LS_GX, JSON.stringify({ uc: S.uc || "board", tb: !!S.gxTable, pa: !!S.gxPath, ic: !!S.gxIndCmp })); } catch (e) { }
 };
 
 /* ---------------------------------------------------------------- ส่วนประกอบร่วมของสองหน้า */
@@ -5480,11 +5813,37 @@ function gxCannot(c, v, k) {
 }
 
 /* ---------------------------------------------------------------- Strategy Grid 2×2 */
-function gxSvg(c, v, show, selQ) {
+/* ---------------------------------------------------------------- สิทธิ์และชั้นเสริมของ Grid (แก้ไขครั้งที่ 2.2) */
+const gxRank = () => typeof tierRank === "function" ? tierRank() : 2;
+/** Free เห็นเฉพาะตำแหน่งบริษัทตนเอง — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ */
+const gxPeersOf = (c, show) => show && gxRank() >= 1 ? (S.peers || []).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
+/** ชั้นจุดอ้างอิงใช้ได้กับ Pro ขึ้นไป และไม่แสดงในมุมมองธนาคาร (credit / bankbod) */
+const gxPathAllowed = L => !["credit", "bankbod"].includes(L.id);
+const gxPathOn = (L, show) => show && gxPathAllowed(L) && gxRank() >= 1 && !!S.gxPath;
+const gxIndOn = show => show && gxRank() >= 2 && !!S.gxIndCmp;
+const gxMed = a => { const b = a.slice().sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
+/** จุดอ้างอิงเชิงเปรียบเทียบ = ค่ามัธยฐาน (P_w, amp) ของ REF-928 ช่อง A ในอุตสาหกรรมเดียวกัน */
+function gxRefPoint(c) {
+  let pts = REF_PTS.filter(p => p[2] === "A" && p[4] === c.ind), scope = "ind";
+  if (pts.length < 5) { pts = REF_PTS.filter(p => p[2] === "A"); scope = "all"; }
+  const P = gxMed(pts.map(p => p[0])), A = gxMed(pts.map(p => p[1]));
+  const ois = oisOf(signalB(P, A));
+  return { P, A, n: pts.length, scope, ois, quad: quadOf(cpOf(P), A) };
+}
+/** สัดส่วนช่องของอุตสาหกรรมเทียบทั้งฐาน (Pro Max) */
+function gxIndShares(ind) {
+  const pts = REF_PTS.filter(p => p[4] === ind), N = REF_PTS.length;
+  return ["A", "B", "C", "D"].map(k => ({ k, n: pts.filter(p => p[2] === k).length, tot: pts.length,
+    all: REF_PTS.filter(p => p[2] === k).length / N }));
+}
+function gxSvg(c, v, show, selQ, opt) {
+  opt = opt || {};
   const mP = OM.P, pw = x => wins(x.promo, "P");
-  const peers = show ? (S.peers || []).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
+  const peers = gxPeersOf(c, show);
   const marked = show ? [c, ...peers] : [];
-  const px = REF_PTS.map(p => p[0]), ax = REF_PTS.map(p => p[1]);
+  const ref = opt.ref || null;
+  const bg = opt.ind ? REF_PTS.filter(p => p[4] === c.ind) : REF_PTS;
+  const px = REF_PTS.map(p => p[0]).concat(ref ? [ref.P] : []), ax = REF_PTS.map(p => p[1]).concat(ref ? [ref.A] : []);
   const xr = [Math.min(...px, ...marked.map(pw), mP), Math.max(...px, ...marked.map(pw), mP)];
   const yr = [Math.min(...ax, ...marked.map(x => x.amp), 0), Math.max(...ax, ...marked.map(x => x.amp), 0)];
   const padx = (xr[1] - xr[0]) * .06 || .1, pady = (yr[1] - yr[0]) * .06 || .1;
@@ -5497,11 +5856,14 @@ function gxSvg(c, v, show, selQ) {
       width="${Math.abs(x1 - x0).toFixed(1)}" height="${Math.abs(y1 - y0).toFixed(1)}" fill="${ZONES[k].c}"
       fill-opacity="${k === selQ ? .13 : k === zk ? .08 : .035}"><title>${esc(ZONES[k].l)} · ${esc(COMPASS[k].sub)} — คลิกเพื่อดูคำถามประจำช่อง</title></rect>`;
   const dotCol = q => q === "A" ? "var(--ok)" : q === "C" ? "var(--serious)" : "var(--ink-3)";
-  const dots = REF_PTS.map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="2.2" fill="${dotCol(p[2])}" fill-opacity=".3"/>`).join("");
+  const dots = bg.map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="2.2" fill="${dotCol(p[2])}" fill-opacity=".3"/>`).join("");
   const corner = (k, x, y, anc) => {
     const q = QN[k] || [0, 0];
+    const sub = opt.ind ? (() => { const n = bg.filter(p => p[2] === k).length;
+      return `อุตสาหกรรมนี้ n = ${n} (${fmt(bg.length ? n / bg.length * 100 : 0, 0)}%) · ทั้งฐาน ${fmt(q[1] / REF_PTS.length * 100, 0)}%`; })()
+      : `n = ${q[1]} บริษัท-ปี · OI เฉลี่ย ${fmt(q[0], 2)}`;
     return `<g class="gx-cl" data-q="${k}"><text x="${x}" y="${y}" font-size="12" font-weight="600" fill="${ZONES[k].c}" text-anchor="${anc}" ${sk}>${ZONES[k].l} · ${esc(COMPASS[k].sub)}</text>
-      <text x="${x}" y="${y + 14}" font-size="9.8" fill="var(--ink-3)" text-anchor="${anc}" ${sk}>n = ${q[1]} บริษัท-ปี · OI เฉลี่ย ${fmt(q[0], 2)}</text></g>`;
+      <text x="${x}" y="${y + 14}" font-size="9.8" fill="var(--ink-3)" text-anchor="${anc}" ${sk}>${sub}</text></g>`;
   };
   const num = (x, i) => {
     const r = i === 0 ? 11 : 8.5, col = i === 0 ? "var(--ink)" : SER[i - 1];
@@ -5513,6 +5875,10 @@ function gxSvg(c, v, show, selQ) {
       <text y="${i === 0 ? 4 : 3.5}" text-anchor="middle" font-size="${i === 0 ? 12 : 10}" font-weight="600" fill="var(--panel)">${i + 1}</text></g>`;
   };
   const lab = show ? (() => { const mx = X(pw(c)), flip = mx > W - 160;
+    // เมื่อเปิดชั้นจุดอ้างอิงและเส้นประพาดไปฝั่งเดียวกับป้าย — ยกป้ายบริษัทขึ้นเหนือจุดแทน
+    const rx = ref ? X(ref.P) : null, up = ref && (flip ? rx < mx - 12 : rx > mx + 12);
+    if (up) return `<text x="${mx.toFixed(1)}" y="${(Y(c.amp) - 18).toFixed(1)}" font-size="12" font-weight="600"
+      text-anchor="${mx > W - 120 ? "end" : mx < L + 120 ? "start" : "middle"}" fill="var(--ink)" ${sk} pointer-events="none">${esc(c.t)} · คลิกเพื่อเปิดประเด็น</text>`;
     return `<text x="${(flip ? mx - 17 : mx + 17).toFixed(1)}" y="${(Y(c.amp) + 4).toFixed(1)}" font-size="12" font-weight="600"
       text-anchor="${flip ? "end" : "start"}" fill="var(--ink)" ${sk} pointer-events="none">${esc(c.t)} · คลิกเพื่อเปิดประเด็น</text>`; })() : "";
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="gx-svg" role="img" aria-label="Strategy Grid 2 คูณ 2 — ${esc(GX_X)} และ ${esc(GX_Y)}">
@@ -5524,6 +5890,21 @@ function gxSvg(c, v, show, selQ) {
       <text x="${(W - R - 4)}" y="${(cy - 5).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" text-anchor="end" ${sk}>amp = 0</text></g>
     ${corner("A", cx + 9, T + 15, "start")}${corner("D", cx - 9, T + 15, "end")}
     ${corner("B", cx + 9, H - B - 26, "start")}${corner("C", cx - 9, H - B - 26, "end")}
+    ${ref && show ? (() => {
+      const x0 = X(pw(c)), y0 = Y(c.amp), x1 = X(ref.P), y1 = Y(ref.A), dx = x1 - x0, dy = y1 - y0, dd = Math.hypot(dx, dy) || 1;
+      const sx = x0 + dx / dd * 14, sy = y0 + dy / dd * 14, ex = x1 - dx / dd * 9, ey = y1 - dy / dd * 9;
+      // ป้ายอยู่ฝั่งตรงข้ามกับบริษัท ไม่ให้ทับป้ายของบริษัท · ชิดขอบกราฟแล้วกลับด้าน
+      let flip = x0 > x1; if (!flip && x1 > W - 250) flip = true; if (flip && x1 < L + 250) flip = false;
+      const ly = dd < 70 ? (y0 <= y1 ? y1 + 22 : y1 - 22) : y1 - 4;
+      return `<g class="tr-path" pointer-events="none">
+        <defs><marker id="trArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0L10 5L0 10z" fill="var(--brand)"/></marker></defs>
+        ${dd > 24 ? `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="var(--brand)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#trArrow)"/>` : ""}
+        <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="8" fill="var(--panel)" stroke="var(--brand)" stroke-width="2.2" stroke-dasharray="3 2"/>
+        <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="2.6" fill="var(--brand)"/>
+        <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.8" font-weight="600" fill="var(--brand)" text-anchor="${flip ? "end" : "start"}" ${sk}>จุดอ้างอิงเชิงเปรียบเทียบ</text>
+        <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${(ly + 13).toFixed(1)}" font-size="9.4" fill="var(--ink-2)" text-anchor="${flip ? "end" : "start"}" ${sk}>มัธยฐานช่อง Deliver ${ref.scope === "ind" ? "ในอุตสาหกรรมเดียวกัน" : "ทั้งฐาน"} · ไม่ใช่เป้าหมาย</text></g>`;
+    })() : ""}
     ${peers.map((p, i) => num(p, i + 1)).join("")}${show ? num(c, 0) : ""}${lab}
     <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 12}" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">${esc(GX_X)}</text>
     <text transform="translate(14,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="11" fill="var(--ink-2)" text-anchor="middle">${esc(GX_Y)}</text>
@@ -5633,7 +6014,9 @@ function viewMatrix2() {
   const show = v.inDomain && L.placeable;
   const sel = gxSel(c, v, show);
   const tbl = !!S.gxTable;
-  const peers = show ? (S.peers || []).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
+  const peers = gxPeersOf(c, show);
+  const pathOn = gxPathOn(L, show), indOn = gxIndOn(show);
+  const ref = pathOn ? gxRefPoint(c) : null;
   const msg = !v.inDomain ? `<div class="note warn gx-msg"><b>${esc(c.t)} อยู่นอกกลุ่มอ้างอิง</b> — ไม่แสดงจุดของบริษัทบนกราฟ (R4)
         <button class="btn s" data-goto="outdomain">เปิดโหมดนอกกลุ่มอ้างอิง</button></div>`
     : !L.placeable ? `<div class="note warn gx-msg"><b>มุมมองบอร์ดธนาคาร</b> — ธนาคารอยู่นอกฐานอ้างอิง REF-928 จึงไม่แสดงจุดบนกราฟ (R4)
@@ -5651,7 +6034,8 @@ function viewMatrix2() {
               <button data-gxtb="0" aria-selected="${!tbl}">ดูเป็นกราฟ</button>
               <button data-gxtb="1" aria-selected="${tbl}">ดูเป็นตาราง</button></div></div>
           ${msg}
-          <div class="gx-svgwrap">${tbl ? gxTable(c, v, show) : gxSvg(c, v, show, sel.q)}</div>
+          ${gxLayerBar(L, show)}
+          <div class="gx-svgwrap">${tbl ? gxTable(c, v, show) : gxSvg(c, v, show, sel.q, { ref, ind: indOn })}</div>
           ${tbl ? "" : `<div class="legend gx-legend">
             <span><i style="background:var(--ok);opacity:.55"></i>A Deliver</span>
             <span><i style="background:var(--serious);opacity:.55"></i>C Develop</span>
@@ -5661,9 +6045,12 @@ function viewMatrix2() {
           <div class="gx-qpick"><span class="gx-sm">ดูคำถามประจำช่อง:</span>${["D", "A", "C", "B"].map(k =>
             `<button class="btn g${k === sel.q ? " on" : ""}" data-gxq="${k}" style="--zc:${ZONES[k].c}">${ZONES[k].l}${show && k === v.quad ? " ●" : ""}</button>`).join("")}</div>
           <p class="gx-split">${esc(GX_SPLIT)}</p>
+          ${ref ? gxPathCard(c, ref) : ""}
+          ${indOn ? gxIndCard(c) : ""}
         </div>
         <aside class="gx-side"><div class="gx-sideh">ที่มาของข้อมูลและสถานะตรวจคุณภาพ</div>${gxProv(c, v)}
-          <p class="gx-sm">จุดพื้นหลัง = REF-928 ทั้งชุด (ไม่ระบุชื่อ) · วงกลม 2–4 = คู่เทียบจากหน้า “เทียบคู่แข่ง” (คลิกเพื่อเลือกเปิดประเด็นของบริษัทนั้น)</p></aside>
+          <p class="gx-sm">${indOn ? `จุดพื้นหลัง = REF-928 เฉพาะ${esc(IND[c.ind] || "อุตสาหกรรมเดียวกัน")} (ไม่ระบุชื่อ)` : "จุดพื้นหลัง = REF-928 ทั้งชุด (ไม่ระบุชื่อ)"} ·
+            ${gxRank() >= 1 ? "วงกลม 2–4 = คู่เทียบจากหน้า “เทียบคู่แข่ง” (คลิกเพื่อเลือกเปิดประเด็นของบริษัทนั้น)" : "ระดับ Free แสดงเฉพาะตำแหน่งบริษัทของคุณ — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ"}</p></aside>
       </div>
       ${gxPanel(c, v, show, sel)}
       <p class="gx-disc">${esc(GX_DISC)}</p>
@@ -5671,6 +6058,50 @@ function viewMatrix2() {
         <p class="gx-sm">งานเหล่านี้รองรับเหตุผลในการออกแบบ ไม่ได้รับรองแกนหรือการจัดช่องของโมเดลนี้</p>
         <ol>${REFS.map(r => `<li>${r}</li>`).join("")}</ol></details>
     </div>`;
+}
+
+/** แถบชั้นเสริม — จุดอ้างอิง/เส้นทาง (Pro ขึ้นไป) และเทียบอุตสาหกรรม (Pro Max) */
+function gxLayerBar(L, show) {
+  if (!show) return "";
+  const r = gxRank(), out = [];
+  if (gxPathAllowed(L)) out.push(r >= 1
+    ? `<label class="tr-tog"><input type="checkbox" id="gxPathTog"${S.gxPath ? " checked" : ""}> แสดงจุดอ้างอิงและเส้นทางย้ายโซน</label>`
+    : `<button class="btn g tr-locked" data-trlock="pro" title="ชั้นนี้เป็นสิทธิ์ Pro / Pro Max">🔒 แสดงจุดอ้างอิงและเส้นทางย้ายโซน · Pro</button>`);
+  out.push(r >= 2
+    ? `<label class="tr-tog"><input type="checkbox" id="gxIndTog"${S.gxIndCmp ? " checked" : ""}> เปรียบเทียบในอุตสาหกรรมเดียวกัน</label>`
+    : `<button class="btn g tr-locked" data-trlock="max" title="เปรียบเทียบอุตสาหกรรมเป็นสิทธิ์ Pro Max">🔒 เปรียบเทียบอุตสาหกรรม · Pro Max</button>`);
+  return `<div class="tr-layers"><span class="gx-sm">ชั้นข้อมูลเสริม:</span>${out.join("")}</div>`;
+}
+/** การ์ดใต้กราฟเมื่อเปิดชั้นจุดอ้างอิง — ระยะห่างรายแกน (ถ้อยคำเชิงความสัมพันธ์) และคะแนน ณ จุดอ้างอิง */
+function gxPathCard(c, ref) {
+  const cX = promoPct(c.promo), rX = promoPct(ref.P), cY = ampPct(c.amp), rY = ampPct(ref.A);
+  const row = (l, a, b) => { const d = Math.round((b - a) * 10) / 10;
+    return `<tr><td>${esc(l)}</td><td class="n">${fmt(a, 0)}</td><td class="n">${fmt(b, 0)}</td>
+      <td class="n"><b>${d > 0 ? "+" : ""}${fmt(d, 0)}</b></td>
+      <td>${d > 0 ? "บริษัทในช่อง Deliver กลุ่มนี้มีค่ากลางสูงกว่า" : d < 0 ? "บริษัทนี้สูงกว่าค่ากลางของช่อง Deliver กลุ่มนี้" : "ใกล้เคียงกัน"}</td></tr>`; };
+  return `<div class="tr-pathcard">
+    <div class="tr-pathh"><b>จุดอ้างอิงเชิงเปรียบเทียบ (ค่ามัธยฐานช่อง Deliver ในอุตสาหกรรมเดียวกัน) — ไม่ใช่เป้าหมายที่ระบบแนะนำ</b>
+      ${ref.scope === "all" ? `<span class="pill warn">ช่อง Deliver ในอุตสาหกรรมนี้มีน้อยกว่า 5 บริษัท-ปี — ใช้มัธยฐานทั้งฐานแทน</span>` : `<span class="pill mute">n = ${ref.n} บริษัท-ปี</span>`}</div>
+    <div class="grid g2 tight" style="gap:12px;align-items:start">
+      <div><div class="tr-k">ระยะห่างบนแต่ละแกน (เปอร์เซ็นไทล์ในฐานอ้างอิง)</div>
+        <div class="tw"><table class="tr-tbl"><thead><tr><th>แกน</th><th class="n">${esc(c.t)}</th><th class="n">จุดอ้างอิง</th><th class="n">ระยะห่าง</th><th>อ่านว่า</th></tr></thead>
+          <tbody>${row("CEO Promotion Focus (แกนนอน)", cX, rX)}${row("Board Amplification Signal (แกนตั้ง)", cY, rY)}</tbody></table></div></div>
+      <div><div class="tr-k">คะแนน ณ จุดอ้างอิง</div>
+        <div class="tr-refois"><span class="num">${fmt(ref.ois, 0)}</span><span>OpenInnoScore ณ จุดอ้างอิง · ${esc(c.t)} ปัจจุบัน ${fmt(c.ois ?? c.ipi, 0)}</span></div>
+        <p class="gx-sm" style="margin:6px 0 0">เส้นประคือระยะห่างเชิงตำแหน่งบนกราฟ ไม่ใช่เส้นทางที่ระบบแนะนำให้เดิน ·
+          บริษัทในช่อง Deliver ของกลุ่มเดียวกัน<b>มีความสัมพันธ์</b>กับตำแหน่งนี้ในข้อมูลย้อนหลัง — ไม่ได้แปลว่าการขยับค่าบนแกนจะทำให้ย้ายช่องหรือเกิดนวัตกรรมเพิ่ม ·
+          ประเด็นสำหรับบอร์ดด้านล่างยังเป็นเนื้อหาหลักของหน้า</p></div>
+    </div></div>`;
+}
+/** การ์ดสัดส่วนช่องของอุตสาหกรรม (Pro Max) */
+function gxIndCard(c) {
+  const sh = gxIndShares(c.ind), tot = sh[0].tot || 1;
+  return `<div class="tr-pathcard"><div class="tr-pathh"><b>สัดส่วนสี่ช่องใน${esc(IND[c.ind] || "อุตสาหกรรมนี้")} เทียบทั้งฐาน REF-928</b>
+      <span class="pill blue">Pro Max</span><span class="pill mute">n = ${tot} บริษัท-ปี</span></div>
+    <div class="tr-shares">${sh.map(x => `<div class="tr-share"><span style="color:${ZONES[x.k].c}"><b>${esc(ZONES[x.k].l)}</b></span>
+      <div class="mbar"><span style="width:${(x.n / tot * 100).toFixed(1)}%;background:${ZONES[x.k].c}"></span></div>
+      <span class="num">${fmt(x.n / tot * 100, 0)}%</span><span class="gx-sm">ทั้งฐาน ${fmt(x.all * 100, 0)}%</span></div>`).join("")}</div>
+    <p class="gx-sm" style="margin:6px 0 0">จุดพื้นหลังบนกราฟกรองเหลือเฉพาะอุตสาหกรรมเดียวกัน (ไม่ระบุชื่อ) · สัดส่วนเป็นการพรรณนาฐานอ้างอิง ไม่ใช่การจัดอันดับ</p></div>`;
 }
 
 function gxAddPlan(t, src) {
@@ -5685,6 +6116,10 @@ function gxSetUc(h) {
 function wireMatrix2(h) {
   gxSetUc(h);
   h.querySelectorAll("[data-gxtb]").forEach(b => b.onclick = () => { S.gxTable = b.dataset.gxtb === "1"; save(); render(); });
+  const pt = h.querySelector("#gxPathTog"); if (pt) pt.onchange = () => { S.gxPath = pt.checked; save(); render(); };
+  const it = h.querySelector("#gxIndTog"); if (it) it.onchange = () => { S.gxIndCmp = it.checked; save(); render(); };
+  h.querySelectorAll("[data-trlock]").forEach(b => b.onclick = () =>
+    toast(b.dataset.trlock === "max" ? "เปรียบเทียบอุตสาหกรรมเป็นสิทธิ์ Pro Max — ดูได้ที่หน้า เครดิตและแผน" : "ชั้นจุดอ้างอิงและเส้นทางย้ายโซนเป็นสิทธิ์ Pro / Pro Max"));
   const pick = q => { S.gxSel = q ? { t: S.t, q } : null; S._gxScroll = true; render(); };
   h.querySelectorAll("[data-gxq]").forEach(b => b.onclick = () => pick(b.dataset.gxq));
   h.querySelectorAll(".gx-q, .gx-cl, .gx-trow").forEach(r => r.addEventListener("click", () => pick(r.dataset.q)));
@@ -6785,26 +7220,30 @@ const RP_WI_INFO = {
   reg: { ev: [...RP_EV_FEM, "แนวทางของ ตลท. ที่อ้างอิงและปีที่มีผล"], as: ["สัดส่วนกรรมการหญิงอย่างน้อย 30% ตามแนวทางกำกับ", "ภาษา CEO คงเปอร์เซ็นไทล์เดิม"] },
   new: { ev: [...RP_EV_CEO, ...RP_EV_FEM], as: ["CEO Promotion Focus อยู่ที่เปอร์เซ็นไทล์ 75", "สัดส่วนกรรมการหญิงขึ้นไปที่ p90 ของอุตสาหกรรม"] },
 };
-const RP_AS_COMMON = ["กรรมการครอบครัว political ties และอายุงานตรึงไว้ที่ค่าจริง (ข้อมูลบริบท ไม่ใช่คันโยก)",
+const RP_AS_COMMON = ["ฉากทัศน์สำเร็จรูปตรึงกรรมการครอบครัวและ political ties ไว้ที่ค่าจริง (ข้อมูลบริบท ไม่ใช่คันโยก) · อายุงานไม่มีผลต่อคะแนน (δT = 0)",
   "ฐานอ้างอิง REF-928 และสูตรไม่เปลี่ยน", "บริษัทอื่นในฐานอ้างอิงไม่เปลี่ยนตำแหน่ง"];
 const RP_CAVEAT = "ผลตามสูตรเชิงความสัมพันธ์ ไม่ใช่การรับประกันว่าปรับแล้วจะเกิดผล";
-function rpScen(c, fem, dp) {
+function rpScen(c, fem, dp, fam, pol) {
+  fam = fam ?? c.fam; pol = pol ?? c.pol;
   const promo = dp === c.dp ? c.promo : promoAtPct(dp);
-  const amp = ampOf(c.fam, c.pol, fem, c.ten), B = signalB(promo, amp), ois = oisOf(B);
+  const amp = ampOf(fam, pol, fem, c.ten), B = signalB(promo, amp), ois = oisOf(B);
+  const ctx = Math.abs(fam - c.fam) > 1e-9 || pol !== c.pol;
   let band = null;
-  if (dp === c.dp && Math.abs(fem - c.fem) < 1e-9 && c.band) band = c.band;          // ไม่ขยับคันโยก → ใช้ช่วงเดียวกับทุกหน้า
-  else try { band = band90(promo, c.fam, c.pol, fem); } catch (e) { }
+  if (dp === c.dp && Math.abs(fem - c.fem) < 1e-9 && !ctx && c.band) band = c.band;          // ไม่ขยับคันโยก → ใช้ช่วงเดียวกับทุกหน้า
+  else try { band = band90(promo, fam, pol, fem); } catch (e) { }
   return { fem, dp, ois, ipi: Math.round(ois), tier: tierOf(ois), quad: quadOf(cpOf(promo), amp), band };
 }
 let RP_WI = [];
 function whatIfReport(c, w) {
   if (typeof WI_PRESETS === "undefined") return "";
   const base = { l: "ปัจจุบัน (ค่าจริง)", fem: c.fem, dp: c.dp, ois: c.ois ?? c.ipi, ipi: c.ipi, tier: rpTier(c), quad: rpQuad(c), band: c.band };
-  const sim = rpScen(c, w.fem, w.dp);
+  const sim = rpScen(c, w.fem, w.dp, w.fam, w.pol);
+  const ctxMoved = Math.abs((w.fam ?? c.fam) - c.fam) > 1e-9 || (w.pol ?? c.pol) !== c.pol;
   const simEv = [...(Math.abs(w.fem - c.fem) > 1e-9 ? RP_EV_FEM : []), ...(w.dp !== c.dp ? RP_EV_CEO : [])];
   const simAs = [Math.abs(w.fem - c.fem) > 1e-9 ? `สัดส่วนกรรมการหญิง ${pct1(w.fem)} (ค่าจริง ${pct1(c.fem)})` : "สัดส่วนกรรมการหญิงคงค่าจริง",
-    w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง"];
-  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: "ค่าที่ตั้งไว้บนหน้านี้", ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
+    w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง",
+    ...(ctxMoved ? [`ตัวแปรบริบทถูกขยับ: กรรมการครอบครัว ${pct1(w.fam)} (ค่าจริง ${pct1(c.fam)}) · political ties ${w.pol} (ค่าจริง ${c.pol}) — ผลจากตัวแปรบริบท ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย`] : [])];
+  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: ctxMoved ? "ค่าที่ตั้งไว้บนหน้านี้ · ผลจากตัวแปรบริบท — ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย" : "ค่าที่ตั้งไว้บนหน้านี้", ctx: ctxMoved, ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
   WI_PRESETS.filter(p => p.k !== "cur").forEach(p => {
     const v = p.f(c), info = RP_WI_INFO[p.k] || { ev: [], as: [p.d || ""] };
     RP_WI.push({ k: p.k, l: p.th, d: p.d || "", ev: info.ev, as: info.as, s: rpScen(c, v.fem, v.dp) });
@@ -6821,7 +7260,7 @@ function whatIfReport(c, w) {
         <div><div class="rp-k">สมมติฐานที่ใช้</div><ul class="rp-ctx">${a.as.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
         <div><div class="rp-k">หลักฐานที่ต้องมีก่อนดำเนินการ</div><ul class="rp-ctx">${a.ev.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
       </div>
-      <button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>
+      ${a.ctx ? `<span class="pill warn">ผลจากตัวแปรบริบท — ไม่ใช่ทางเลือกเชิงนโยบาย จึงไม่เพิ่มเข้าแผน</span>` : `<button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>`}
     </div>`).join("");
   return `<div class="card rp-block rp-wi" style="margin-top:14px">
     <div class="rp-print-head">OpenInnoScore · What-if Report · ${esc(c.n)} (${esc(c.t)}) · ${esc(rpNow())}</div>
@@ -6904,6 +7343,22 @@ function fuSet(key, f, v) {
     r[map[f]] = v; rpPilotSave(P);
   }
 }
+/* ร่าง 56-1 ต้องไม่มีชื่อบริษัทอื่น — แทนชื่อย่อหลักทรัพย์ด้วยคำกลาง (keep = ชื่อย่อที่อนุญาต เช่น บริษัทที่จัดทำแบบ 56-1 เอง) */
+let _rpTK = null;
+function rpAnon(t, keep) {
+  if (!_rpTK) _rpTK = new Set(COMPS.map(c => String(c.t).toUpperCase()).filter(t => !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
+  const k = keep ? String(keep).toUpperCase() : null;
+  let out = String(t ?? "").replace(/[A-Za-z][A-Za-z0-9&.\-]*/g, w => (_rpTK.has(w.toUpperCase()) && w.toUpperCase() !== k) ? "บริษัทในกลุ่มเปรียบเทียบ" : w);
+  // ชื่อเต็มของบริษัทอื่น (ภาษาไทย/อังกฤษ) ก็ต้องไม่ปรากฏ
+  COMPS.forEach(c => { if (c.n && c.n.length > 3 && String(c.t).toUpperCase() !== k && out.includes(c.n)) out = out.split(c.n).join("บริษัทในกลุ่มเปรียบเทียบ"); });
+  return out;
+}
+/** รายการที่ "เสร็จ" และมีมติ — ใช้ร่วมกับหน้า Template 56-1 (v2_tiers.js) · co = จำกัดเฉพาะบริษัทเดียว (แถวข้อสั่งการที่ไม่ระบุบริษัทนับรวม) */
+function fuDoneItems(co) {
+  const rows = fuRows().filter(r => r.st === "done" && String(r.dec || "").trim() && (!co || !r.co || r.co === co));
+  return rows.map(r => ({ co: r.co, src: r.src, issue: rpAnon(r.issue.replace(/^\[[^\]]+\]\s*/, ""), co), dec: rpAnon(r.dec, co), concl: rpAnon(r.concl, co) }));
+}
+window.fuDoneItems = fuDoneItems; window.rpAnon = rpAnon; window.fuRows = fuRows;
 function fu561(rows) {
   const ok = rows.filter(r => r.st === "done" && String(r.dec || "").trim());
   if (!ok.length) return `<p class="rp-hint" style="margin:0">ยังไม่มีรายการที่มีสถานะ “เสร็จ” และมีมติบันทึกไว้ — ส่วนนี้จะแสดงเฉพาะรายการที่ครบทั้งสองเงื่อนไข</p>`;
@@ -6914,8 +7369,7 @@ function fu561(rows) {
   const lead = `ในรอบปีที่ผ่านมา คณะกรรมการได้ใช้ผลการประเมินด้านการกำกับดูแลนวัตกรรมประกอบการหารือ และกำหนดประเด็นพัฒนารวม ${ok.length} เรื่อง`
     + ` ซึ่งได้ดำเนินการแล้วเสร็จตามมติหรือข้อสรุปของที่ประชุม โดยมีที่มาจาก${Object.keys(bySrc).map(s => (srcTh[s] || s) + ` (${bySrc[s].length} เรื่อง)`).join(" ")}`;
   /* ร่าง 56-1 ต้องไม่มีชื่อบริษัทอื่น — แทนชื่อย่อหลักทรัพย์ด้วยคำกลาง */
-  const TK = new Set(COMPS.map(c => String(c.t).toUpperCase()).filter(t => !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
-  const anon = t => String(t).replace(/[A-Za-z][A-Za-z0-9&.\-]*/g, w => TK.has(w.toUpperCase()) ? "บริษัทในกลุ่มเปรียบเทียบ" : w);
+  const anon = t => rpAnon(t);
   const items = ok.map(r => `${anon(r.issue.replace(/^\[[^\]]+\]\s*/, ""))} — การดำเนินการตามมติ: ${anon(r.dec)}`);
   RP_561 = [lead + (cos.length > 1 ? ` (รวม ${cos.length} บริษัทในแฟ้มนี้ — ใช้เฉพาะรายการของบริษัทที่จัดทำแบบ 56-1)` : ""), ...items.map((x, i) => `${i + 1}. ${x}`)].join("\n");
   return `<p class="rp-561-lead">${esc(lead)}</p><ol class="rp-561">${items.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
@@ -6980,6 +7434,7 @@ function viewFollowup() {
         ข้อความเขียนเป็นภาพรวม ไม่ระบุชื่อบุคคลหรือตำแหน่งผู้รับผิดชอบ · ตำแหน่งบน Grid เพียงอย่างเดียวไม่ใช่หลักฐานว่าบอร์ดพัฒนาประสิทธิผลสำเร็จ ·
         ตรวจถ้อยคำในมติอีกครั้งว่าไม่มีชื่อบุคคลก่อนนำไปใช้</p>
       ${fu561(rows)}
+      <div class="rp-noprint" style="margin-top:9px"><button class="btn s" data-goto="t561">เปิดหน้า ร่าง 56-1 · Template และการอนุมัติ →</button></div>
     </div>
     <p class="rp-foot">ผลประเมินเป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่เหตุ-ผล · ห้ามนำผลไปให้คะแนนกรรมการรายบุคคล ·
       พิมพ์จาก OpenInnoScore ต้นแบบ · ${esc(rpThDate(rpToday()))}</p>
@@ -7057,5 +7512,780 @@ if (typeof WIRES2 === "object" && WIRES2) {
       render();
     }
   } catch (e) { }
+})();
+</script>
+<script>/* ============================================================================
+   v2_tiers.js — แก้ไขครั้งที่ 2.2
+     1 สิทธิ์ 3 ระดับตามรายงานหัวข้อ 4: Level 1 Free · Level 2 Pro (Pay-Per-Use) · Level 3 Pro Max (Subscription, add-on จาก Pro)
+     2 อัตราเครดิตและแพ็กเกจตามรายงานหัวข้อ 5 (การชำระเงินยังเป็นการจำลอง · เติมเครดิตด้วยมือ)
+     3 ร่าง 56-1 · Template ที่ลูกค้าแก้เองได้ + ขั้นอนุมัติก่อนส่งออก (หัวข้อ 6 · 56-1 ส่วนที่ 2 ข้อ 7 และ 8)
+     4 คู่มือการใช้งานในหน้าระบบ (ชิ้นงานส่งมอบข้อ 4) + ลิงก์ "?" บนหัวทุกหน้า
+   ไฟล์นี้โหลดเป็นลำดับสุดท้าย — ห่อ (wrap) ฟังก์ชันของไฟล์ก่อนหน้า ไม่แก้ไฟล์ต้นทาง
+   กติกา: ถ้อยคำเชิงความสัมพันธ์ · ไม่แสดงค่าสัมประสิทธิ์ · ร่าง 56-1 ไม่มีชื่อบริษัทอื่นและไม่ใช้คะแนนเป็นหลักฐานประสิทธิผลของบอร์ด
+   ============================================================================ */
+
+/* ---------------------------------------------------------------- 1 · ราคาและแพ็กเกจ (หัวข้อ 5) */
+Object.assign(PRICE, { report: 1, peer: 1, studio: 1, ceotext: 1, sector: 5 });
+Object.assign(PLAN_TOKENS, { free: 3, pro: 20, max: 40 });
+PACKS.splice(0, PACKS.length,
+  { n: 5, baht: 490, tag: "" },
+  { n: 15, baht: 1290, tag: "คุ้มที่สุด" },
+  { n: 40, baht: 2990, tag: "สำหรับทีมงาน" });
+const SECTOR_BAHT = 990;
+const TR_PLANS = [
+  { k: "free", lv: "Level 1", n: "Free", sub: "ผู้ใช้งานทั่วไป / ทดลองใช้ฟรี", tok: PLAN_TOKENS.free,
+    d: "ดูได้เฉพาะบริษัทตนเอง · รายงานวินิจฉัยฉบับเต็มฟรี 1 บริษัท · เมทริกซ์ 2×2 · หลักฐานความแม่นยำ · BOD Evaluation · แบบสอบถาม RFQ" },
+  { k: "pro", lv: "Level 2", n: "Pro", sub: "Pay-Per-Use · คิดตามการใช้งานจริง ไม่มีค่ารายเดือน", tok: PLAN_TOKENS.pro,
+    d: "ปลดล็อกรายบริษัทด้วยเครดิต · Peer 1 vs 3 · What-if 3 ตัวแปร + ตรวจภาษา CEO · อัปโหลด PDF/TXT · Top 5 อุตสาหกรรม · ร่าง 56-1" },
+  { k: "max", lv: "Level 3", n: "Pro Max", sub: "Subscription · add-on จาก Pro (เหมาจ่ายองค์กร)", tok: PLAN_TOKENS.max,
+    d: "ทุกบริษัท · เทียบข้ามอุตสาหกรรม · ฉากทัศน์ขาลง · ภาพรวมทั้งอุตสาหกรรม + CSV · วิเคราะห์เชิงลึก + Compliance · Email Approval" },
+];
+/** ตารางสิทธิ์ตามรายงานหัวข้อ 4 — แหล่งเดียวของหน้า billing และคู่มือ */
+const PERM = [
+  ["ดูข้อมูลบริษัท", "เฉพาะบริษัทตนเอง", "ปลดล็อกเพิ่มรายบริษัท · 1 เครดิต", "ทุกบริษัทในฐานข้อมูล"],
+  ["เมทริกซ์กลยุทธ์ 2×2", "ตำแหน่งใน 4 โซน เฉพาะบริษัทตนเอง", "+ จุดอ้างอิงและเส้นทางย้ายโซน (ชั้นเสริม เปิด/ปิดได้)", "+ เปรียบเทียบอุตสาหกรรม"],
+  ["รายงานวินิจฉัยบริษัท", "ฟรี 1 บริษัทแรก", "บริษัทที่ 2 ขึ้นไป · 1 เครดิต/บริษัท", "ฉบับเต็มไม่จำกัด"],
+  ["Peer Benchmark", "✕", "1 vs 3 ราย ในอุตสาหกรรมเดียวกัน · 1 เครดิต", "ข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ"],
+  ["What-if Studio", "✕ (ทดลอง 1 ตัวแปรเป็นตัวอย่าง)", "บอร์ด 3 ตัวแปร + ตรวจภาษา CEO · 1 เครดิต", "+ ฉากทัศน์ขาลง (Downside) · รายไตรมาส: เฟสถัดไป"],
+  ["ตรวจภาษา CEO", "พิมพ์/วางข้อความเอง ≥ 2,000 คำ · แบบสอบถาม RFQ (รอแบบฟอร์ม)", "อัปโหลด PDF/TXT สแกนคำอัตโนมัติ", "+ ดึงรายงานประจำปีอัตโนมัติ (เฟสถัดไป)"],
+  ["ภาพรวมอุตสาหกรรม", "✕", "Top 5 ในกลุ่มตนเอง (ทั้งกลุ่ม + CSV ปลดได้ 5 เครดิต/กลุ่ม)", "ทั้งอุตสาหกรรม + ส่งออก CSV (รวมใน Subscription)"],
+  ["Agentic AI · ร่าง 56-1", "✕", "ร่างรายงานการกำกับดูแลนวัตกรรมแนบ 56-1 + Template", "+ วิเคราะห์เชิงลึก · AI Strategic Advice · ข้อสั่งการ/Compliance"],
+  ["Email Approval Workflow", "✕", "✕", "ส่งขออนุมัติผู้บริหาร (จำลอง · อีเมลจริงต้องใช้เซิร์ฟเวอร์)"],
+];
+const TARIFF = [
+  ["เมทริกซ์ 2×2 / หน้าหลักฐานความแม่นยำ / รายงานบริษัทแรก", "ฟรี", "เปิดถาวร"],
+  ["รายงานบริษัทที่ 2 ขึ้นไป", "1", "ต่อ 1 บริษัท · ปลดล็อกครั้งเดียวดูได้ตลอด"],
+  ["เทียบคู่แข่ง 3 ราย", "1", "เปลี่ยนคู่แข่งได้ไม่จำกัดหลังปลดล็อก"],
+  ["What-if Studio", "1", "รวมการตรวจภาษา CEO"],
+  ["ภาพรวมทั้งอุตสาหกรรม + ส่งออก CSV", "5", `หรือซื้อแยกรายกลุ่ม ${fmt(SECTOR_BAHT)} บาท · Pro Max รวมใน Subscription`],
+];
+
+/* ---------------------------------------------------------------- 2 · ตรรกะสิทธิ์ */
+const ownInd = () => { const o = S.freeCo && byT[S.freeCo]; return o ? o.ind : cur().ind; };
+/** ดูข้อมูลบริษัทนี้ได้หรือไม่ — Free เฉพาะบริษัทตนเอง · Pro ปลดรายบริษัท · Pro Max ทุกบริษัท */
+function canSeeCo(t) {
+  t = t || S.t; const r = tierRank();
+  if (r >= 2) return true;
+  if (!S.freeCo || S.freeCo === t) return true;
+  return r >= 1 && !!S.unlocked[keyOf("report", t)];
+}
+const TR_PAID = ["report", "peer", "studio", "ceotext", "sector"];
+const _trIsU = isUnlocked;
+isUnlocked = function (what, t) {
+  t = t || S.t; const r = tierRank();
+  if (!TR_PAID.includes(what)) return _trIsU(what, t);
+  if (r >= 2) return true;                                         // Pro Max · Subscription
+  if (what === "report") return S.freeCo === t || (r >= 1 && !!S.unlocked[keyOf("report", t)]);
+  if (r < 1) return false;                                         // Free · ✕
+  if (what === "sector") return !!S.sectors[t];
+  if (what === "ceotext") return !!S.unlocked[keyOf("studio", t)];
+  return !!S.unlocked[keyOf(what, t)];
+};
+const _trSpend = spend;
+spend = function (what, t, label) {
+  t = t || S.t; const r = tierRank();
+  if (!TR_PAID.includes(what)) return _trSpend(what, t, label);
+  if (r >= 2) { toast("รวมอยู่ในสิทธิ์ Pro Max แล้ว — ไม่ใช้เครดิต"); return true; }
+  if (r < 1) {
+    toast("ระดับ Free ใช้เครดิตปลดล็อกไม่ได้ — เปลี่ยนเป็น Pro (Pay-Per-Use) แล้วใช้เครดิตที่มีอยู่ได้ทันที");
+    go("billing"); return false;
+  }
+  const w = what === "ceotext" ? "studio" : what, cost = PRICE[w] || 1;
+  if (S.credits < cost) { go("billing"); toast(`เครดิตไม่พอ — เหลือ ${S.credits} ต้องใช้ ${cost}`); return false; }
+  S.credits -= cost;
+  if (w === "sector") S.sectors[t] = true; else S.unlocked[keyOf(w, t)] = true;
+  S.log.unshift({ what: w, t, cost, label: label || "", at: new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" }) });
+  save(); syncChrome(); toast(`ปลดล็อกแล้ว · ใช้ ${cost} เครดิต · เหลือ ${S.credits}`);
+  return true;
+};
+function setPlan(p) {
+  if (!PLAN_RANK.hasOwnProperty(p)) return;
+  const up = PLAN_RANK[p] > tierRank();
+  S.plan = p;
+  if (up && S.credits < PLAN_TOKENS[p]) S.credits = PLAN_TOKENS[p];
+  if (p !== "max") S.peerAll = false;
+  save(); syncChrome();
+  toast(`เปลี่ยนเป็น ${({ free: "Level 1 · Free", pro: "Level 2 · Pro (Pay-Per-Use)", max: "Level 3 · Pro Max (Subscription)" })[p]} · เครดิต ${S.credits}`);
+}
+goPro = function () { if (tierRank() >= 1) return; setPlan("pro"); };
+/** โค้ดเดิมบางจุดเช็ก S.plan === "pro" ตรง ๆ — Pro Max ต้องได้ทุกอย่างที่ Pro ได้ จึงให้มองเห็นเป็น "pro" ชั่วขณะตอนวาด */
+function asPro(fn) {
+  if (S.plan !== "max") return fn();
+  S.plan = "pro";
+  try { return fn(); } finally { S.plan = "max"; }
+}
+const _trStatusBar = statusBar;
+statusBar = function (c) { return asPro(() => _trStatusBar(c)); };
+if (typeof svAdmin === "function") { const _sa = svAdmin; svAdmin = function () { return asPro(() => _sa()); }; }
+
+/* ---------------------------------------------------------------- 3 · ผนังสิทธิ์ (ข้อความเป็น "เครดิต") */
+const TR_NEED = { pro: "Level 2 · Pro (Pay-Per-Use)", max: "Level 3 · Pro Max (Subscription)" };
+function trWall(inner, title, body, need) {
+  return `<div class="lockwrap">
+    <div class="blurred" aria-hidden="true">${inner}</div>
+    <div class="paywall" style="align-items:flex-start;padding-top:56px"><div class="paycard">
+      <div class="lk">◈</div>
+      <div class="tr-eyebrow">สิทธิ์ของ ${esc(TR_NEED[need] || need)}</div>
+      <h3 style="font-size:16px;margin-bottom:5px">${esc(title)}</h3>
+      <p style="font-size:12.3px;color:var(--ink-2);margin:0 0 15px;line-height:1.65">${body}</p>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+        <button class="btn p" data-setplan="${need}">เปลี่ยนเป็น ${need === "max" ? "Pro Max" : "Pro"}</button>
+        <button class="btn s" data-goto="billing">ดูตารางสิทธิ์</button></div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:11px;line-height:1.6">ต้นแบบยังไม่เชื่อมระบบชำระเงิน — สลับระดับได้ทันทีเพื่อสาธิต</div>
+    </div></div></div>`;
+}
+paywall = function (inner, what, title, body, cost, tag) {
+  if (tierRank() < 1 && TR_PAID.includes(what))
+    return trWall(inner, title, body + `<br><b>ระดับ Free ใช้เครดิตปลดล็อกส่วนนี้ไม่ได้</b> — เปลี่ยนเป็น Pro แล้วใช้เครดิตที่มีอยู่ได้ทันที`, "pro");
+  return `<div class="lockwrap">
+    <div class="blurred" aria-hidden="true">${inner}</div>
+    <div class="paywall" style="align-items:flex-start;padding-top:64px"><div class="paycard">
+      <div class="lk">🔒</div>
+      <h3 style="font-size:16px;margin-bottom:5px">${esc(title)}</h3>
+      <p style="font-size:12.3px;color:var(--ink-2);margin:0 0 15px;line-height:1.65">${body}</p>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+        <button class="btn p" data-unlock="${what}">ปลดล็อก · ใช้ ${cost} เครดิต</button>
+        <button class="btn s" data-goto="billing">ดูแพ็กเกจเครดิต</button></div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:11px">คุณมี <b style="color:var(--ink)">${S.credits}</b> เครดิต${tag ? " · " + tag : ""}
+        · Pro Max ใช้ได้โดยไม่ตัดเครดิต</div>
+    </div></div></div>`;
+};
+prowall = function (inner, title, body) { return trWall(inner, title, body, "pro"); };
+const trSkel = n => `<div class="card">${[...Array(n)].map((_, i) => `<div class="tr-skel" style="width:${92 - i * 9}%"></div>`).join("")}</div>`;
+
+/* ---------------------------------------------------------------- 4 · ประตูสิทธิ์รายบริษัท */
+const CO_VIEWS = ["profile", "docs", "fit", "zonec", "matrix", "compass", "peer", "studio", "ic", "t561"];
+function trCoGate() {
+  const c = cur(), r = tierRank(), mine = S.freeCo && byT[S.freeCo];
+  return pageHead("สิทธิ์การดูข้อมูลบริษัท", `${c.t} · ${c.n}`,
+    r < 1 ? "ระดับ Free (Level 1) ดูข้อมูลได้เฉพาะบริษัทของคุณเอง — ไม่สามารถดูข้อมูลบริษัทอื่นได้ (Inspect before pay)"
+      : "ระดับ Pro (Level 2) ปลดล็อกข้อมูลบริษัทเพิ่มได้ทีละบริษัทด้วยเครดิต — ปลดครั้งเดียวดูได้ตลอด")
+    + `<div class="card tr-gate">
+      <div class="tr-gate-ic" aria-hidden="true">🔒</div>
+      <div style="flex:1;min-width:240px">
+        <h3 style="margin:0 0 4px">${r < 1 ? `ข้อมูลของ ${esc(c.t)} ยังไม่เปิดสำหรับระดับ Free` : `ปลดล็อกข้อมูลของ ${esc(c.t)}`}</h3>
+        <p class="desc" style="margin:0">${r < 1
+          ? `บริษัทของคุณคือ <b>${esc(S.freeCo)}</b>${mine ? ` (${esc(mine.n)})` : ""} · เปลี่ยนเป็น Pro (Pay-Per-Use ไม่มีค่ารายเดือน) เพื่อปลดล็อกบริษัทอื่นทีละบริษัท หรือ Pro Max เพื่อดูได้ทุกบริษัท`
+          : `ใช้ ${PRICE.report} เครดิต เปิด Company Profile, รายงานวินิจฉัยฉบับเต็ม, Zone A–C และ Grid ของบริษัทนี้ · คุณมี <b>${S.credits}</b> เครดิต · Pro Max ดูได้ทุกบริษัทโดยไม่ตัดเครดิต`}</p>
+        <div class="gx-row" style="margin-top:12px">
+          ${r >= 1 ? `<button class="btn p" data-unlock="report">ปลดล็อกบริษัทนี้ · ${PRICE.report} เครดิต</button>` : `<button class="btn p" data-setplan="pro">เปลี่ยนเป็น Pro (Pay-Per-Use)</button>`}
+          ${S.freeCo ? `<button class="btn s" data-trco="${esc(S.freeCo)}">กลับไปที่บริษัทของฉัน (${esc(S.freeCo)})</button>` : ""}
+          <button class="btn g" data-setplan="max">Pro Max · ดูได้ทุกบริษัท</button></div>
+      </div></div>` + trSkel(4);
+}
+CO_VIEWS.forEach(k => {
+  const v = VIEWS[k];
+  if (typeof v === "function") VIEWS[k] = function () { return canSeeCo(S.t) ? v.apply(this, arguments) : trCoGate(); };
+  const w = WIRES2[k];
+  WIRES2[k] = function (h) { if (!canSeeCo(S.t)) return; if (typeof w === "function") w(h); };
+});
+
+/* ---------------------------------------------------------------- 5 · หน้าที่ปรับตามสิทธิ์ */
+/* Peer Benchmark — Free ✕ */
+(() => {
+  const v = VIEWS.peer, w = WIRES2.peer;
+  VIEWS.peer = function () {
+    if (tierRank() >= 1 || !canSeeCo(S.t)) return v.apply(this, arguments);
+    const c = cur();
+    return pageHead("เทียบคู่แข่ง", `Peer Benchmark · ${c.t}`, "เทียบตัวต่อตัวกับคู่แข่งในอุตสาหกรรมเดียวกัน 3 ราย")
+      + trWall(trSkel(6), "Peer Benchmark", "ระดับ Pro ปลดล็อกการเทียบ 1 vs 3 ราย ในอุตสาหกรรมเดียวกัน ด้วย 1 เครดิต (เปลี่ยนคู่แข่งได้ไม่จำกัดหลังปลดล็อก) · Pro Max เทียบข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจได้", "pro");
+  };
+  WIRES2.peer = function (h) { if (tierRank() < 1) return; if (typeof w === "function") w(h); };
+})();
+
+/* ภาพรวมอุตสาหกรรม — Free ✕ · Pro Top 5 ในกลุ่มตนเอง (ทั้งกลุ่ม + CSV ปลด 5 เครดิต) · Pro Max ทั้งอุตสาหกรรม + CSV */
+(() => {
+  const v = VIEWS.sector, w = WIRES2.sector;
+  function top5(ind) {
+    const pool = indComps(ind).slice().sort((a, b) => b.ipi - a.ipi), top = pool.slice(0, 5);
+    return pageHead("ภาพรวมอุตสาหกรรม", `${IND[ind]} · Top 5`,
+      `ระดับ Pro ดูได้เฉพาะ 5 อันดับแรกในกลุ่มของบริษัทคุณ (${pool.length} บริษัทในกลุ่ม) · ทั้งกลุ่มและไฟล์ CSV เป็นสิทธิ์ Pro Max หรือปลดรายกลุ่ม ${PRICE.sector} เครดิต`)
+      + `<div class="card" style="margin-bottom:14px"><h3>5 อันดับแรกของ${esc(IND[ind])} <span class="pill blue">Pro</span></h3>
+        <p class="desc">เรียงตาม OpenInnoScore · ใช้ดูตำแหน่งเทียบเท่านั้น ไม่ใช่การจัดอันดับคุณภาพบอร์ด · คลิกแถวเพื่อเปิดบริษัท (บริษัทอื่นต้องปลดล็อกรายบริษัท)</p>
+        <div class="tw"><table class="tr-top5"><thead><tr><th class="n">#</th><th>บริษัท</th><th>โซน</th><th class="n">OIS</th>
+          <th class="n">CEO Promotion Focus</th><th class="n">Board Amp</th><th class="n">กก.หญิง</th></tr></thead>
+          <tbody>${top.map((x, k) => { const zz = ZONES[zoneOf(x.promo, x.amp)];
+            return `<tr data-co="${esc(x.t)}" style="cursor:pointer"${x.t === S.t ? ' class="hl"' : ""}><td class="n">${k + 1}</td>
+              <td><b>${esc(x.t)}</b> <span style="color:var(--ink-3)">${esc(x.n)}</span></td>
+              <td><span class="pill" style="border-color:${zz.c};color:${zz.c};font-size:9.5px">${esc(zz.l)}</span></td>
+              <td class="n"><b>${x.ipi}</b></td><td class="n">${x.dp}</td><td class="n">${ampPct(x.amp)}</td><td class="n">${pct1(x.fem)}</td></tr>`; }).join("")}</tbody></table></div>
+        <p class="gx-sm" style="margin-top:8px">แสดง ${top.length} จาก ${pool.length} บริษัท · อีก ${Math.max(0, pool.length - top.length)} บริษัทและไฟล์ CSV อยู่ในสิทธิ์ทั้งกลุ่ม</p></div>
+      <div class="card tr-buy"><div style="flex:1;min-width:240px"><h3 style="margin:0 0 4px">ดูทั้งกลุ่ม + ส่งออก CSV</h3>
+          <p class="desc" style="margin:0">ปลดล็อก${esc(IND[ind])}ทั้งกลุ่ม ${pool.length} บริษัท ด้วย ${PRICE.sector} เครดิต (หรือซื้อแยกรายกลุ่ม ${fmt(SECTOR_BAHT)} บาท) · Pro Max รวมใน Subscription ทุกอุตสาหกรรม · คุณมี <b>${S.credits}</b> เครดิต</p></div>
+        <div class="gx-row"><button class="btn p" data-trsec="${ind}">ปลดล็อกทั้งกลุ่ม · ${PRICE.sector} เครดิต</button>
+          <button class="btn s" data-setplan="max">ดู Pro Max</button></div></div>`;
+  }
+  VIEWS.sector = function () {
+    const r = tierRank();
+    if (r >= 2) return v.apply(this, arguments);
+    if (r < 1) return pageHead("ภาพรวมอุตสาหกรรม", "Industry Overview", "ตารางจัดอันดับรายอุตสาหกรรม การกระจายตัวของคะแนน และค่ากลางองค์ประกอบบอร์ด")
+      + trWall(trSkel(7), "ภาพรวมอุตสาหกรรม", "ระดับ Pro ดู Top 5 ในกลุ่มตนเอง · Pro Max ดูทั้งอุตสาหกรรมและส่งออก CSV (หรือใช้ 5 เครดิตต่อกลุ่ม)", "pro");
+    if (S.ind !== "all" && isUnlocked("sector", S.ind)) return v.apply(this, arguments);
+    if (S.ind === "all" || +S.ind === ownInd()) return top5(ownInd());
+    return v.apply(this, arguments);
+  };
+  WIRES2.sector = function (h) { if (tierRank() < 1) return; if (typeof w === "function") w(h); };
+})();
+
+/* หลักฐานความแม่น — Pro Max เห็นตารางรายปีเหมือน Pro */
+if (typeof VIEWS.valid === "function") { const v = VIEWS.valid; VIEWS.valid = function () { return asPro(() => v.apply(this, arguments)); }; }
+/* ข้อสั่งการบอร์ด / Compliance — สิทธิ์ Pro Max (ต้นแบบเปิดให้ทดลองเพื่อ Pilot) */
+if (typeof VIEWS.directives === "function") {
+  const v = VIEWS.directives;
+  VIEWS.directives = function () {
+    const h = v.apply(this, arguments);
+    if (tierRank() >= 2) return h;
+    const note = `<div class="note warn tr-maxnote"><b>Compliance program รายเดือน/รายไตรมาส เป็นสิทธิ์ Pro Max</b> (รายงานหัวข้อ 4 · Agentic AI) — ต้นแบบเปิดหน้านี้ให้ทดลองเพื่อ Pilot ·
+      <button class="lnk" data-setplan="max">เปลี่ยนเป็น Pro Max</button></div>`;
+    const i = h.indexOf("</div>", h.indexOf('class="pagehead"'));
+    return i > 0 ? h.slice(0, i + 6) + note + h.slice(i + 6) : note + h;
+  };
+}
+
+/* ---------------------------------------------------------------- 6 · หน้าเครดิตและแผน */
+function viewBillingTr() {
+  const r = tierRank(), used = S.log.filter(l => l.cost > 0).reduce((a, b) => a + b.cost, 0);
+  const col = k => PLAN_RANK[k] === r ? " tr-cur" : "";
+  const cell = v => v === "✕" ? `<span class="tr-x" aria-label="ไม่สามารถใช้งานได้">✕</span>` : esc(v);
+  return pageHead("บัญชีของคุณ", "เครดิตและแผนการใช้งาน",
+    "สิทธิ์ 3 ระดับ — Free · Pro (Pay-Per-Use) · Pro Max (Subscription, add-on จาก Pro) · คิดค่าบริการด้วยเครดิตตามการใช้งานจริง ปลดล็อกแล้วอยู่ตลอด")
+    + `<div class="grid g4 tight" style="gap:10px;margin-bottom:16px">
+      <div class="stat hero"><div class="k">เครดิตคงเหลือ</div><div class="v num">${S.credits}</div>
+        <div class="u">${S.credits ? "พร้อมใช้งาน" : "หมดแล้ว — เติมเพื่อใช้งานต่อ"}</div></div>
+      <div class="stat"><div class="k">ระดับปัจจุบัน</div><div class="v" style="font-size:19px">${esc(PLAN_LAB[S.plan])}</div>
+        <div class="u">${esc(TR_PLANS[r].lv)} · ${esc(TR_PLANS[r].sub)}</div></div>
+      <div class="stat"><div class="k">ใช้ไปแล้ว</div><div class="v num">${used}</div><div class="u">${S.log.length} รายการ</div></div>
+      <div class="stat"><div class="k">บริษัทของคุณ (ฟรี)</div><div class="v" style="font-size:19px">${esc(S.freeCo || "ยังไม่ได้เลือก")}</div>
+        <div class="u">รายงานวินิจฉัยฉบับเต็มฟรี 1 บริษัท</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3>ระดับสิทธิ์การใช้งาน</h3>
+      <p class="desc">ระดับกำหนดว่าเปิดฟีเจอร์ใดได้ ส่วนเครดิตใช้จ่ายรายครั้งในระดับ Pro · Pro Max เป็น Subscription ที่ต่อยอดจาก Pro จึงไม่ตัดเครดิตกับรายการในตาราง</p>
+      <div class="grid g3 tr-plans">${TR_PLANS.map(p => `<div class="tr-plan${p.k === S.plan ? " on" : ""}">
+          <div class="tr-plan-h"><span class="tr-lv">${esc(p.lv)}</span>${p.k === S.plan ? `<span class="pill ok">ระดับปัจจุบัน</span>` : ""}</div>
+          <b class="tr-plan-n">${esc(p.n)}</b><div class="tr-plan-s">${esc(p.sub)}</div>
+          <p>${esc(p.d)}</p><div class="tr-plan-t">เริ่มต้น ${p.tok} เครดิต${p.k === "free" ? " (รับทันทีเมื่อสมัคร)" : ""}</div>
+          ${p.k === S.plan ? "" : `<button class="btn ${PLAN_RANK[p.k] > r ? "p" : "g"}" data-setplan="${p.k}">${PLAN_RANK[p.k] > r ? "อัปเกรดเป็น" : "สลับไป"} ${esc(p.n)}</button>`}
+        </div>`).join("")}</div>
+      <div class="note" style="margin-top:12px">ต้นแบบยังไม่เชื่อมระบบชำระเงิน — สลับระดับได้ทันทีเพื่อสาธิต · อัตรา Subscription ของ Pro Max เป็นไปตามข้อตกลงองค์กร (ยังไม่กำหนดในต้นแบบ) · ระบบจริงจะผูกระดับกับการชำระเงินและออกใบเสร็จ (เฟส 2)</div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3>ตารางสิทธิ์การใช้งาน <span class="pill blue">ตามรายงานหัวข้อ 4</span></h3>
+      <p class="desc">คอลัมน์ที่ไฮไลต์คือระดับปัจจุบันของคุณ</p>
+      <div class="tw"><table class="tr-perm"><thead><tr><th>ฟีเจอร์ / สิทธิ์การเข้าถึง</th>
+        <th class="${col("free")}">Level 1 · Free</th><th class="${col("pro")}">Level 2 · Pro (Pay-Per-Use)</th><th class="${col("max")}">Level 3 · Pro Max (Subscription)</th></tr></thead>
+        <tbody>${PERM.map(row => `<tr><th scope="row">${esc(row[0])}</th><td class="${col("free")}">${cell(row[1])}</td>
+          <td class="${col("pro")}">${cell(row[2])}</td><td class="${col("max")}">${cell(row[3])}</td></tr>`).join("")}</tbody></table></div>
+    </div>
+
+    <div class="grid g2" style="margin-bottom:14px">
+      <div class="card"><h3>อัตราการใช้เครดิต (Credit Tariff)</h3>
+        <div class="tw"><table><thead><tr><th>รายการ</th><th class="n">เครดิต</th><th>หมายเหตุ</th></tr></thead><tbody>
+          ${TARIFF.map(t => `<tr><td>${esc(t[0])}</td><td class="n"><b>${esc(t[1])}</b></td><td style="color:var(--ink-2)">${esc(t[2])}</td></tr>`).join("")}
+        </tbody></table></div>
+        <p class="gx-sm" style="margin-top:8px">หลักคิด: ให้ตรวจสอบก่อนจ่าย · จ่ายตามที่ใช้จริง · ปลดล็อกแล้วอยู่ตลอด · ขายเป็นชุดได้ในระดับอุตสาหกรรม</p></div>
+      <div class="card"><h3>แพ็กเกจเติมเครดิต (Credit Packages)</h3>
+        <div class="tr-packs">${PACKS.map((p, i) => `<div class="tr-pack${i === 1 ? " best" : ""}">
+            ${p.tag ? `<span class="tr-tag">${esc(p.tag)}</span>` : ""}
+            <div class="tr-pack-n">${p.n}<span> เครดิต</span></div>
+            <div class="tr-pack-b">${fmt(p.baht)} บาท</div>
+            <div class="gx-sm">เฉลี่ย ${fmt(Math.round(p.baht / p.n))} บาท / รายงาน</div>
+            <button class="btn ${i === 1 ? "p" : "s"}" data-buy="${p.n}">เลือกแพ็กเกจนี้</button></div>`).join("")}</div>
+        <div class="note" style="margin-top:12px">การชำระเงินเป็นการจำลอง — กดเลือกแพ็กเกจแล้วยืนยันเพื่อเติมเครดิตด้วยมือ ไม่มีการตัดบัตรจริง (ระบบชำระเงินและใบเสร็จอยู่ในเฟส 2)</div></div>
+    </div>
+
+    <div class="card"><h3>ประวัติการใช้เครดิต</h3>
+      ${S.log.length ? `<div class="tw" style="max-height:260px;overflow:auto"><table><thead><tr><th>รายการ</th><th>อ้างอิง</th><th class="n">เครดิต</th><th>เวลา</th></tr></thead><tbody>
+        ${S.log.map(l => `<tr><td>${esc(({ report: "รายงานวินิจฉัย / ข้อมูลบริษัท", peer: "เทียบคู่แข่ง", studio: "What-if Studio + ตรวจภาษา CEO", sector: "ภาพรวมอุตสาหกรรม + CSV", ceotext: "ตรวจข้อความ CEO", port: "พอร์ตลงทุน", topup: "เติมเครดิต" })[l.what] || l.what)}</td>
+          <td style="color:var(--ink-2)">${esc(l.label || l.t)}</td><td class="n">${l.cost > 0 ? "−" + l.cost : "+" + (-l.cost)}</td>
+          <td style="color:var(--ink-3);font-size:11px">${esc(l.at)}</td></tr>`).join("")}</tbody></table></div>`
+      : `<div style="text-align:center;padding:26px 10px;color:var(--ink-3);font-size:12.5px">ยังไม่มีการใช้เครดิต</div>`}
+      <button class="btn g" id="btnResetDemo" style="margin-top:12px;width:100%;justify-content:center">รีเซ็ตข้อมูลสาธิต (คืนเครดิต 3 และล้างสิทธิ์ที่ปลดล็อก)</button>
+    </div>`;
+}
+VIEWS.billing = viewBillingTr;
+
+/* ---------------------------------------------------------------- 7 · ร่าง 56-1 · Template และการอนุมัติ */
+const T561_KEY = "ois_t561_v1";
+const T561_PH = ["ชื่อบริษัท", "ปีบัญชี", "กระบวนการประเมิน", "ประเด็นพัฒนา", "การดำเนินการที่เสร็จและมีมติ", "ผลประเมิน BOD"];
+const T561_DEFAULT = () => ({ id: "default", name: "แบบมาตรฐาน · 56-1 ส่วนที่ 2 ข้อ 7–8", secs: [
+  { h: "ส่วนที่ 2 ข้อ 7 · โครงสร้างการกำกับดูแลกิจการและข้อมูลสำคัญเกี่ยวกับคณะกรรมการ — การประเมินผลการปฏิบัติงานของคณะกรรมการด้านการกำกับดูแลนวัตกรรม",
+    b: "ในปีบัญชี {{ปีบัญชี}} คณะกรรมการ{{ชื่อบริษัท}}ได้ประเมินผลการปฏิบัติงานของคณะกรรมการในระดับคณะ เพิ่มเติมในประเด็นการกำกับดูแลนวัตกรรมแบบเปิด โดยมีกระบวนการดังนี้\n{{กระบวนการประเมิน}}\n\n{{ผลประเมิน BOD}}" },
+  { h: "ส่วนที่ 2 ข้อ 8 · รายงานผลการดำเนินงานสำคัญด้านการกำกับดูแลกิจการ — การกำกับดูแลนวัตกรรมแบบเปิด",
+    b: "ประเด็นพัฒนาที่คณะกรรมการกำหนดจากการประเมิน ได้แก่\n{{ประเด็นพัฒนา}}\n\nการดำเนินการที่แล้วเสร็จและผ่านมติของคณะกรรมการในรอบปี\n{{การดำเนินการที่เสร็จและมีมติ}}" },
+] });
+const T561 = (() => {
+  const d = { tpl: [T561_DEFAULT()], cur: "default", ap: {} };
+  try { const o = JSON.parse(localStorage.getItem(T561_KEY) || "null");
+    if (o && Array.isArray(o.tpl) && o.tpl.length) { d.tpl = o.tpl; d.cur = o.cur || o.tpl[0].id; d.ap = o.ap || {}; } } catch (e) { }
+  if (!d.tpl.some(t => t.id === "default")) d.tpl.unshift(T561_DEFAULT());
+  return d;
+})();
+const t561Save = () => { try { localStorage.setItem(T561_KEY, JSON.stringify(T561)); } catch (e) { } };
+const t561Tpl = () => T561.tpl.find(t => t.id === T561.cur) || T561.tpl[0];
+const t561Now = () => new Date().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+const t561Hash = s => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+const T561_ROLES = ["ประธานกรรมการ", "เลขานุการบริษัท", "ประธานคณะกรรมการบรรษัทภิบาล"];
+let _t561Ai = null, _t561Focus = null;
+
+/** ผล BOD Self-Assessment (OI-1…6) จาก ois_pilot_v1 — ระดับคณะเท่านั้น */
+function t561Bod() {
+  let a = null;
+  try { if (typeof PL === "object" && PL && PL.bod) a = PL.bod.a; } catch (e) { }
+  if (!a) try { const o = JSON.parse(localStorage.getItem("ois_pilot_v1") || "null"); a = o && o.bod && o.bod.a; } catch (e) { }
+  a = a || {};
+  const items = typeof OI_ITEMS !== "undefined" ? OI_ITEMS : [];
+  const done = items.filter(i => a[i.id]);
+  return { done, hi: done.filter(i => a[i.id] >= 4), lo: done.filter(i => a[i.id] <= 2) };
+}
+/** ค่าที่เติมลงตัวแทน — เฉพาะสิ่งที่เกิดขึ้นจริงและผ่านมติ · ไม่มีชื่อบริษัทอื่น · ไม่ใช้คะแนนแบบจำลอง */
+function t561Values(c) {
+  const done = typeof fuDoneItems === "function" ? fuDoneItems(c.t) : [];
+  const decided = typeof fuRows === "function"
+    ? fuRows().filter(r => String(r.dec || "").trim() && (!r.co || r.co === c.t)).map(r => rpAnon(r.issue.replace(/^\[[^\]]+\]\s*/, ""), c.t)) : [];
+  const bod = t561Bod();
+  const proc = [];
+  if (bod.done.length) proc.push(`- คณะกรรมการตอบชุดคำถามประเมินตนเองระดับคณะด้านการกำกับดูแลนวัตกรรมแบบเปิด ${bod.done.length} ประเด็น (${bod.done.map(i => i.id).join(", ")}) ซึ่งอ้างอิงหลักการกำกับดูแลกิจการที่ดีสำหรับบริษัทจดทะเบียน ปี 2560 โดยเลขานุการบริษัทสรุปจากการหารือของคณะกรรมการ`);
+  if (decided.length) proc.push(`- นำประเด็นที่ได้จากการประเมินเข้าสู่วาระการหารือของคณะกรรมการ บันทึกข้อสรุปและมติ กำหนดผู้รับผิดชอบในระดับตำแหน่ง และรอบการติดตามผล`);
+  const isu = [...bod.lo.map(i => `${i.id} · ${i.t}`), ...decided];
+  return {
+    "ชื่อบริษัท": c.n || c.t,
+    "ปีบัญชี": String((c.fy || FY_SHOWN) + 543),
+    "กระบวนการประเมิน": proc.length ? proc.join("\n") : "[ยังไม่มีข้อมูลกระบวนการประเมิน — กรอกหลังการประชุมจริง]",
+    "ประเด็นพัฒนา": isu.length ? [...new Set(isu)].map(x => "- " + x).join("\n") : "[ยังไม่มีประเด็นพัฒนาที่ผ่านการหารือ]",
+    "การดำเนินการที่เสร็จและมีมติ": done.length ? done.map((r, i) => `${i + 1}. ${r.issue} — การดำเนินการตามมติ: ${r.dec}`).join("\n")
+      : "[ยังไม่มีรายการที่ดำเนินการแล้วเสร็จและมีมติ — ส่วนนี้แสดงเฉพาะการดำเนินการที่เกิดขึ้นจริงและผ่านการอนุมัติ]",
+    "ผลประเมิน BOD": bod.done.length
+      ? `ผลการประเมินตนเองระดับคณะ: ประเด็นที่คณะกรรมการเห็นว่ามีการดำเนินการเป็นส่วนใหญ่หรืออย่างเป็นระบบแล้ว ได้แก่ ${bod.hi.map(i => i.id).join(", ") || "—"}`
+        + ` · ประเด็นที่กำหนดเป็นแนวทางพัฒนาในปีถัดไป ได้แก่ ${bod.lo.map(i => i.id).join(", ") || "—"} · ผลเป็นภาพรวมระดับคณะ ไม่มีการประเมินหรือให้คะแนนกรรมการรายบุคคล`
+      : "[ยังไม่มีผลประเมินตนเอง OI-1…OI-6 — ทำได้ที่หน้า BOD Self-Assessment]",
+  };
+}
+/** กฎก่อนส่งออก — ไม่มีชื่อบริษัทอื่น (ใช้ตัวแทนชื่อ) · ไม่อ้างคะแนนแบบจำลองเป็นหลักฐานประสิทธิผลของบอร์ด */
+const T561_SCORE_RX = /OpenInnoScore|\bOIS\b|\bTier\s*\d|เปอร์เซ็นไทล์|percentile|quadrant|Signal\s*B|Board Amplification|ช่อง\s*(Deliver|Develop|Discipline|Discover)/i;
+function t561Build(c) {
+  const vals = t561Values(c), tpl = t561Tpl(), unknown = new Set();
+  const fill = s => String(s || "").replace(/{{\s*([^}]+?)\s*}}/g, (m, k) => vals[k] !== undefined ? vals[k] : (unknown.add(k), m));
+  const secs = tpl.secs.map(x => ({ h: rpAnon(fill(x.h), c.t), b: rpAnon(fill(x.b), c.t) }));
+  const text = secs.map(x => `${x.h}\n\n${x.b}`).join("\n\n");
+  const issues = [];
+  const m = text.match(T561_SCORE_RX);
+  if (m) issues.push(`พบคำที่อ้างคะแนน/ตำแหน่งจากแบบจำลอง (“${m[0]}”) — ห้ามใช้คะแนนเป็นหลักฐานว่าบอร์ดมีประสิทธิผล ให้แก้ Template ก่อน`);
+  if (unknown.size) issues.push(`ตัวแทนที่ระบบไม่รู้จัก: ${[...unknown].map(k => "{{" + k + "}}").join(", ")}`);
+  const gaps = (text.match(/\[ยังไม่มี[^\]]*\]/g) || []).length;
+  return { secs, text, issues, gaps, hash: t561Hash(text) };
+}
+function t561Ap(t) { return T561.ap[t] || (T561.ap[t] = { st: "draft", hist: [] }); }
+function t561State(c, b) {
+  const a = t561Ap(c.t);
+  if ((a.st === "pending" || a.st === "approved") && a.hash !== b.hash) return { k: "changed", a };
+  return { k: a.st, a };
+}
+const T561_STEPS = [["draft", "ร่าง"], ["pending", "รออนุมัติ"], ["approved", "อนุมัติแล้ว / ส่งกลับแก้"], ["ready", "พร้อมส่งออก"]];
+function t561Flow(st) {
+  const idx = st === "pending" ? 1 : st === "approved" ? 3 : st === "returned" ? 2 : 0;
+  return `<ol class="tr-flow">${T561_STEPS.map(([k, l], i) => `<li class="${i < idx ? "done" : i === idx ? "on" : ""}${st === "returned" && i === 2 ? " ret" : ""}">
+    <b>${i + 1}</b><span>${st === "returned" && i === 2 ? "ส่งกลับแก้" : esc(l)}</span></li>`).join("")}</ol>`;
+}
+function t561Mail(c, a) {
+  return `<div class="tr-mail" role="group" aria-label="ตัวอย่างอีเมลขออนุมัติ">
+    <div class="tr-mail-h"><span>ถึง</span><b>${esc(a.role || T561_ROLES[0])}</b> <span class="pill mute">จำลอง · อีเมลจริงต้องใช้เซิร์ฟเวอร์</span></div>
+    <div class="tr-mail-h"><span>เรื่อง</span><b>ขออนุมัติร่างข้อความแบบ 56-1 ส่วนที่ 2 ข้อ 7–8 · ${esc(c.n || c.t)} · ปีบัญชี ${(c.fy || FY_SHOWN) + 543}</b></div>
+    <div class="tr-mail-b">เรียน ${esc(a.role || T561_ROLES[0])}<br>
+      ฝ่ายเลขานุการบริษัทขอเสนอร่างข้อความการกำกับดูแลนวัตกรรมสำหรับแนบแบบ 56-1 One Report (Template “${esc(t561Tpl().name)}”)
+      เพื่อพิจารณาอนุมัติก่อนนำส่งออก · ร่างนี้ใช้เฉพาะการดำเนินการที่เกิดขึ้นจริงและผ่านมติแล้ว ไม่ระบุชื่อบริษัทอื่น และไม่ใช้คะแนนแบบจำลองเป็นหลักฐานประสิทธิผลของคณะกรรมการ<br>
+      <span class="tr-mail-btns"><span>✓ อนุมัติ</span><span>↺ ส่งกลับแก้</span></span>
+      <span class="gx-sm">กดได้จากอุปกรณ์ใดก็ได้ (Anydevice Approval) — ในต้นแบบจำลองด้วยปุ่มด้านล่าง</span></div></div>`;
+}
+function viewT561() {
+  const r = tierRank(), c = cur();
+  const head = pageHead("Agentic AI · 56-1", "ร่าง 56-1 · Template และการอนุมัติ",
+    `ลูกค้าเปลี่ยน Template รายงานเองได้ และมีขั้นอนุมัติก่อนส่งข้อมูลออก (รายงานหัวข้อ 6) · หัวข้อที่เกี่ยวข้องคือ 56-1 ส่วนที่ 2 ข้อ 7 และข้อ 8 ·
+     ข้อความสร้างจากกฎ (rule-based) — AI ทำหน้าที่เรียบเรียงเท่านั้น คะแนนมาจากเครื่องคำนวณหลังบ้าน`);
+  if (r < 1) return head + trWall(trSkel(8), "ร่างรายงาน 56-1 ด้วย Agentic AI",
+    "ระดับ Pro สร้างร่างรายงานการกำกับดูแลนวัตกรรมแนบ 56-1 และแก้ Template เองได้ · Pro Max เพิ่มขั้นอนุมัติผ่านอีเมล (Email Approval Workflow) การวิเคราะห์เชิงลึก และ Compliance program", "pro");
+  const tpl = t561Tpl(), b = t561Build(c), s = t561State(c, b), a = s.a;
+  const blocked = b.issues.length > 0;
+  const canExport = !blocked && (r < 2 || (s.k === "approved"));
+  const ai = typeof window !== "undefined" && window.OIS_API && typeof window.OIS_API.llm === "function";
+  const editor = `<div class="card tr-ed">
+    <div class="tr-edh"><h3 style="margin:0">ก · Template</h3>
+      <select class="sel" id="t5Tpl" aria-label="เลือก Template">${T561.tpl.map(t => `<option value="${esc(t.id)}"${t.id === tpl.id ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select></div>
+    <label class="tr-k" for="t5Name">ชื่อ Template</label>
+    <input class="inp" id="t5Name" value="${esc(tpl.name)}" style="width:100%"${tpl.id === "default" ? "" : ""}>
+    <div class="tr-ph"><span class="gx-sm">ตัวแทนข้อมูล — คลิกเพื่อแทรกในช่องข้อความที่เลือกล่าสุด:</span>
+      ${T561_PH.map(p => `<button class="tr-chip" data-t5ph="${esc(p)}">{{${esc(p)}}}</button>`).join("")}</div>
+    ${tpl.secs.map((x, i) => `<div class="tr-sec">
+      <div class="tr-sec-h"><span class="pill mute">ส่วนที่ ${i + 1}</span>
+        <button class="btn g" data-t5up="${i}" ${i ? "" : "disabled"} title="เลื่อนขึ้น">↑</button>
+        <button class="btn g" data-t5del="${i}" ${tpl.secs.length > 1 ? "" : "disabled"} title="ลบส่วนนี้">ลบ</button></div>
+      <input class="inp" data-t5h="${i}" value="${esc(x.h)}" aria-label="หัวข้อส่วนที่ ${i + 1}" style="width:100%;font-weight:600">
+      <textarea class="inp" data-t5b="${i}" rows="6" aria-label="ข้อความส่วนที่ ${i + 1}" style="width:100%;margin-top:6px;resize:vertical">${esc(x.b)}</textarea>
+    </div>`).join("")}
+    <div class="gx-row">
+      <button class="btn s" id="t5Add">+ เพิ่มส่วน</button>
+      <button class="btn p" id="t5Save">บันทึก Template</button>
+      <button class="btn s" id="t5SaveAs">บันทึกเป็น Template ใหม่</button>
+      <button class="btn g" id="t5Reset">คืนค่าเริ่มต้น</button>
+      ${tpl.id !== "default" ? `<button class="btn g" id="t5Del">ลบ Template นี้</button>` : ""}</div>
+    <p class="gx-sm" style="margin-top:8px">แก้ข้อความแล้วกดนอกช่องเพื่อบันทึกอัตโนมัติ · Template เก็บในเครื่องนี้ (${T561.tpl.length} ชุด) · เมื่อแก้หลังส่งขออนุมัติ ร่างจะกลับเป็นสถานะ “ร่าง”</p>
+  </div>`;
+  const preview = `<div class="card tr-prev">
+    <div class="tr-edh"><h3 style="margin:0">ข · ตัวอย่างร่าง · ${esc(c.t)}</h3>
+      ${b.gaps ? `<span class="pill warn">ข้อมูลยังไม่ครบ ${b.gaps} จุด</span>` : `<span class="pill ok">เติมข้อมูลครบ</span>`}</div>
+    <div class="note tr-rules"><b>กติกาที่ระบบบังคับ</b> · ใช้เฉพาะการดำเนินการที่เกิดขึ้นจริงและผ่านมติแล้ว (สถานะ “เสร็จ” + มีมติในหน้า Follow-up) ·
+      ชื่อบริษัทอื่นถูกแทนด้วย “บริษัทในกลุ่มเปรียบเทียบ” · ไม่ใช้คะแนน/ตำแหน่งจากแบบจำลองเป็นหลักฐานว่าบอร์ดมีประสิทธิผล · ไม่ระบุชื่อบุคคล</div>
+    ${b.issues.map(x => `<div class="note crit" style="margin-top:8px">⚠ ${esc(x)}</div>`).join("")}
+    <article class="tr-doc" id="t5Doc">${b.secs.map(x => `<h4>${esc(x.h)}</h4>${x.b.split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("")}`).join("")}</article>
+    <div class="tr-ai">
+      ${ai ? `<button class="btn s" id="t5Ai">ให้ AI เรียบเรียง (ต้องเปิดใช้บนเซิร์ฟเวอร์)</button>`
+        : `<button class="btn g" disabled title="ต้องเปิดใช้บนเซิร์ฟเวอร์">ให้ AI เรียบเรียง (ต้องเปิดใช้บนเซิร์ฟเวอร์)</button>`}
+      <span class="gx-sm">${ai ? "AI เรียบเรียงถ้อยคำตามโครงสร้างของ SET เท่านั้น — ไม่เพิ่มข้อเท็จจริงและไม่เข้าถึงสูตรคำนวณ" : "ต้นแบบนี้ยังไม่ได้เชื่อมบริการ AI ฝั่งเซิร์ฟเวอร์ — ร่างด้านบนสร้างจากกฎทั้งหมด"}</span></div>
+    ${_t561Ai ? `<div class="tr-aiout ${_t561Ai.ok ? "" : "off"}"><div class="tr-k">${_t561Ai.ok ? "ข้อความที่ AI เรียบเรียง — ตรวจทานก่อนใช้ (ยังไม่ผ่านขั้นอนุมัติจนกว่าจะคัดลอกลง Template)" : "บริการ AI"}</div>
+        <div class="tr-aitxt">${esc(_t561Ai.text).replace(/\n/g, "<br>")}</div></div>` : ""}
+  </div>`;
+  const hist = a.hist.length ? `<div class="tw" style="margin-top:10px"><table class="tr-tbl"><thead><tr><th>เวลา</th><th>การดำเนินการ</th><th>บทบาท</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>${a.hist.slice().reverse().map(h => `<tr><td style="white-space:nowrap">${esc(h.at)}</td><td>${esc(h.act)}</td><td>${esc(h.role || "—")}</td><td>${esc(h.note || "")}</td></tr>`).join("")}</tbody></table></div>`
+    : `<p class="gx-sm" style="margin-top:8px">ยังไม่มีประวัติการอนุมัติ</p>`;
+  const approval = r < 2 ? `<div class="card tr-lockcard"><h3>ค · ขั้นอนุมัติก่อนส่งออก <span class="pill blue">Pro Max</span></h3>
+      <p class="desc" style="margin:0">Email Approval Workflow (ร่าง → รออนุมัติ → อนุมัติแล้ว/ส่งกลับแก้ → พร้อมส่งออก) เป็นสิทธิ์ Pro Max ·
+        ระดับ Pro ร่างและส่งออกได้โดยไม่ผ่านขั้นอนุมัติ — ผู้ใช้ต้องตรวจทานกับเลขานุการบริษัทเอง</p>
+      <button class="btn s" data-setplan="max" style="margin-top:10px">ดูสิทธิ์ Pro Max</button></div>`
+    : `<div class="card tr-appr"><h3>ค · ขั้นอนุมัติก่อนส่งออก <span class="pill blue">Pro Max</span></h3>
+      ${t561Flow(s.k === "changed" ? "draft" : s.k)}
+      ${s.k === "changed" ? `<div class="note warn" style="margin:8px 0">เนื้อหาเปลี่ยนหลังส่งขออนุมัติ — ต้องส่งขออนุมัติใหม่ก่อนส่งออก</div>` : ""}
+      ${s.k === "draft" || s.k === "returned" || s.k === "changed" ? `
+        ${s.k === "returned" && a.note ? `<div class="note warn" style="margin:8px 0"><b>ส่งกลับแก้โดย ${esc(a.by || "")}</b> · ${esc(a.note)}</div>` : ""}
+        <div class="gx-row" style="align-items:center"><label class="gx-sm" for="t5Role">ผู้อนุมัติ (บทบาท)</label>
+          <select class="sel" id="t5Role">${T561_ROLES.map(x => `<option${x === (a.role || T561_ROLES[0]) ? " selected" : ""}>${esc(x)}</option>`).join("")}</select>
+          <button class="btn p" id="t5Submit"${blocked ? " disabled title=\"แก้ข้อที่ระบบเตือนก่อน\"" : ""}>ส่งขออนุมัติ</button></div>
+        <p class="gx-sm">ระบบจำลองการส่งอีเมลไปยังบทบาทที่เลือก — อีเมลจริงต้องใช้เซิร์ฟเวอร์</p>`
+      : s.k === "pending" ? `${t561Mail(c, a)}
+        <label class="tr-k" for="t5Note" style="margin-top:10px">ความเห็นผู้อนุมัติ</label>
+        <textarea class="inp" id="t5Note" rows="2" style="width:100%" placeholder="เช่น ปรับถ้อยคำย่อหน้าที่ 2 ให้ตรงกับมติครั้งที่ 4/2567"></textarea>
+        <div class="gx-row"><button class="btn p" id="t5Ok">✓ อนุมัติ (จำลองในบทบาท ${esc(a.role)})</button>
+          <button class="btn s" id="t5Ret">↺ ส่งกลับแก้</button></div>`
+      : `<div class="note ok" style="margin:8px 0"><b>อนุมัติแล้ว · พร้อมส่งออก</b> — โดย ${esc(a.by || "")} · ${esc(a.at || "")}${a.note ? " · " + esc(a.note) : ""}</div>
+        <button class="btn g" id="t5Reopen">เปิดร่างเพื่อแก้ไขอีกครั้ง</button>`}
+      <div class="tr-k" style="margin-top:12px">ประวัติ</div>${hist}</div>`;
+  const exportCard = `<div class="card tr-exp"><h3>ส่งออก</h3>
+    <p class="desc">${r >= 2 ? (canExport ? "ร่างได้รับอนุมัติแล้ว — ส่งออกได้" : "ปุ่มส่งออกเปิดเมื่อร่างได้รับอนุมัติแล้ว (พร้อมส่งออก)") : blocked ? "แก้ข้อที่ระบบเตือนก่อนส่งออก" : "ระดับ Pro ส่งออกได้ทันที — ตรวจทานกับเลขานุการบริษัทก่อนใช้"}</p>
+    <div class="gx-row"><button class="btn s" data-t5x="copy"${canExport ? "" : " disabled"}>คัดลอกข้อความ</button>
+      <button class="btn s" data-t5x="txt"${canExport ? "" : " disabled"}>ดาวน์โหลด .txt</button>
+      <button class="btn s" data-t5x="md"${canExport ? "" : " disabled"}>ดาวน์โหลด .md</button>
+      <button class="btn s" data-t5x="print"${canExport ? "" : " disabled"}>พิมพ์</button></div></div>`;
+  const maxCard = `<div class="card"><h3>ต่อยอดระดับ Pro Max <span class="pill ${r >= 2 ? "ok" : "blue"}">${r >= 2 ? "เปิดแล้ว" : "Pro Max"}</span></h3>
+    <div class="tr-links">
+      ${[["compass", "รายงานวิเคราะห์เชิงลึก", "Board Strategy Compass ฉบับเต็ม"], ["zonec", "AI Strategic Advice", "Zone C · ข้อเสนอระดับคณะ (กรรมการหญิง + ภาษา CEO)"],
+        ["directives", "แผนกำกับดูแลและข้อสั่งการบอร์ด", "Compliance program รายเดือน / รายไตรมาส"]].map(([v, l, d]) =>
+        r >= 2 ? `<button class="tr-link" data-goto="${v}"><b>${esc(l)}</b><span>${esc(d)}</span></button>`
+          : `<button class="tr-link off" data-setplan="max"><b>🔒 ${esc(l)}</b><span>${esc(d)}</span></button>`).join("")}</div></div>`;
+  return head + (typeof reportChain === "function" ? reportChain(4).replace('aria-current="page"', "").replace(" on\"", "\"") : "")
+    + `<div class="tr-t5grid"><div class="stack">${editor}${maxCard}</div><div class="stack">${preview}${approval}${exportCard}</div></div>`;
+}
+function t561Dl(name, text, type) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿" + text], { type }));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function wireT561(h) {
+  if (typeof wireChain === "function") wireChain(h);
+  const c = cur(), tpl = t561Tpl();
+  const afterEdit = () => { const a = t561Ap(c.t); t561Save(); render(); return a; };
+  const sel = h.querySelector("#t5Tpl"); if (sel) sel.onchange = () => { T561.cur = sel.value; _t561Ai = null; t561Save(); render(); };
+  const nm = h.querySelector("#t5Name"); if (nm) nm.onchange = () => { tpl.name = nm.value.trim() || tpl.name; t561Save(); render(); };
+  h.querySelectorAll("[data-t5h]").forEach(el => { el.onfocus = () => _t561Focus = el; el.onchange = () => { tpl.secs[+el.dataset.t5h].h = el.value; afterEdit(); }; });
+  h.querySelectorAll("[data-t5b]").forEach(el => { el.onfocus = () => _t561Focus = el; el.onchange = () => { tpl.secs[+el.dataset.t5b].b = el.value; afterEdit(); }; });
+  h.querySelectorAll("[data-t5ph]").forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => {
+    const el = _t561Focus && h.contains(_t561Focus) ? _t561Focus : h.querySelector("[data-t5b]");
+    if (!el) return;
+    const ins = "{{" + b.dataset.t5ph + "}}", p0 = el.selectionStart ?? el.value.length, p1 = el.selectionEnd ?? p0;
+    el.value = el.value.slice(0, p0) + ins + el.value.slice(p1);
+    el.dispatchEvent(new Event("change")); }; });
+  h.querySelectorAll("[data-t5del]").forEach(b => b.onclick = () => { tpl.secs.splice(+b.dataset.t5del, 1); afterEdit(); });
+  h.querySelectorAll("[data-t5up]").forEach(b => b.onclick = () => { const i = +b.dataset.t5up; if (i < 1) return;
+    [tpl.secs[i - 1], tpl.secs[i]] = [tpl.secs[i], tpl.secs[i - 1]]; afterEdit(); });
+  const add = h.querySelector("#t5Add"); if (add) add.onclick = () => { tpl.secs.push({ h: "หัวข้อใหม่", b: "ข้อความ — ใช้ตัวแทนข้อมูลได้ เช่น {{ชื่อบริษัท}}" }); afterEdit(); };
+  const sv = h.querySelector("#t5Save"); if (sv) sv.onclick = () => { t561Save(); toast("บันทึก Template แล้ว"); };
+  const sa = h.querySelector("#t5SaveAs"); if (sa) sa.onclick = () => {
+    const id = "t" + Date.now().toString(36), cp = JSON.parse(JSON.stringify(tpl));
+    cp.id = id; cp.name = (tpl.name || "Template") + " (สำเนา)";
+    T561.tpl.push(cp); T561.cur = id; t561Save(); toast("บันทึกเป็น Template ใหม่แล้ว"); render(); };
+  const rs = h.querySelector("#t5Reset"); if (rs) rs.onclick = () => {
+    if (!confirm("คืนค่า Template นี้เป็นแบบมาตรฐาน (56-1 ส่วนที่ 2 ข้อ 7–8)?")) return;
+    const d = T561_DEFAULT(); tpl.secs = d.secs; if (tpl.id === "default") tpl.name = d.name; afterEdit(); toast("คืนค่าเริ่มต้นแล้ว"); };
+  const dl = h.querySelector("#t5Del"); if (dl) dl.onclick = () => {
+    if (!confirm(`ลบ Template “${tpl.name}”?`)) return;
+    T561.tpl = T561.tpl.filter(t => t.id !== tpl.id); T561.cur = "default"; t561Save(); render(); };
+  /* การอนุมัติ (Pro Max) */
+  const push = (a, act, note) => { a.hist.push({ at: t561Now(), act, role: a.role, note: note || "" }); };
+  const sub = h.querySelector("#t5Submit"); if (sub) sub.onclick = () => {
+    if (tierRank() < 2) return;
+    const b = t561Build(c); if (b.issues.length) return toast("แก้ข้อที่ระบบเตือนก่อนส่งขออนุมัติ");
+    const a = t561Ap(c.t); a.role = (h.querySelector("#t5Role") || {}).value || T561_ROLES[0];
+    a.st = "pending"; a.hash = b.hash; a.note = ""; push(a, "ส่งขออนุมัติ (จำลองอีเมล)");
+    t561Save(); toast("ส่งขออนุมัติแล้ว (จำลอง) · ถึง " + a.role); render(); };
+  const ok = h.querySelector("#t5Ok"); if (ok) ok.onclick = () => {
+    const a = t561Ap(c.t), n = (h.querySelector("#t5Note") || {}).value || "";
+    a.st = "approved"; a.by = a.role; a.at = t561Now(); a.note = n.trim(); push(a, "อนุมัติแล้ว → พร้อมส่งออก", a.note);
+    t561Save(); toast("อนุมัติแล้ว · พร้อมส่งออก"); render(); };
+  const ret = h.querySelector("#t5Ret"); if (ret) ret.onclick = () => {
+    const a = t561Ap(c.t), n = ((h.querySelector("#t5Note") || {}).value || "").trim();
+    if (!n) return toast("ระบุความเห็นที่ต้องแก้ก่อนส่งกลับ");
+    a.st = "returned"; a.by = a.role; a.at = t561Now(); a.note = n; push(a, "ส่งกลับแก้", n);
+    t561Save(); toast("ส่งกลับแก้แล้ว"); render(); };
+  const ro = h.querySelector("#t5Reopen"); if (ro) ro.onclick = () => { const a = t561Ap(c.t); a.st = "draft"; push(a, "เปิดร่างเพื่อแก้ไข"); t561Save(); render(); };
+  /* ส่งออก */
+  h.querySelectorAll("[data-t5x]").forEach(btn => btn.onclick = () => {
+    const b = t561Build(c), k = btn.dataset.t5x, base = `56-1_ส่วนที่2_ข้อ7-8_${c.t}_${(c.fy || FY_SHOWN) + 543}`;
+    if (b.issues.length) return toast("แก้ข้อที่ระบบเตือนก่อนส่งออก");
+    if (tierRank() >= 2 && t561State(c, b).k !== "approved") return toast("ต้องได้รับอนุมัติก่อนส่งออก");
+    if (k === "copy") return typeof copyText === "function" ? copyText(b.text) : navigator.clipboard && navigator.clipboard.writeText(b.text);
+    if (k === "txt") return t561Dl(base + ".txt", b.text, "text/plain;charset=utf-8");
+    if (k === "md") return t561Dl(base + ".md", b.secs.map(x => `## ${x.h}\n\n${x.b}`).join("\n\n"), "text/markdown;charset=utf-8");
+    if (k === "print") return typeof rpPrint === "function" ? rpPrint("tr-print-561") : window.print();
+  });
+  /* AI เรียบเรียง — ทำงานเมื่อเซิร์ฟเวอร์เปิดให้ใช้เท่านั้น */
+  const aiB = h.querySelector("#t5Ai"); if (aiB) aiB.onclick = async () => {
+    const b = t561Build(c);
+    if (b.issues.length) return toast("แก้ข้อที่ระบบเตือนก่อนส่งให้ AI");
+    aiB.disabled = true; aiB.textContent = "กำลังเรียบเรียง …";
+    try {
+      const res = await Promise.resolve(window.OIS_API.llm("t561_rewrite", { text: b.text,
+        rules: ["เรียบเรียงถ้อยคำตามโครงสร้าง 56-1 ส่วนที่ 2 ข้อ 7–8 เท่านั้น", "ห้ามเพิ่มข้อเท็จจริง ตัวเลข หรือชื่อบริษัท/บุคคล", "ห้ามอ้างคะแนนเป็นหลักฐานประสิทธิผลของคณะกรรมการ"] }));
+      if (!res || res.enabled === false || res.ok === false) _t561Ai = { ok: false, text: (res && (res.message || res.reason || res.error)) || "บริการ AI ยังไม่ได้เปิดใช้บนเซิร์ฟเวอร์ — ใช้ร่างที่สร้างจากกฎไปก่อน" };
+      else {
+        const t = typeof res === "string" ? res : (res.text || res.output || res.content || "");
+        const out = rpAnon(String(t), c.t);
+        _t561Ai = T561_SCORE_RX.test(out) ? { ok: false, text: "ข้อความจาก AI อ้างคะแนนแบบจำลอง จึงไม่แสดง — ใช้ร่างจากกฎแทน" } : { ok: !!out, text: out || "AI ไม่ได้ส่งข้อความกลับมา" };
+      }
+    } catch (e) { _t561Ai = { ok: false, text: "เรียก AI ไม่สำเร็จ — " + (e && e.message || e) }; }
+    render();
+  };
+}
+VIEWS.t561 = viewT561;
+WIRES2.t561 = function (h) { if (!canSeeCo(S.t) || tierRank() < 1) return; wireT561(h); };
+/* ประตูสิทธิ์บริษัทถูกห่อไว้ก่อนลงทะเบียน t561 — ห่ออีกครั้งให้ครบ */
+(() => { const v = VIEWS.t561; VIEWS.t561 = function () { return canSeeCo(S.t) ? v() : trCoGate(); }; })();
+
+/* ---------------------------------------------------------------- 8 · คู่มือการใช้งาน (ในหน้าระบบ) */
+const MAN_SECS = [["man-start", "เริ่มต้น"], ["man-plans", "ระดับสิทธิ์และเครดิต"], ["man-flow", "เส้นทางการทำงาน"], ["man-t561", "ร่าง 56-1"],
+  ["man-read", "อ่านผลอย่างไร"], ["man-whatif", "What-if"], ["man-uc", "Use Case"], ["man-rules", "กติกาสำคัญ"], ["man-pilot", "หน้า Pilot"], ["man-faq", "คำถามที่พบบ่อย"]];
+const MAN_HELP = { profile: "man-v-profile", docs: "man-v-docs", fit: "man-v-fit", zonec: "man-v-zonec", matrix: "man-v-matrix", compass: "man-v-compass",
+  peer: "man-v-peer", studio: "man-whatif", followup: "man-v-followup", t561: "man-t561", sector: "man-plans", billing: "man-plans", port: "man-flow", ic: "man-flow",
+  arch: "man-rules", valid: "man-read", bod: "man-pilot", outdomain: "man-pilot", directives: "man-pilot", survey: "man-pilot", syslog: "man-pilot", integr: "man-pilot" };
+const MAN_CHIPS = [
+  ["tier ไม่แน่นอน", "ช่วง 90% ของคะแนนคร่อมมากกว่าหนึ่ง tier — อย่าสรุประดับจากตัวเลขเดียว"],
+  ["Caution: ปีนี้ไม่ผ่านเกณฑ์ validity", "ปีบัญชีนั้นตกเกณฑ์อย่างน้อยหนึ่งข้อในตาราง validity — อ่านผลอย่างระมัดระวัง"],
+  ["ยังไม่ได้ validate", "ยังไม่มีข้อมูลปีถัดไปให้ตรวจ"],
+  ["หลักฐานอ่อนในอุตสาหกรรมนี้", "ความสัมพันธ์ระหว่างคะแนนกับกิจกรรม open innovation ในอุตสาหกรรมนี้ยังไม่ต่างจากศูนย์อย่างมีนัย"],
+  ["กรรมการหญิง … คน — ต่ำกว่า critical mass", "งานวิจัยพบความสัมพันธ์มีนัยเมื่อมีกรรมการหญิงอย่างน้อย 3 คน"],
+  ["amp ≤ 0", "บอร์ดอยู่ในรูปแบบที่ภาษาเชิงรุกของ CEO ไม่สัมพันธ์กับ open innovation ที่สูงขึ้น"],
+  ["ค่าป้อนถูก clip", "ค่าอยู่นอกช่วง p5–p95 ของฐานอ้างอิง จึงถูกแทนด้วยจุดตัดก่อนเข้าสูตร"],
+  ["นอกกลุ่มอ้างอิง", "ธนาคาร/การเงิน หรือไม่มีสารภาษาอังกฤษ — ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid"],
+  ["ธงสัญญาณ OI", "อยู่ช่อง Deliver และขอบล่างของช่วง 90% ≥ 50 ในปีที่ผ่าน validity — เป็นธงเชิงความสัมพันธ์ ไม่ใช่การรับรอง"],
+];
+const MAN_FAQ = [
+  ["คะแนน OpenInnoScore คือความน่าจะเป็นที่บริษัทจะทำนวัตกรรมใช่ไหม", "ไม่ใช่ — เป็นเปอร์เซ็นไทล์ของสัญญาณเทียบฐานอ้างอิง REF-928 (928 บริษัท-ปี) อ่านเชิงความสัมพันธ์ ไม่ใช่การพยากรณ์และไม่ใช่เหตุ-ผล"],
+  ["ทำไมระดับ Free เปิดบริษัทอื่นไม่ได้ แม้มีเครดิต", "Free ออกแบบให้ “ตรวจสอบก่อนจ่าย” กับบริษัทของตนเอง · เครดิต 3 หน่วยที่ได้ตอนสมัครใช้ได้ทันทีเมื่อเปลี่ยนเป็น Pro (Pay-Per-Use ไม่มีค่ารายเดือน)"],
+  ["ปลดล็อกแล้วต้องจ่ายซ้ำไหม", "ไม่ต้อง — ปลดล็อกครั้งเดียวดูได้ตลอดสำหรับบริษัท/อุตสาหกรรมนั้น · Pro Max ไม่ตัดเครดิตกับรายการในตาราง"],
+  ["ทำไม What-if ปรับกรรมการครอบครัวและ political ties ได้ แต่ระบบไม่แนะนำ", "ปรับได้เพื่อให้เข้าใจโมเดล แต่ความสัมพันธ์ของสองตัวแปรนี้ไม่ทนต่อการวิเคราะห์ fixed-effects (H2, H3) และ political ties ไม่ใช้เป็นเหตุผลเชิงบวก (R6) จึงไม่อยู่ในข้อเสนอ Zone C หรือฉากทัศน์สำเร็จรูป"],
+  ["จุดอ้างอิงบน Grid คือเป้าหมายที่ควรไปใช่ไหม", "ไม่ใช่ — เป็นค่ามัธยฐานของบริษัทช่อง Deliver ในอุตสาหกรรมเดียวกัน ใช้เทียบระยะห่างเท่านั้น และปิดไว้เป็นค่าเริ่มต้น"],
+  ["ร่าง 56-1 เอาคะแนนไปใส่ได้ไหม", "ไม่ได้ — ร่างใช้เฉพาะกระบวนการประเมิน ประเด็นพัฒนา และการดำเนินการที่เกิดขึ้นจริงและผ่านมติ ระบบจะเตือนและบล็อกการส่งออกถ้าพบคำอ้างคะแนน"],
+  ["ข้อมูลที่อัปโหลดถูกส่งไปที่ไหน", "ต้นแบบนี้อ่านเอกสารในเบราว์เซอร์เท่านั้น ไม่ส่งออก · ข้อมูลอยู่ใน localStorage ของเครื่องนี้"],
+  ["ทำไมธนาคารไม่มีจุดบน Grid", "ธนาคารอยู่นอกฐานอ้างอิง REF-928 (อุตสาหกรรม 1–7 นอกกลุ่มการเงิน) — ใช้ BOD Self-Assessment และโหมดนอกกลุ่มอ้างอิงแทน"],
+];
+function viewManual() {
+  const step = (id, n, h, p) => `<li id="man-v-${id}"><b>${n}. ${esc(h)}</b> <button class="lnk" data-goto="${id}">เปิดหน้า →</button><div>${p}</div></li>`;
+  return pageHead("คู่มือ", "คู่มือการใช้งาน OpenInnoScore",
+    "คู่มือย่อในหน้าระบบ — เริ่มต้น เส้นทางการทำงาน วิธีอ่านผล และกติกาสำคัญ · กด “?” บนหัวของแต่ละหน้าเพื่อกลับมาที่หัวข้อที่เกี่ยวข้อง")
+    + `<div class="tr-man">
+    <nav class="tr-toc" aria-label="สารบัญคู่มือ">${MAN_SECS.map(([id, l], i) => `<button data-mango="${id}">${i + 1}. ${esc(l)}</button>`).join("")}</nav>
+    <div class="tr-mbody">
+    <section class="card" id="man-start"><h3>1 · เริ่มต้น</h3>
+      <ol class="tr-ol"><li>หน้าเข้าสู่ระบบ: เลือกระดับผู้ใช้ (Free · Pro · Pro Max) เลือก “บริษัทของคุณ” แล้วกดเข้าสู่ระบบด้วย Google (ต้นแบบจำลองการล็อกอิน)</li>
+        <li>บริษัทของคุณ = บริษัทที่ดูรายงานวินิจฉัยฉบับเต็มได้ฟรี · Free รับ ${PLAN_TOKENS.free} เครดิตทันที</li>
+        <li>แถบบนแสดงระดับและเครดิตคงเหลือ · เปลี่ยนบริษัท/อุตสาหกรรมได้จากตัวเลือกด้านบน · ปุ่ม “เติม” พาไปหน้าเครดิตและแผน</li></ol></section>
+    <section class="card" id="man-plans"><h3>2 · ระดับสิทธิ์และเครดิต</h3>
+      <div class="tw"><table class="tr-perm"><thead><tr><th>ฟีเจอร์</th><th>Free</th><th>Pro (Pay-Per-Use)</th><th>Pro Max (Subscription)</th></tr></thead>
+        <tbody>${PERM.map(r => `<tr><th scope="row">${esc(r[0])}</th><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("")}</tbody></table></div>
+      <p class="gx-sm" style="margin-top:8px">เครดิต: รายงานบริษัทที่ 2 ขึ้นไป 1 · เทียบคู่แข่ง 3 ราย 1 · What-if (รวมตรวจภาษา CEO) 1 · ภาพรวมทั้งอุตสาหกรรม + CSV 5 (หรือ ${fmt(SECTOR_BAHT)} บาท/กลุ่ม) ·
+        แพ็กเกจ 5 เครดิต 490 บาท · 15 เครดิต 1,290 บาท · 40 เครดิต 2,990 บาท · การชำระเงินในต้นแบบเป็นการจำลอง</p></section>
+    <section class="card" id="man-flow"><h3>3 · เส้นทางการทำงาน</h3>
+      <ol class="tr-steps">
+        ${step("profile", 1, "Company Profile", "ภาพรวมบริษัท ข้อมูลองค์ประกอบบอร์ด และจุดเริ่มของทุกหน้า")}
+        ${step("docs", 2, "Zone A · Document Intelligence", "อัปโหลดสารจาก CEO (Pro) หรือพิมพ์/วางข้อความ ≥ 2,000 คำ (Free) · แก้ค่าบอร์ดเองได้ทุกช่อง และทุกตัวเลขบอกที่มา")}
+        ${step("fit", 3, "Zone B · Insight Generator", "รายงานวินิจฉัย: OpenInnoScore, tier, ช่วง 90%, quadrant และข้อค้นพบที่กด “Add to Report” ได้")}
+        ${step("zonec", 4, "Zone C · Board Refresh", "ข้อเสนอระดับคณะ — ใช้เฉพาะสัดส่วนกรรมการหญิงและภาษา CEO · ไม่เสนอกรรมการครอบครัวหรือ political ties")}
+        ${step("matrix", 5, "Strategy Grid 2×2", "ตำแหน่งบริษัท + ประเด็นสำหรับบอร์ด 6 ส่วน · Pro เปิดชั้น “จุดอ้างอิงและเส้นทางย้ายโซน” ได้ · Pro Max เปรียบเทียบอุตสาหกรรม")}
+        ${step("compass", 6, "Compass · รายงานประเด็นสำหรับบอร์ด", "รายงานฉบับเต็มสำหรับการประชุม — ผลหลังประชุมผู้ใช้กรอกเอง")}
+        ${step("peer", 7, "Peer Benchmark", "เทียบ 1 vs 3 ราย พร้อมคำถามว่าความต่างเกิดจากอะไร · ข้ามอุตสาหกรรมเป็นสิทธิ์ Pro Max")}
+        ${step("studio", 8, "What-if Studio", "ฉากทัศน์ภายใต้สมมติฐาน + What-if Report · Pro Max มีฉากทัศน์ขาลง")}
+        ${step("followup", 9, "Follow-up", "ข้อสรุป มติ ผู้รับผิดชอบ (ตำแหน่ง) และกำหนดติดตาม — ข้อมูลต้นทางของร่าง 56-1")}
+        ${step("t561", 10, "ร่าง 56-1 · Template และการอนุมัติ", "เติมข้อความลง Template แล้วส่งขออนุมัติก่อนส่งออก")}
+      </ol></section>
+    <section class="card" id="man-t561"><h3>4 · ร่าง 56-1 · Template และการอนุมัติ</h3>
+      <ul class="tr-ol"><li>Template แบ่งเป็นส่วน แก้หัวข้อและข้อความได้ · แทรกตัวแทนข้อมูล ${T561_PH.map(p => `<code>{{${esc(p)}}}</code>`).join(" ")} · บันทึกได้หลายชุด และคืนค่าเริ่มต้นได้</li>
+        <li>ค่าเริ่มต้นผูกกับแบบ 56-1 ส่วนที่ 2 ข้อ 7 (โครงสร้างการกำกับดูแลกิจการและข้อมูลสำคัญเกี่ยวกับคณะกรรมการ) และข้อ 8 (รายงานผลการดำเนินงานสำคัญด้านการกำกับดูแลกิจการ)</li>
+        <li>ระบบใช้เฉพาะรายการ “เสร็จ” ที่มีมติ · แทนชื่อบริษัทอื่นด้วยคำกลาง · บล็อกการส่งออกถ้าพบคำอ้างคะแนนแบบจำลอง</li>
+        <li>Pro Max: ร่าง → ส่งขออนุมัติ (จำลองอีเมลถึงประธานกรรมการ / เลขานุการบริษัท) → อนุมัติ หรือ ส่งกลับแก้ (บันทึกความเห็น บทบาท เวลา) → พร้อมส่งออก · Pro: ร่างและส่งออกได้โดยไม่ผ่านขั้นอนุมัติ</li>
+        <li>ปุ่ม “ให้ AI เรียบเรียง” ทำงานเมื่อเปิดใช้บนเซิร์ฟเวอร์เท่านั้น</li></ul></section>
+    <section class="card" id="man-read"><h3>5 · อ่านผลอย่างไร</h3>
+      <dl class="tr-dl">
+        <dt>OpenInnoScore (0–100)</dt><dd>เปอร์เซ็นไทล์ของสัญญาณ B = cP × amp เทียบฐาน REF-928 — ไม่ใช่ความน่าจะเป็น</dd>
+        <dt>Tier 1–4</dt><dd>ระดับของคะแนนตามจุดตัดของฐานอ้างอิง · อ่านคู่กับช่วง 90% เสมอ</dd>
+        <dt>เปอร์เซ็นไทล์</dt><dd>ตำแหน่งเทียบฐานอ้างอิง เช่น 70 = สูงกว่าราว 70% ของบริษัท-ปีในฐาน</dd>
+        <dt>ช่วง 90%</dt><dd>ความไม่แน่นอนของคะแนนจากค่าประมาณของแบบจำลอง — ถ้าคร่อมหลาย tier ระบบจะติดป้าย “tier ไม่แน่นอน”</dd>
+        <dt>quadrant (A Deliver · B Discipline · C Develop · D Discover)</dt><dd>แกนนอน = CEO Promotion Focus · แกนตั้ง = Board Amplification Signal · เป็นสี่ช่อง ไม่ใช่ควอไทล์อันดับ</dd>
+        <dt>แถบสถานะ</dt><dd>สรุป Tier × quadrant พร้อมค่าเฉลี่ยกิจกรรม open innovation ของกลุ่มเดียวกันในฐาน (ไม่ใช่ค่าคาดหมายของบริษัท)</dd></dl>
+      <div class="tr-k" style="margin-top:10px">ป้าย (chips) บนแถบสถานะ</div>
+      <dl class="tr-dl">${MAN_CHIPS.map(([k, d]) => `<dt><span class="chip">${esc(k)}</span></dt><dd>${esc(d)}</dd>`).join("")}</dl></section>
+    <section class="card" id="man-whatif"><h3>6 · What-if Studio</h3>
+      <ul class="tr-ol"><li>Free ทดลอง 1 ตัวแปร (สัดส่วนกรรมการหญิง) · Pro ปลดล็อกรายบริษัท 1 เครดิต: บอร์ด 3 ตัวแปร + ตรวจภาษา CEO · Pro Max เพิ่มฉากทัศน์ขาลง</li>
+        <li>กรรมการครอบครัว: ${esc(typeof WARN_FAM !== "undefined" ? WARN_FAM : "")}</li>
+        <li>political ties (0/1 เท่านั้น): ${esc(typeof WARN_POL !== "undefined" ? WARN_POL : "")}</li>
+        <li>เมื่อขยับสองตัวนี้ ผลจะติดป้าย “${esc(typeof CHIP_CTX !== "undefined" ? CHIP_CTX : "")}” · มุมมองธนาคารล็อกสองตัวนี้ไว้ · อายุงานไม่มีผลต่อคะแนน (δT = 0)</li>
+        <li>การคำนวณรายไตรมาสต้องใช้ข้อมูลรายไตรมาสซึ่งงานวิจัยยังไม่มี — เตรียมไว้สำหรับเฟสถัดไป</li></ul></section>
+    <section class="card" id="man-uc"><h3>7 · มุมมอง Use Case</h3>
+      <p class="desc">เลือกมุมมองที่หน้า Strategy Grid — เนื้อหาฐานชุดเดียวกัน แต่ถ้อยคำและผู้อ่านต่างกัน</p>
+      <ul class="tr-ol">${(typeof USECASES !== "undefined" ? USECASES : []).map(u => `<li><b>${esc(u.lab)}</b> — ผู้อ่าน: ${esc(u.audience)}</li>`).join("")}</ul>
+      <p class="gx-sm">มุมมองธนาคาร (ลูกค้าสินเชื่อ / บอร์ดธนาคาร) ซ่อนชั้นจุดอ้างอิง และล็อกตัวแปรบริบทใน What-if ตามแนวทาง Pilot</p></section>
+    <section class="card" id="man-rules"><h3>8 · กติกาสำคัญ</h3>
+      <ul class="tr-ol"><li><b>ไม่ใช่เชิงสาเหตุ</b> — ทุกตัวเลขเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การรับประกันผล</li>
+        <li><b>ไม่ให้คะแนนบุคคล</b> — ผลเป็นระดับคณะ ห้ามใช้ประเมินหรือคัดเลือกกรรมการรายบุคคล (ข้อมูลอ่อนไหว พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล ม.26)</li>
+        <li><b>political ties</b> — ข้อมูลบริบท ไม่ใช้เป็นเหตุผลเชิงบวก ไม่ใช่เป้าการสรรหา (R6)</li>
+        <li><b>นอกกลุ่มอ้างอิง</b> — ธนาคาร/การเงิน ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid (R4)</li>
+        <li><b>ไม่แสดงค่าสัมประสิทธิ์</b> — สูตรและพารามิเตอร์เป็นความลับทางการค้า ประมวลผลหลังบ้านในระบบจริง</li></ul></section>
+    <section class="card" id="man-pilot"><h3>9 · หน้า Pilot</h3>
+      <ul class="tr-ol"><li><button class="lnk" data-goto="bod">BOD Self-Assessment (OI-1…6)</button> — ประเมินตนเองระดับคณะ · ผลนำไปใช้ใน {{ผลประเมิน BOD}} ของร่าง 56-1</li>
+        <li><button class="lnk" data-goto="outdomain">โหมดนอกกลุ่มอ้างอิง (ธนาคาร)</button> — โปรไฟล์เชิงพรรณนาสำหรับบริษัทนอกฐาน</li>
+        <li><button class="lnk" data-goto="directives">ข้อสั่งการบอร์ด / Compliance</button> — สิทธิ์ Pro Max (เปิดให้ทดลองใน Pilot)</li>
+        <li><button class="lnk" data-goto="survey">แบบสอบถามทดสอบการยอมรับ</button> · <button class="lnk" data-goto="syslog">System log</button> · <button class="lnk" data-goto="integr">การเชื่อมต่อ (Phase ถัดไป)</button></li></ul></section>
+    <section class="card" id="man-faq"><h3>10 · คำถามที่พบบ่อย</h3>
+      ${MAN_FAQ.map(([q, a]) => `<details class="tr-faq"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</section>
+    </div></div>`;
+}
+function wireManual(h) {
+  h.querySelectorAll("[data-mango]").forEach(b => b.onclick = () => { const t = h.querySelector("#" + b.dataset.mango); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  if (S._manSec) {
+    const id = S._manSec; S._manSec = null;
+    setTimeout(() => { const t = h.querySelector("#" + id); if (t) { t.scrollIntoView({ behavior: "smooth", block: "start" }); t.classList.add("tr-flash"); setTimeout(() => t.classList.remove("tr-flash"), 1600); } }, 380);
+  }
+}
+VIEWS.manual = viewManual;
+WIRES2.manual = wireManual;
+
+/* ---------------------------------------------------------------- 9 · เมนู และป้ายล็อก */
+(() => {
+  const bl = NAV.find(n => n.id === "billing"); if (bl) bl.lab = "เครดิตและแผนการใช้งาน";
+  if (!NAV.some(n => n.id === "t561")) {
+    const i = NAV.findIndex(n => n.id === "followup");
+    const it = { id: "t561", g: 2, ico: "✎", lab: "ร่าง 56-1 · Template และการอนุมัติ" };
+    if (i >= 0) NAV.splice(i + 1, 0, it); else NAV.push(it);
+  }
+  if (!NAV.some(n => n.id === "manual")) {
+    const i = NAV.findIndex(n => n.g === 3);
+    const it = { id: "manual", g: 3, ico: "?", lab: "คู่มือการใช้งาน" };
+    if (i >= 0) NAV.splice(i, 0, it); else NAV.push(it);
+  }
+})();
+const CO_LOCK_VIEWS = ["profile", "docs", "fit", "zonec", "matrix", "compass", "ic"];
+function navBadge(id) {
+  const r = tierRank(), see = canSeeCo(S.t);
+  if (CO_LOCK_VIEWS.includes(id)) {
+    if (!see) return r < 1 ? ["🔒", "lock"] : [PRICE.report + " เครดิต", "cost"];
+    if (id === "fit") return r >= 2 ? null : S.freeCo === S.t ? ["ฟรี", "ok"] : ["เปิดแล้ว", "ok"];
+    return null;
+  }
+  if (r >= 2 && ["peer", "studio", "sector", "t561"].includes(id)) return null;     // Pro Max · รวมใน Subscription
+  if (id === "peer" || id === "studio") {
+    if (r < 1) return ["Pro", "pro"];
+    if (!see) return ["🔒", "lock"];
+    return isUnlocked(id) ? ["เปิดแล้ว", "ok"] : [PRICE[id] + " เครดิต", "cost"];
+  }
+  if (id === "sector") return r < 1 ? ["Pro", "pro"] : r < 2 ? (S.ind !== "all" && isUnlocked("sector", S.ind) ? ["เปิดแล้ว", "ok"] : ["Top 5", "cost"]) : ["เปิดแล้ว", "ok"];
+  if (id === "t561") return r < 1 ? ["Pro", "pro"] : r < 2 ? ["ร่าง", "ok"] : ["+อนุมัติ", "ok"];
+  if (id === "directives") return r < 2 ? ["Pro Max", "max"] : null;
+  if (id === "port") return isUnlocked("port") ? ["เปิดแล้ว", "ok"] : ["🔒", "lock"];
+  return null;
+}
+syncNavLocks = function () {
+  $$(".nav button").forEach(b => {
+    const id = b.dataset.v, tag = b.querySelector(".lockb");
+    b.setAttribute("aria-current", id === S.view ? "page" : "false");
+    if (!tag) return;
+    const s = navBadge(id);
+    tag.textContent = s ? s[0] : ""; tag.style.display = s ? "" : "none";
+    tag.dataset.k = s ? s[1] : "";
+  });
+};
+buildNav();
+
+/* ---------------------------------------------------------------- 10 · หน้าเข้าสู่ระบบ — ตัวเลือก 3 ระดับ */
+(() => {
+  const pp = $("#planPick"); if (!pp) return;
+  const set = (k, html) => { const l = pp.querySelector(`[data-plan="${k}"] div`); if (l) l.innerHTML = html; };
+  set("free", `<b>Level 1 · Free · ${PLAN_TOKENS.free} เครดิต</b><span>ดูได้เฉพาะบริษัทของคุณ · รายงานวินิจฉัยฉบับเต็มฟรี 1 บริษัท · เมทริกซ์ 2×2 · Validity · BOD Evaluation</span>`);
+  set("pro", `<b>Level 2 · Pro (Pay-Per-Use) · ${PLAN_TOKENS.pro} เครดิต</b><span>ปลดล็อกรายบริษัทด้วยเครดิต · Peer 1 vs 3 · What-if 3 ตัวแปร + ตรวจภาษา CEO · ร่าง 56-1</span>`);
+  if (!pp.querySelector('[data-plan="max"]')) {
+    const l = document.createElement("label");
+    l.className = "planopt"; l.dataset.plan = "max";
+    l.innerHTML = `<input type="radio" name="plan" value="max"><div><b>Pro Max · Subscription (add-on จาก Pro) · ${PLAN_TOKENS.max} เครดิต</b>
+      <span>ทุกบริษัท · เทียบข้ามอุตสาหกรรม · ฉากทัศน์ขาลง · ภาพรวมทั้งอุตสาหกรรม + CSV · Email Approval</span></div>`;
+    pp.appendChild(l);
+  }
+  $$("#planPick .planopt").forEach(l => l.onclick = () => { $$("#planPick .planopt").forEach(x => x.classList.remove("on")); l.classList.add("on"); });
+  /* ข้อความเดิมบนหน้าเข้าสู่ระบบยังเป็นราคารอบก่อน (token ขั้นต่ำ 3) — ปรับให้ตรงหัวข้อ 5 */
+  const g = $("#gate");
+  if (g && document.createTreeWalker) {
+    const w = document.createTreeWalker(g, NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())) {
+      if (!/token/.test(n.nodeValue)) continue;
+      n.nodeValue = n.nodeValue.replace(/การซื้อ token ขั้นต่ำ 3 token ต่อครั้ง/, "แพ็กเกจเครดิตเริ่มต้น 5 เครดิต 490 บาท · การชำระเงินในต้นแบบเป็นการจำลอง")
+        .replace(/เติม token ด้วยมือได้ตลอด/, "เติมเครดิตด้วยมือได้ตลอด (จำลองการชำระเงิน)").replace(/token/g, "เครดิต");
+    }
+  }
+})();
+
+/* ---------------------------------------------------------------- 11 · หลังวาดทุกหน้า — ปุ่มสิทธิ์ และลิงก์ "?" ไปคู่มือ */
+const _trRender = render;
+render = function () {
+  _trRender.apply(this, arguments);
+  const host = $("#v-" + S.view); if (!host) return;
+  host.querySelectorAll("[data-setplan]").forEach(b => b.onclick = () => { setPlan(b.dataset.setplan); render(); });
+  host.querySelectorAll("[data-trco]").forEach(b => b.onclick = () => {
+    const t = b.dataset.trco; if (!byT[t]) return;
+    S.t = t; S.peers = []; S.wi = null;
+    const sc = $("#selCo");
+    if (sc && ![...sc.options].some(o => o.value === t)) { S.ind = "all"; if ($("#selInd")) $("#selInd").value = "all"; fillCompanies(); }
+    if (sc) sc.value = t;
+    save(); syncChrome(); render();
+  });
+  host.querySelectorAll("[data-trsec]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.trsec;
+    if (spend("sector", String(i), IND[i])) { S.ind = String(i); if ($("#selInd")) $("#selInd").value = S.ind; fillCompanies(); save(); render(); }
+  });
+  const ph = host.querySelector(".pagehead");
+  if (ph && S.view !== "manual" && !ph.querySelector(".tr-help")) {
+    const a = document.createElement("button");
+    a.className = "tr-help"; a.type = "button"; a.textContent = "?";
+    a.title = "เปิดคู่มือส่วนที่เกี่ยวข้องกับหน้านี้"; a.setAttribute("aria-label", "คู่มือการใช้งานของหน้านี้");
+    const sec = MAN_HELP[S.view] || "man-flow";
+    a.onclick = () => { S._manSec = sec; go("manual"); };
+    ph.appendChild(a);
+  }
+};
+
+/* ---------------------------------------------------------------- 12 · เริ่มระบบ */
+(() => {
+  if (!S.user) return;
+  try {
+    const o = JSON.parse(localStorage.getItem(LS) || "null"), vw = o && o.vw;
+    if (vw && VIEWS[vw] && S.view !== vw) { S.view = vw; $$(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + vw)); }
+  } catch (e) { }
+  syncChrome(); render();
 })();
 </script>
