@@ -1881,8 +1881,9 @@ function ctxCtrls(c, w) {
 function downsideRows(c) {
   const bs = c.bsize || 11, fn = Math.round(c.fem * bs), fy = c.fy || FY_SHOWN;
   const dp25 = clamp(c.dp - 25, 0, 100);
+  /* ฐานคือสัดส่วนจริง (ไม่ปัดเป็นจำนวนคน) · ลาออก k คน = ลด k/ขนาดบอร์ด — แถว "ปัจจุบัน" จึงตรงกับคะแนนบนหัวหน้า */
   const mk = (l, as, femN, dp) => {
-    const fem = clamp(femN / bs, 0, 1), promo = dp === c.dp ? c.promo : promoAtPct(dp);
+    const fem = clamp(c.fem - (fn - femN) / bs, 0, 1), promo = dp === c.dp ? c.promo : promoAtPct(dp);
     const amp = ampOf(c.fam, c.pol, fem, c.ten), ois = oisOf(signalB(promo, amp));
     let band = null; try { const b = band90(promo, c.fam, c.pol, fem); if (Array.isArray(b)) band = b; } catch (e) { }
     const quad = quadOf(cpOf(promo), amp);
