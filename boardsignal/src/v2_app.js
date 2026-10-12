@@ -1676,36 +1676,158 @@ function validRemark() {
     d: `ไม่ผ่าน ${v.failed.length} จาก 3 เกณฑ์ — ` +
        v.failed.map(f => `<b>${f.n}</b> (เกณฑ์ ${f.rule}) ${f.why}`).join(" · ") };
 }
+/* แก้ไขครั้งที่ 2.3 — ตัวเลขทุกตัวในหน้านี้ตรงกับงานวิจัย (Table 3–5, §5.1–5.7) · DATA.validYear ถูกปรับ 4 จุดให้ตรงกับฉบับตีพิมพ์
+   (lift ปี 2021 = 3.70 · AUC pooled CI ล่าง = 0.575 · bootstrap SE/percentile interval ของ ρ และ AUC) */
+const PAPER = {
+  byYear: [
+    { fy: 2019, n: 209, sp: .311, p: "<0.001", auc: .686, ci: [.608, .764], lift: 4.39, loyo: .320, v: "PASS" },
+    { fy: 2020, n: 155, sp: .120, p: "0.14", auc: .590, ci: [.492, .688], lift: 1.66, loyo: .117, v: "CAUTION" },
+    { fy: 2021, n: 181, sp: .207, p: "0.005", auc: .624, ci: [.539, .709], lift: 3.70, loyo: .208, v: "PASS" },
+    { fy: 2022, n: 187, sp: -.003, p: "0.96", auc: .494, ci: [.407, .581], lift: 1.34, loyo: -.010, v: "FAIL" },
+    { fy: 2023, n: 196, sp: .214, p: "0.003", auc: .659, ci: [.582, .737], lift: 4.11, loyo: .206, v: "PASS" },
+  ],
+  pooled: { n: 928, sp: .179, p: "<0.001", auc: .614, ci: [.575, .652], lift: 2.38, loyo: .168, v: "PASS" },
+  fwd: [["2019–2020", "2021", .229], ["2019–2021", "2022", -.009], ["2019–2022", "2023", .206]],
+  boot: { spSE: .038, sp: [.105, .248], aucSE: .022, auc: [.572, .654], reps: 500 },
+  ind: { 1: [.067, "0.44", "weak"], 2: [.047, "0.59", "weak"], 6: [.287, "0.002", "strong"], 5: [.246, "0.005", "strong"],
+         3: [.196, "0.020", "strong"], 4: [.152, null, "mid"], 7: [.193, null, "mid"] },
+  variants: [
+    ["B_EG (สูตรหลัก)", "ปิดเทอมอายุงานด้วย evidence gate (g_T = 0)", .179, .614, 2.38, .168, "PASS"],
+    ["B_FULL", "คืนเทอมอายุงานที่ถูกปิด", .178, .615, 2.38, .167, "PASS"],
+    ["B_T1", "เฉพาะเทอม promotion + กรรมการหญิง (ทนต่อ FE)", .148, .595, 1.97, .147, "CAUTION"],
+    ["B_FE", "คำนวณจากสัมประสิทธิ์ fixed-effects", .180, .616, 2.55, null, "PASS"],
+    ["OIS_ind", "เปอร์เซ็นไทล์ภายในอุตสาหกรรม", .171, .610, 2.55, null, "PASS"],
+  ],
+  base: [
+    ["promotion focus อย่างเดียว", .550, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["board amplification อย่างเดียว", .534, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["สัดส่วนกรรมการหญิง", .520, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["อายุงานเฉลี่ยของบอร์ด", .513, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["สัดส่วนกรรมการครอบครัว", .557, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["ขนาดบริษัท (firm size)", .511, "ชนะอย่างมีนัย (p < 0.05)", "ok"],
+    ["political ties อย่างเดียว", .578, "ไม่ชนะอย่างมีนัย (p = 0.16)", "warn"],
+    ["ค่าเฉลี่ยรายอุตสาหกรรม (industry-mean)", .597, "ไม่ชนะอย่างมีนัย (p = 0.53)", "warn"],
+  ],
+  tier: [[1, 232, 12.98, 9], [2, 232, 10.49, 6], [3, 232, 8.32, 6], [4, 232, 7.43, 4]],
+  t4: { 1: { A: [14.87, 151], C: [9.46, 81] }, 2: { A: [13.28, 129], C: [7.00, 103] },
+        3: { B: [8.15, 86], C: [1.00, 1], D: [8.47, 145] }, 4: { B: [8.90, 63], D: [6.88, 169] } },
+  quadN: { A: 280, B: 149, C: 185, D: 314 },
+  band: { med: 17.2, mean: 24.2, p10: 4, p90: 56 },
+};
+(() => {
+  const VY = DATA.validYear; if (!VY) return;
+  PAPER.byYear.forEach(r => { const y = VY.byYear[String(r.fy)]; if (y) Object.assign(y, { n: r.n, sp: r.sp, auc: r.auc, ci: r.ci.slice(), lift: r.lift, loyo: r.loyo }); });
+  Object.assign(VY.all, { n: 928, sp: .179, auc: .614, ci: [.575, .652], lift: 2.38, loyo: .168 });
+  VY.boot = Object.assign(VY.boot || {}, { sp: PAPER.boot.sp.slice(), spSE: PAPER.boot.spSE, auc: PAPER.boot.auc.slice(), aucSE: PAPER.boot.aucSE });
+})();
+
+/** ลำดับขั้นของเครื่องมือตามขอบเขตงาน: Data Set > Moderation Analysis > Marginal Plot > Regression Analysis > Signal B (Quartile Score) */
+function algoStrip(active) {
+  const st = [["datasets", "Data Set", "REF-928 · ชุดให้คะแนน · ข้อมูลผู้ใช้"], ["valid#mvMarg", "Moderation Analysis", "ความชันของ promotion focus แปรตามองค์ประกอบบอร์ด"],
+    ["valid#mvMarg", "Marginal Plot", "ความชันตามสัดส่วนกรรมการหญิง / ครอบครัว"], ["valid#mvYear", "Regression Analysis", "RE-NB · FE-Poisson · validity รายปี"],
+    ["profile", "Signal B™", "Quartile Score · Tier · quadrant"]];
+  return `<nav class="mv-algo" aria-label="ลำดับขั้นของเครื่องมือ">${st.map(([v, h, p], i) => `${i ? `<span class="mv-arr" aria-hidden="true">›</span>` : ""}
+    <button class="mv-astep${i === active ? " on" : ""}" data-mvalgo="${v}"><b>${esc(h)}</b><span>${esc(p)}</span></button>`).join("")}</nav>`;
+}
+function wireAlgo(h) {
+  h.querySelectorAll("[data-mvalgo]").forEach(b => b.onclick = () => {
+    const [v, anc] = b.dataset.mvalgo.split("#");
+    if (S.view !== v) { if (!VIEWS[v]) return; go(v); }
+    if (anc) setTimeout(() => { const e = document.getElementById(anc); if (e) e.scrollIntoView({ behavior: "smooth", block: "start" }); }, S.view === v ? 0 : 380);
+  });
+}
+
+/* ---------------------------------------------------------------- Marginal plot (moderation)
+   ความชันของ CEO promotion focus (board amplification) แปรตามสัดส่วนกรรมการหญิง (และครอบครัว) โดยตรึงตัวแปรอื่นที่ค่าของบริษัท
+   แกนตั้งแสดงเป็นเปอร์เซ็นไทล์ของ amp ใน REF-928 — ไม่แสดงค่าสัมประสิทธิ์หรือความชันเป็นตัวเลข
+   โหมดเซิร์ฟเวอร์: ampOf คืนค่าชั่วคราวจากแคชแล้ว render ใหม่เมื่อค่าจริงมาถึง · แถบ 90% ต้องใช้ชุด θ^(r) ซึ่งมีเฉพาะโหมดออฟไลน์ */
+function margAmpBand(fam, pol, fem) {
+  if (!KR.length) return null;
+  const z = cen(0, fam, pol, fem), out = KR.map(t => midRank(REF_AMP, q8(t[0] + t[1] * z.F + t[2] * z.G + t[3] * z.W))).sort((a, b) => a - b);
+  const q = p => out[Math.min(Math.floor(p * out.length), out.length - 1)];
+  return [q(.05), q(.95)];
+}
+function margPanel(c, key) {
+  const fem = key === "fem", hi = (OCUT[fem ? "W" : "F"] || [0, fem ? .5 : .6])[1];
+  const W = 460, H = 270, L = 46, R = 14, T = 16, B = 44, N = 26;
+  const X = x => L + x / hi * (W - L - R), Y = y => H - B - clamp(y, 0, 100) / 100 * (H - T - B);
+  const xs = Array.from({ length: N }, (_, i) => hi * i / (N - 1));
+  const pts = xs.map(x => { const a = fem ? ampOf(c.fam, c.pol, x) : ampOf(x, c.pol, c.fem); return [x, isFinite(a) ? ampPct(a) : NaN]; });
+  const ok = pts.every(p => isFinite(p[1]));
+  const bands = xs.map(x => fem ? margAmpBand(c.fam, c.pol, x) : margAmpBand(x, c.pol, c.fem));
+  const hasBand = bands.every(Boolean);
+  const line = ok ? pts.map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)}`).join(" ") : "";
+  const area = hasBand ? xs.map((x, i) => `${i ? "L" : "M"}${X(x).toFixed(1)} ${Y(bands[i][1]).toFixed(1)}`).join(" ")
+    + xs.slice().reverse().map((x, j) => `L${X(x).toFixed(1)} ${Y(bands[N - 1 - j][0]).toFixed(1)}`).join(" ") + "Z" : "";
+  const y0 = ampPct(0), cx = Math.min(fem ? c.fem : c.fam, hi), cy = ampPct(c.amp);
+  const col = fem ? "var(--s1)" : "var(--ink-3)";
+  const refX = REF_PTS.map(p => (fem ? p[8] + OM.W : p[6] + OM.F)).filter(isFinite);
+  const rug = refX.filter((_, i) => i % 3 === 0).map(v => `<line x1="${X(clamp(v, 0, hi)).toFixed(1)}" x2="${X(clamp(v, 0, hi)).toFixed(1)}" y1="${H - B + 1}" y2="${H - B + 6}" stroke="var(--ink-3)" stroke-opacity=".25"/>`).join("");
+  const ticks = [0, .1, .2, .3, .4, .5, .6].filter(t => t <= hi + 1e-9);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="mv-marg" role="img" aria-label="Marginal plot · ความชันของ promotion focus ตาม${fem ? "สัดส่วนกรรมการหญิง" : "สัดส่วนกรรมการครอบครัว"}">
+    ${[0, 25, 50, 75, 100].map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/>
+      <text x="${L - 6}" y="${Y(t) + 3}" font-size="9.5" fill="var(--ink-3)" text-anchor="end">${t}</text>`).join("")}
+    ${ticks.map(t => `<text x="${X(t)}" y="${H - B + 17}" font-size="9.5" fill="var(--ink-3)" text-anchor="middle">${Math.round(t * 100)}%</text>`).join("")}
+    ${rug}
+    ${area ? `<path d="${area}" fill="${col}" fill-opacity=".14" stroke="none"/>` : ""}
+    <line x1="${L}" x2="${W - R}" y1="${Y(y0).toFixed(1)}" y2="${Y(y0).toFixed(1)}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
+    <text x="${fem ? W - R - 2 : L + 4}" y="${(Y(y0) + (fem ? -5 : 13)).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" text-anchor="${fem ? "end" : "start"}" paint-order="stroke" stroke="var(--panel)" stroke-width="3">ความชัน = 0 (เส้นแบ่งช่องบน/ล่าง)</text>
+    ${line ? `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>` : `<text x="${(L + W - R) / 2}" y="${H / 2}" font-size="11" fill="var(--ink-3)" text-anchor="middle">กำลังคำนวณบนเซิร์ฟเวอร์…</text>`}
+    ${isFinite(cy) ? `<g transform="translate(${X(cx).toFixed(1)},${Y(cy).toFixed(1)})"><circle r="8" fill="var(--panel)"/><path d="M0-6 6 0 0 6-6 0Z" fill="var(--ink)"/></g>
+      <text x="${(X(cx) + (X(cx) > W - 120 ? -11 : 11)).toFixed(1)}" y="${(Y(cy) - 9).toFixed(1)}" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="${X(cx) > W - 120 ? "end" : "start"}" paint-order="stroke" stroke="var(--panel)" stroke-width="3">${esc(c.t)}</text>` : ""}
+    <text x="${(L + W - R) / 2}" y="${H - 6}" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">${fem ? "สัดส่วนกรรมการหญิง (ช่วงอ้างอิง REF-928 หลัง winsorise)" : "สัดส่วนกรรมการครอบครัว (ช่วงอ้างอิง REF-928 หลัง winsorise)"}</text>
+    <text transform="translate(12,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="10" fill="var(--ink-2)" text-anchor="middle">Board amplification · เปอร์เซ็นไทล์ใน REF-928</text>
+  </svg>`;
+}
+function marginalCard(c) {
+  const inD = inDomainOf(c.ind);
+  return `<div class="card mv-margcard" id="mvMarg" style="margin-bottom:14px">
+    <h3>Moderation Analysis · Marginal Plot — ความชันของ CEO promotion focus แปรตามองค์ประกอบบอร์ด</h3>
+    <p class="desc">เส้นแสดงว่า “board amplification” (ความชันของ promotion focus ภายใต้บอร์ดลักษณะนั้น) อยู่ที่เปอร์เซ็นไทล์เท่าใดของ REF-928
+      เมื่อสัดส่วนกรรมการเปลี่ยนไปตลอดช่วงที่พบจริงในฐานอ้างอิง โดยตรึงตัวแปรอื่นไว้ที่ค่าของ ${esc(c.t)} · ◆ = ตำแหน่งปัจจุบันของ ${esc(c.t)} ·
+      ขีดสั้นใต้แกน = การกระจายของบริษัท-ปีใน REF-928 · <b>ไม่แสดงค่าสัมประสิทธิ์หรือความชันเป็นตัวเลข</b> (ความลับทางการค้า)</p>
+    ${inD ? "" : `<div class="note warn" style="margin-bottom:10px">${esc(c.t)} อยู่นอกกลุ่มอ้างอิง (R4) — กราฟแสดงรูปแบบของฐานอ้างอิงเพื่ออธิบายโมเดลเท่านั้น</div>`}
+    <div class="grid g2" style="gap:14px">
+      <div><div class="mv-margh"><b>สัดส่วนกรรมการหญิง</b> <span class="pill ok">ทนต่อ FE-Poisson · Tier 1 (within-firm)</span></div>
+        ${margPanel(c, "fem")}
+        <p class="mv-sub">เทอมกรรมการหญิงยังมีนัยเมื่อเปลี่ยนเป็น fixed-effects Poisson — อ่านเป็นรูปแบบภายในบริษัทเดียวกันที่ค่อนข้างคงทน แต่ยังเป็น<b>ความสัมพันธ์</b> ไม่ใช่เหตุ-ผล ·
+          งานวิจัยพบว่าความสัมพันธ์มีนัยเมื่อมีกรรมการหญิง ≥ ${CRIT_N} คน (Table 4)</p></div>
+      <div><div class="mv-margh"><b>สัดส่วนกรรมการครอบครัว</b> <span class="pill warn">ไม่ทนต่อ FE · Tier 2 (between-firm · บริบท R6)</span></div>
+        ${margPanel(c, "fam")}
+        <p class="mv-sub">เทอมครอบครัวอ่อนลงจนไม่มีนัยเมื่อใช้ fixed-effects — เป็นรูปแบบระหว่างบริษัท จึงแสดงเป็นข้อมูลบริบทเท่านั้น ไม่ใช่คันโยกหรือเหตุผลเชิงบวก (R6)</p></div>
+    </div>
+    <div class="mv-sub" style="margin-top:8px">${KR.length ? "แถบจาง = ช่วง 90% ของความชันจากชุดจำลอง Krinsky–Robb 500 ชุด (ชุดเดียวกับช่วง 90% ของคะแนน) แสดงเป็นเปอร์เซ็นไทล์"
+      : "ฉบับเซิร์ฟเวอร์: เส้นคำนวณบนเซิร์ฟเวอร์ (ค่าจะปรากฏเมื่อคำนวณเสร็จ) · แถบช่วง 90% ต้องใช้ชุดจำลองซึ่งเก็บไว้ฝั่งเซิร์ฟเวอร์ จึงไม่แสดงในเบราว์เซอร์"}
+      · political ties ตรึงไว้ที่ค่าของบริษัท (${c.pol ? "1 · มี" : "0 · ไม่มี"}) · อายุงานไม่อยู่ในสูตร (δT = 0)</div>
+  </div>`;
+}
+
 function viewValid() {
-  const VY = DATA.validYear;
+  const VY = DATA.validYear, c = cur();
   const vv = validity4(), rm = validRemark();
-  const yrs = Object.entries(VY.byYear);
   const GR = { pass: ["ผ่านเกณฑ์", "ok"], caution: ["ควรระวัง", "warn"], fail: ["ไม่ผ่าน", "crit"] };
   const VD = { PASS: ["✓ PASS", "ok"], CAUTION: ["⚠ CAUTION", "warn"], FAIL: ["✕ FAIL", "crit"] };
-
-  // เดไซล์คำนวณสดจากบริษัทในฐานอ้างอิงของต้นแบบ โดยใช้คะแนนของโมเดลใหม่
   const sorted = [...COMPS].sort((a, b) => a.B - b.B);
   const dec = Array.from({ length: 10 }, (_, i) => {
     const g = sorted.slice(Math.floor(i * sorted.length / 10), Math.floor((i + 1) * sorted.length / 10));
     return g.reduce((t, x) => t + (x.oi || 0), 0) / (g.length || 1);
   });
   const mxd = Math.max(...dec), liftLocal = dec[0] > 0 ? dec[9] / dec[0] : null;
+  const P = PAPER, f3 = v => v === null ? "—" : fmt(v, 3).replace(/^-/, "−");
 
   const cards = `<div class="grid g4 tight" style="gap:10px;margin-bottom:14px">
       ${vv.rows.map(r => `<div class="stat"><div class="k">${esc(r.n)}</div>
         <div class="v num">${fmt(r.v, r.d)}${r.k === "lift" ? "×" : ""}</div>
         <div class="u"><span class="pill ${GR[r.g][1]}">${GR[r.g][0]}</span>
           <span style="color:var(--ink-3)"> ${esc(r.rule)}</span></div></div>`).join("")}
-      <div class="stat"><div class="k">${esc(vv.loyo.n)}</div>
-        <div class="v num">${fmt(vv.loyo.v, 3)}</div>
-        <div class="u"><span class="pill mute">รายงาน</span><span style="color:var(--ink-3)"> ${esc(vv.loyo.note)}</span></div></div>
+      <div class="stat"><div class="k">${esc(vv.loyo.n)}</div><div class="v num">${fmt(vv.loyo.v, 3)}</div>
+        <div class="u"><span class="pill mute">รายงาน</span><span style="color:var(--ink-3)"> ค่าเฉลี่ย 5 ปี · stacked ${fmt(.166, 3)}</span></div></div>
     </div>`;
 
   const decCard = `<div class="card" style="margin-bottom:14px">
-      <h3>ยิ่งคะแนนสูง กิจกรรมนวัตกรรมเปิดยิ่งมากจริงหรือไม่</h3>
-      <p class="desc">แบ่งบริษัทในชุดแสดงผลปีบัญชี 2566 (${COMPS.length} บริษัท — ไม่ใช่ฐานอ้างอิง REF-928) เป็น 10 กลุ่มเท่า ๆ กันตามคะแนน Signal B
-        แล้วดูค่าเฉลี่ยกิจกรรมนวัตกรรมเปิดจริงของแต่ละกลุ่ม ถ้าคะแนนใช้ได้ แท่งควรไต่ขึ้นจากซ้ายไปขวา ·
-        ค่า Decile lift ${fmt(VY.all.lift, 2)}× ในการ์ดด้านบนคำนวณบนแผงเต็ม ${VY.all.n} บริษัท-ปี จึงไม่เท่ากับภาพนี้พอดี</p>
+      <h3>ยิ่งคะแนนสูง กิจกรรมนวัตกรรมเปิดยิ่งมากหรือไม่ (ภาพตัดขวางชุดแสดงผล)</h3>
+      <p class="desc">แบ่งบริษัทในชุดแสดงผลปีบัญชี 2566 (${COMPS.length} บริษัท — ไม่ใช่ฐานอ้างอิง REF-928) เป็น 10 กลุ่มตาม Signal B แล้วดูค่าเฉลี่ยกิจกรรมนวัตกรรมเปิดของแต่ละกลุ่ม ·
+        Decile lift ${fmt(P.pooled.lift, 2)}× ของงานวิจัยคำนวณบนแผงเต็ม 928 บริษัท-ปี จึงไม่เท่ากับภาพนี้พอดี</p>
       <div style="display:flex;align-items:flex-end;gap:6px;height:150px;margin:14px 0 6px">
         ${dec.map((v, i) => `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px">
           <div style="font-size:11px;color:var(--ink-2)" class="num">${fmt(v, 1)}</div>
@@ -1715,103 +1837,119 @@ function viewValid() {
       <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3)">
         <span>← กลุ่มคะแนนต่ำสุด</span><span>กลุ่มที่ 1–10 ตามคะแนน Signal B</span><span>กลุ่มคะแนนสูงสุด →</span></div>
       <div class="note" style="margin-top:12px">กลุ่มบนสุดเฉลี่ย ${fmt(dec[9], 1)} รายการต่อปี เทียบกลุ่มล่างสุด ${fmt(dec[0], 1)}
-        ${liftLocal ? "คิดเป็น " + fmt(liftLocal, 2) + " เท่าในภาพตัดขวางปีนี้" : ""} ·
-        <b>ไม่ได้ไต่ขึ้นเป็นเส้นตรงทุกขั้น</b> ซึ่งเป็นเรื่องปกติของข้อมูลนับที่ผันผวนสูง และตัวเลขนี้เป็นผลเชิงพรรณนาในตัวอย่าง ไม่ใช่การทดสอบ</div>
+        ${liftLocal ? "คิดเป็น " + fmt(liftLocal, 2) + " เท่าในภาพตัดขวางปีนี้" : ""} · ไม่ได้ไต่ขึ้นทุกขั้น ซึ่งเป็นเรื่องปกติของข้อมูลนับที่ผันผวนสูง · ผลเชิงพรรณนา ไม่ใช่การทดสอบ</div>
     </div>`;
 
-  const yearTable = `<div class="card" style="margin-bottom:14px">
-      <h3>ความแม่นรายปี — ปีไหนสัญญาณชัด ปีไหนหาย <span class="pill blue">สิทธิ์ Pro</span></h3>
-      <p class="desc">ตารางที่ 6 ของเอกสารสมการ · ตัวแปรวัดที่ปีบัญชี t − 1 ผลลัพธ์วัดที่ปี t ·
-        ช่วงเชื่อมั่นของ AUC คำนวณแบบ DeLong et al. (1988)</p>
-      <div class="tw"><table><thead><tr><th>ปีบัญชี (ผลลัพธ์)</th><th class="n">n</th>
-        <th class="n">Spearman (p)</th><th class="n">AUC [95% CI]</th><th class="n">Decile lift</th><th class="n">LOYO ρ</th><th>สรุป</th></tr></thead><tbody>
-        ${yrs.map(([y, v]) => {
-    const vd = vv.byYearV[y];
-    return `<tr${vd === "FAIL" ? ' class="hl"' : ""}><td><b>${+y + 543}</b> <span style="color:var(--ink-3)">(${+y + 544})</span></td>
-          <td class="n">${v.n}</td>
-          <td class="n"><span style="color:${v.sp > 0 ? "var(--ink)" : "var(--crit)"}">${fmt(v.sp, 3)}</span>
-            <span style="color:var(--ink-3);font-size:10.5px">(${v.p < .001 ? "<0.001" : fmt(v.p, 3)})</span></td>
-          <td class="n">${fmt(v.auc, 3)} <span style="color:var(--ink-3);font-size:10.5px">[${fmt(v.ci[0], 3)}, ${fmt(v.ci[1], 3)}]</span></td>
-          <td class="n">${fmt(v.lift, 2)}×</td><td class="n">${fmt(v.loyo, 3)}</td>
-          <td><span class="pill ${VD[vd][1]}">${VD[vd][0]}</span></td></tr>`;
-  }).join("")}
-        <tr class="hl"><td><b>รวมทุกปี</b></td><td class="n">${VY.all.n}</td>
-          <td class="n"><b>${fmt(VY.all.sp, 3)}</b> <span style="color:var(--ink-3);font-size:10.5px">(&lt;0.001)</span></td>
-          <td class="n"><b>${fmt(VY.all.auc, 3)}</b> <span style="color:var(--ink-3);font-size:10.5px">[${fmt(VY.all.ci[0], 3)}, ${fmt(VY.all.ci[1], 3)}]</span></td>
-          <td class="n"><b>${fmt(VY.all.lift, 2)}×</b></td><td class="n"><b>${fmt(VY.all.loyo, 3)}</b></td>
-          <td><span class="pill ${VD[vv.verdict][1]}">${VD[vv.verdict][0]}</span></td></tr>
+  const yearTable = `<div class="card" id="mvYear" style="margin-bottom:14px">
+      <h3>ความแม่นรายปีและรวมทุกปี (Table 3 ของงานวิจัย) <span class="pill blue">สิทธิ์ Pro</span></h3>
+      <p class="desc">แต่ละแถวจับคู่ปีของตัวแปร (FY t − 1) กับปีผลลัพธ์ (t) · AUC แยก tercile บนของจำนวนกิจกรรม open innovation ปีถัดไป · ช่วงเชื่อมั่น 95% แบบ DeLong ·
+        LOYO = fit ใหม่บนอีก 4 ปีแล้ววัดปีที่เหลือ · เกณฑ์ตัดสินกำหนดล่วงหน้า (24 ส.ค. 2569) — เป็นเกณฑ์ของโครงการ ไม่ใช่ค่าจากวรรณกรรม</p>
+      <div class="tw"><table class="mv-ptbl"><thead><tr><th>ปีตัวแปร (→ ปีผลลัพธ์)</th><th class="n">N</th>
+        <th class="n">Spearman ρ (p)</th><th class="n">AUC [95% CI]</th><th class="n">Lift</th><th class="n">LOYO ρ</th><th>Verdict</th></tr></thead><tbody>
+        ${P.byYear.map(r => `<tr${r.v === "FAIL" ? ' class="hl"' : ""}><td><b>${r.fy} (→ ${r.fy + 1})</b> <span class="mv-sub">พ.ศ. ${r.fy + 543}</span></td>
+          <td class="n">${r.n}</td><td class="n">${f3(r.sp)} <span class="mv-sub">(${r.p})</span></td>
+          <td class="n">${f3(r.auc)} <span class="mv-sub">[${f3(r.ci[0])}, ${f3(r.ci[1])}]</span></td>
+          <td class="n">${fmt(r.lift, 2)}</td><td class="n">${f3(r.loyo)}</td><td><span class="pill ${VD[r.v][1]}">${VD[r.v][0]}</span></td></tr>`).join("")}
+        <tr class="hl"><td><b>รวมทุกปี (Pooled)</b></td><td class="n">${P.pooled.n}</td><td class="n"><b>${f3(P.pooled.sp)}</b> <span class="mv-sub">(${P.pooled.p})</span></td>
+          <td class="n"><b>${f3(P.pooled.auc)}</b> <span class="mv-sub">[${f3(P.pooled.ci[0])}, ${f3(P.pooled.ci[1])}]</span></td>
+          <td class="n"><b>${fmt(P.pooled.lift, 2)}</b></td><td class="n"><b>${f3(P.pooled.loyo)}</b> <span class="mv-sub">(ค่าเฉลี่ย)</span></td>
+          <td><span class="pill ok">${VD.PASS[0]}</span></td></tr>
       </tbody></table></div>
-      <div class="note crit" style="margin-top:12px">
-        <b>ปีบัญชี 2565 (ผลลัพธ์ 2566) ไม่ผ่านเกณฑ์ทั้งชุด</b> — สหสัมพันธ์อันดับ ${fmt(VY.byYear["2022"].sp, 3)}
-        และ AUC ${fmt(VY.byYear["2022"].auc, 3)} ซึ่งเท่ากับเดาสุ่ม · รายงานของบริษัทในปีนั้นจะติดป้าย
-        <b>“Caution: ปีนี้ไม่ผ่านเกณฑ์ validity”</b> อัตโนมัติ และธง “สัญญาณ OI” จะไม่ขึ้นในปีนั้น (กติกา R3 และ E13)</div>
+      <div class="note crit" style="margin-top:12px"><b>ปีตัวแปร 2022 (ผลลัพธ์ 2023) = FAIL</b> — ρ −0.003 (p = 0.96) และ AUC 0.494 ซึ่งแยกไม่ออกจากการเดาสุ่ม (0.50) ·
+        รายงานของปีนั้นติดป้าย “Caution: ปีนี้ไม่ผ่านเกณฑ์ validity” และธงสัญญาณ OI ไม่ขึ้น (R3) · ปี 2020 (→ 2021) = CAUTION: ρ 0.120 ไม่ต่างจากศูนย์ (p = 0.14)</div>
+      <div class="grid g2" style="gap:14px;margin-top:14px">
+        <div><div class="tr-k">Out-of-sample · forward expanding window (ฝึกเฉพาะปีก่อนหน้า)</div>
+          <div class="tw"><table class="mv-ptbl"><thead><tr><th>ฝึกบนปี</th><th>ทดสอบปี</th><th class="n">ρ</th></tr></thead><tbody>
+            ${P.fwd.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n">${f3(r[2])}</td></tr>`).join("")}</tbody></table></div>
+          <p class="mv-sub">ใกล้กับค่าในตัวอย่างและเห็นปีอ่อนเดียวกัน — การใช้ฐานอ้างอิงชุดเดียวกับที่ fit ไม่ได้ทำให้ผลหลักสูงเกินจริงอย่างมีนัยในช่วงนี้</p></div>
+        <div><div class="tr-k">Firm-clustered bootstrap · ${P.boot.reps} รอบ</div>
+          <div class="tw"><table class="mv-ptbl"><thead><tr><th>สถิติ</th><th class="n">SE</th><th class="n">percentile interval</th></tr></thead><tbody>
+            <tr><td>Spearman ρ</td><td class="n">${f3(P.boot.spSE)}</td><td class="n">${f3(P.boot.sp[0])}–${f3(P.boot.sp[1])}</td></tr>
+            <tr><td>AUC</td><td class="n">${f3(P.boot.aucSE)}</td><td class="n">${f3(P.boot.auc[0])}–${f3(P.boot.auc[1])}</td></tr></tbody></table></div>
+          <p class="mv-sub">ช่วงไม่คร่อมค่าไม่มีข้อมูล (ρ = 0, AUC = 0.50) แต่ขอบล่างอยู่ใกล้เกณฑ์ “ควรระวัง” มากกว่าห่างจากเกณฑ์ผ่าน — สัญญาณมีจริงแต่ขนาดปานกลาง</p></div>
+      </div>
       <div class="tw" style="margin-top:14px"><table><thead><tr><th>ทดสอบ</th><th>แสดงอะไร</th><th>ถ้าตกแล้วกระทบอะไร</th></tr></thead><tbody>
         ${vv.rows.map(r => `<tr><td><b>${esc(r.n)}</b><br><span class="pill ${GR[r.g][1]}">${GR[r.g][0]}</span>
           <span style="color:var(--ink-3);font-size:10.6px"> ${esc(r.rule)}</span></td>
           <td>${esc(r.what)}</td><td style="color:${r.g === "pass" ? "var(--ink-3)" : "var(--ink-2)"}">${esc(r.why)}</td></tr>`).join("")}
       </tbody></table></div>
-      <div class="tw" style="margin-top:14px"><table><thead><tr><th>สูตรคะแนนทางเลือก</th><th>นิยาม</th>
-        <th class="n">Spearman</th><th class="n">AUC</th><th class="n">Lift</th><th class="n">LOYO</th><th>อ่านผล</th></tr></thead><tbody>
-        ${(VY.alt || []).map(a => `<tr${a[0].indexOf("หลัก") > 0 ? ' class="hl"' : ""}><td><b>${esc(a[0])}</b></td><td style="color:var(--ink-2)">${esc(a[1])}</td>
-          <td class="n">${fmt(a[2], 3)}</td><td class="n">${fmt(a[3], 3)}</td><td class="n">${fmt(a[4], 2)}×</td>
-          <td class="n">${a[5] === null ? "—" : fmt(a[5], 3)}</td><td style="color:var(--ink-2);font-size:11.5px">${esc(a[6])}</td></tr>`).join("")}
-      </tbody></table></div>
-      <div style="font-size:11px;color:var(--ink-2);margin-top:8px">แถว <b>B_T1</b> คือสูตร shadow ตามแนวทาง Pilot — ผู้ใช้ Pro เห็นค่า B_T1 ใต้แถบสถานะทุกหน้า
-        และสลับให้แถบสถานะแสดง B_T1 (พร้อมป้าย Caution) ได้ที่หน้า “สถาปัตยกรรมข้อมูล” <button class="lnk" data-goto="arch">ไปที่ตัวสลับสูตร</button>
-        · ตอนนี้แสดง <b>${useT1() ? "B_T1" : "B_EG"}</b></div>
-      <div style="font-size:10.8px;color:var(--ink-3);margin-top:8px">Firm-cluster bootstrap 500 รอบ · ρ 95% CI
-        ${fmt(VY.boot.sp[0], 3)}–${fmt(VY.boot.sp[1], 3)} (SE ${fmt(VY.boot.spSE, 3)}) ·
-        AUC ${fmt(VY.boot.auc[0], 3)}–${fmt(VY.boot.auc[1], 3)} (SE ${fmt(VY.boot.aucSE, 3)}) ·
-        out-of-sample แบบ stacked LOYO ρ = ${fmt(VY.boot.stacked, 3)}</div>
+    </div>`;
+
+  const varTable = `<div class="card" style="margin-bottom:14px">
+      <h3>สูตรทางเลือกและตัวเปรียบเทียบอย่างง่าย (Table 5 และ §5.6)</h3>
+      <div class="tw"><table class="mv-ptbl"><thead><tr><th>สูตร</th><th>นิยาม</th><th class="n">ρ</th><th class="n">AUC</th><th class="n">Lift</th><th class="n">LOYO ρ</th><th>Verdict</th></tr></thead><tbody>
+        ${P.variants.map(a => `<tr${a[0].indexOf("หลัก") > 0 ? ' class="hl"' : ""}><td><b>${esc(a[0])}</b></td><td style="color:var(--ink-2)">${esc(a[1])}</td>
+          <td class="n">${f3(a[2])}</td><td class="n">${f3(a[3])}</td><td class="n">${fmt(a[4], 2)}</td><td class="n">${f3(a[5])}</td>
+          <td><span class="pill ${VD[a[6]][1]}">${VD[a[6]][0]}</span></td></tr>`).join("")}</tbody></table></div>
+      <p class="mv-sub">ตัดเทอมอายุงานแทบไม่เปลี่ยนผล (B_EG ≈ B_FULL) · B_T1 ใช้เฉพาะเทอมที่ทน FE จึงอ่อนกว่า (CAUTION) — ผู้ใช้ Pro เห็น B_T1 ใต้แถบสถานะ และสลับได้ที่หน้า “สถาปัตยกรรมข้อมูล”
+        <button class="lnk" data-goto="arch">ไปที่ตัวสลับสูตร</button> · ตอนนี้แสดง <b>${useT1() ? "B_T1" : "B_EG"}</b></p>
+      <div class="tr-k" style="margin-top:12px">B_EG (AUC 0.614) เทียบตัวชี้วัดเดี่ยว — DeLong test ของพื้นที่ใต้กราฟ (pooled 928 บริษัท-ปี)</div>
+      <div class="tw"><table class="mv-ptbl"><thead><tr><th>ตัวเปรียบเทียบ</th><th class="n">AUC</th><th>ผลเทียบกับ B_EG</th></tr></thead><tbody>
+        ${P.base.map(b => `<tr><td>${esc(b[0])}</td><td class="n">${f3(b[1])}</td><td><span class="pill ${b[3]}">${esc(b[2])}</span></td></tr>`).join("")}
+        <tr class="hl"><td><b>จำนวนกิจกรรม open innovation ปีก่อน</b> (มีใน 668 บริษัท-ปี)</td><td class="n">0.798</td>
+          <td><span class="pill crit">ดีกว่า B_EG ชัดเจน (0.798 เทียบ 0.580 · p &lt; 0.001)</span></td></tr></tbody></table></div>
+      <div class="note warn" style="margin-top:10px"><b>พูดตามตรง</b> — เมื่อมีจำนวนกิจกรรมปีก่อนที่เก็บด้วยมือ ตัวเลขนั้นอธิบายได้ดีกว่าคะแนนนี้มาก ·
+        คะแนนยังเพิ่มข้อมูลได้เล็กน้อยเมื่อใส่ร่วมกับจำนวนปีก่อน ขนาดบริษัท และอุตสาหกรรม (สัมประสิทธิ์ยังมีนัย p = 0.004 แต่ AUC เพิ่มจาก 0.805 เป็น 0.808 เท่านั้น) ·
+        และไม่ชนะ political ties เดี่ยว ๆ หรือค่าเฉลี่ยรายอุตสาหกรรม — เครื่องมือนี้จึงวางตำแหน่งเป็น<b>ตัวคัดกรองต้นทุนต่ำ</b>สำหรับบริษัท-ปีที่ยังไม่มีจำนวนกิจกรรมปีก่อน ไม่ได้อ้างว่าทำนายเหนือกว่า</div>
     </div>`;
 
   const indTable = `<div class="card" style="margin-bottom:14px">
-      <h3>หลักฐานรายอุตสาหกรรม — ที่ไหนอ่านผลได้มั่นใจกว่ากัน</h3>
-      <p class="desc">ρ รายอุตสาหกรรม (ตารางที่ 8 · REF-928) · อุตสาหกรรมที่ติดป้าย “หลักฐานอ่อน” จะมีป้ายเดียวกันบนแถบสถานะของบริษัทในกลุ่มนั้น (R5)</p>
-      <div class="tw"><table><thead><tr><th>อุตสาหกรรม</th><th class="n">n</th><th class="n">ρ (Spearman)</th><th class="n">p</th><th>สถานะ</th></tr></thead><tbody>
-        ${Object.entries(OIS.indValid || VY.ind8 || {}).map(([k, v]) => {
-          const weak = WEAK_IND.has(+k), near = !weak && v[2] > .05;
-          const tag = weak ? ["warn", "⚠ หลักฐานอ่อน"] : near ? ["mute", `ใกล้เกณฑ์ (p = ${fmt(v[2], 3)}) — รอตัดสินใจ`] : ["ok", "ต่างจากศูนย์"];
-          return `<tr${weak ? ' class="hl"' : ""}><td>${esc(IND[k])}</td><td class="n">${v[0]}</td>
-          <td class="n">${fmt(v[1], 3)}</td><td class="n">${fmt(v[2], 3)}</td>
-          <td><span class="pill ${tag[0]}">${tag[1]}</span></td></tr>`; }).join("")}
-      </tbody></table></div>
-      <div style="font-size:10.8px;color:var(--ink-3);margin-top:6px">อุตสาหกรรม 1 และ 2 ติดป้าย “หลักฐานอ่อน” (ρ ไม่ต่างจากศูนย์) ·
-        อุตสาหกรรม 4 อยู่ใกล้เกณฑ์ (p = .071) — รอทีมวิจัยตัดสินใจว่าจะติดป้ายหรือไม่ จึงยังไม่ติดป้ายบนแถบสถานะ</div>
-      <div class="tw" style="margin-top:14px"><table><thead><tr><th>Tier</th><th class="n">n</th>
-        <th class="n">ค่าเฉลี่ย open innovation</th><th class="n">มัธยฐาน</th></tr></thead><tbody>
-        ${(VY.tier8 || []).map(t => `<tr><td><b>Tier ${t[0]}</b></td><td class="n">${t[1]}</td>
-          <td class="n">${fmt(t[2], 2)}</td><td class="n">${t[3]}</td></tr>`).join("")}
-      </tbody></table></div>
+      <h3>หลักฐานรายอุตสาหกรรม (§5.5) — ที่ไหนอ่านผลได้มั่นใจกว่ากัน</h3>
+      <p class="desc">Spearman ρ ในตัวอย่าง แยกตามอุตสาหกรรม · อุตสาหกรรมที่ ρ ไม่ต่างจากศูนย์ติดป้าย “หลักฐานอ่อน” บนแถบสถานะ (R5)</p>
+      <div class="tw"><table class="mv-ptbl"><thead><tr><th>อุตสาหกรรม</th><th class="n">n</th><th class="n">ρ</th><th class="n">p</th><th>สถานะ</th></tr></thead><tbody>
+        ${[6, 5, 3, 7, 4, 1, 2].map(k => { const r = P.ind[k], n = ((OIS.indValid || {})[k] || [])[0];
+          const tag = r[2] === "weak" ? ["warn", "⚠ หลักฐานอ่อน (R5)"] : r[2] === "strong" ? ["ok", "ต่างจากศูนย์"] : ["mute", "อยู่ระหว่างกลาง"];
+          return `<tr${r[2] === "weak" ? ' class="hl"' : ""}><td>${esc(IND[k])}</td><td class="n">${n ?? "—"}</td><td class="n">${f3(r[0])}</td>
+            <td class="n">${r[1] || "—"}</td><td><span class="pill ${tag[0]}">${tag[1]}</span></td></tr>`; }).join("")}</tbody></table></div>
+      <p class="mv-sub">สัญญาณชัดที่สุดในกลุ่มที่นวัตกรรมสินค้า/กระบวนการปรากฏในรายงานมาก (สินค้าอุปโภคบริโภค สินค้าอุตสาหกรรม ทรัพยากร) และอ่อนที่สุดในเกษตร/อาหารและเทคโนโลยี ·
+        งานวิจัยไม่ได้รายงาน p ของบริการและอสังหาริมทรัพย์ (“อยู่ระหว่างกลาง”)</p>
+    </div>`;
+
+  const tierTable = `<div class="card" style="margin-bottom:14px">
+      <h3>พฤติกรรมของ Tier และ quadrant (§5.4 · Table 4) และความกว้างของช่วง 90% (§5.7)</h3>
+      <div class="grid g2" style="gap:14px">
+        <div><div class="tr-k">ค่าเฉลี่ยกิจกรรม open innovation ตาม Tier (232 บริษัท-ปีต่อ Tier)</div>
+          <div class="tw"><table class="mv-ptbl"><thead><tr><th>Tier</th><th class="n">n</th><th class="n">ค่าเฉลี่ย</th><th class="n">มัธยฐาน</th></tr></thead><tbody>
+            ${P.tier.map(t => `<tr><td><b>Tier ${t[0]}</b></td><td class="n">${t[1]}</td><td class="n">${fmt(t[2], 2)}</td><td class="n">${t[3]}</td></tr>`).join("")}</tbody></table></div>
+          <p class="mv-sub">ลดหลั่นตามลำดับ — Tier บนสุดกับล่างสุดต่างกันราว 5.5 รายการ (ค่าเฉลี่ย) · เป็นผลเชิงพรรณนาในตัวอย่าง</p></div>
+        <div><div class="tr-k">Tier × quadrant · ค่าเฉลี่ย (จำนวนบริษัท-ปี)</div>
+          <div class="tw"><table class="mv-ptbl"><thead><tr><th>Tier</th><th>A Amplified</th><th>B Constrained</th><th>C Restraint</th><th>D Untapped</th></tr></thead><tbody>
+            ${[1, 2, 3, 4].map(t => `<tr><td><b>${t}</b></td>${["A", "B", "C", "D"].map(q => { const v = P.t4[t][q];
+              return `<td>${v ? `${fmt(v[0], 2)} <span class="mv-sub">(${v[1]})</span>` : "—"}</td>`; }).join("")}</tr>`).join("")}</tbody></table></div>
+          <p class="mv-sub">Tier เดียวกันแต่ต่าง quadrant ให้ค่าเฉลี่ยต่างกัน (Tier 1: A 14.87 เทียบ C 9.46) — จึงต้องแสดง Tier คู่กับ quadrant เสมอ (R2) ·
+            จำนวนต่อช่อง A ${P.quadN.A} · B ${P.quadN.B} · C ${P.quadN.C} · D ${P.quadN.D}</p></div>
+      </div>
+      <div class="note" style="margin-top:12px"><b>ช่วง 90% กว้างเมื่อเทียบความกว้างของ Tier</b> — ทั้ง 928 บริษัท-ปี: มัธยฐาน ${fmt(P.band.med, 1)} จุดเปอร์เซ็นไทล์ ·
+        ค่าเฉลี่ย ${fmt(P.band.mean, 1)} · ช่วงเปอร์เซ็นไทล์ที่ 10–90 ประมาณ ${P.band.p10}–${P.band.p90} จุด · Tier กว้าง 25 จุด ช่วงขนาดนี้จึงคร่อม Tier บ่อย
+        ระบบจึงติดป้าย “tier ไม่แน่นอน” (R8) แทนการยืนยัน Tier เดียว</div>
     </div>`;
 
   const proWall = `<div class="card" style="margin-bottom:14px">
       <h3>ตัวชี้วัดเต็มชุดและความแม่นรายปี <span class="pill mute">🔒 สิทธิ์ Pro</span></h3>
-      <p class="desc" style="margin-bottom:0">ผู้ใช้ฟรีเห็น remark สองระดับด้านบน ซึ่งเป็นสิ่งที่แนบไปกับรายงานทุกฉบับ ·
-        ตัวชี้วัดรายข้อ ตารางรายปี ตารางรายอุตสาหกรรม และการเปรียบเทียบสูตรคะแนน เป็นสิทธิ์ของผู้ใช้ Pro
+      <p class="desc" style="margin-bottom:0">ผู้ใช้ฟรีเห็น remark สองระดับด้านบน (แนบไปกับรายงานทุกฉบับ) และ Marginal plot ·
+        ตาราง Table 3–5 รายปี รายอุตสาหกรรม out-of-sample bootstrap ตัวเปรียบเทียบ และ Tier × quadrant เป็นสิทธิ์ของผู้ใช้ Pro
         <button class="lnk" data-pro="1">สลับผู้ใช้สาธิตเป็น Pro</button></p></div>`;
 
   return pageHead("ระบบและหลักฐาน", "Validity — คะแนนนี้อ้างอิงได้แค่ไหน",
-    `เกณฑ์สามข้อ (Spearman · AUC · Decile lift) เป็นกติกาที่โครงการกำหนดเอง ไม่ใช่ค่าจากวรรณกรรม ·
-     ผ่านครบสามข้อรายงานว่า PASS · ตกข้อใดข้อหนึ่งรายงานว่าใช้อย่างระมัดระวัง พร้อมระบุเกณฑ์ที่ตกและเหตุผล ·
-     LOYO เป็นค่าที่รายงานไว้ประกอบ ไม่ใช่เกณฑ์ตัด`)
+    `ตัวเลขทุกตัวตรงกับงานวิจัย (REF-928 · 928 บริษัท-ปี) · เกณฑ์สามข้อ (Spearman · AUC · Decile lift) กำหนดล่วงหน้าโดยโครงการ ·
+     ผ่านครบสามข้อ = PASS · ตกข้อใดถึงระดับควรระวัง = CAUTION · ต่ำกว่าระดับควรระวัง = FAIL · LOYO รายงานประกอบ ไม่ใช่เกณฑ์ตัด · ทุกข้อเป็นความสัมพันธ์ ไม่ใช่การพยากรณ์`)
+    + algoStrip(3)
     + `<div class="note ${rm.k}" style="margin-bottom:14px;font-size:12.6px">
       <b style="font-size:14px">${esc(rm.l)}</b> · ${esc(rm.th)}<br>${rm.d}</div>`
-    + (S.plan === "pro" ? cards + decCard + yearTable + indTable : proWall + decCard)
+    + (S.plan === "pro" ? cards + yearTable + varTable + indTable + tierTable : proWall)
+    + marginalCard(c) + decCard
     + `<div class="card">
       <h3>สิ่งที่ต้องพูดคู่กับตัวเลขเสมอ</h3>
       <div class="grid g2" style="gap:12px;margin-top:10px">
         <div class="note"><b>1 · สหสัมพันธ์ ไม่ใช่เหตุผล</b><br>
-          บริษัทที่ได้คะแนนสูงมีนวัตกรรมเปิดมากกว่าจริง แต่ไม่ได้แปลว่าการปรับบอร์ดจะทำให้นวัตกรรมเพิ่ม</div>
+          บริษัทที่ได้คะแนนสูงสัมพันธ์กับกิจกรรมนวัตกรรมเปิดที่มากกว่าในข้อมูลย้อนหลัง แต่ไม่ได้แปลว่าการปรับบอร์ดจะทำให้นวัตกรรมเพิ่ม · instrumental variable ที่ลองใช้อ่อน (F = 4.56) จึงไม่มีการอ้างเชิงสาเหตุ</div>
         <div class="note"><b>2 · ขนาดของสัญญาณปานกลาง</b><br>
-          AUC ${fmt(VY.all.auc, 2)} แปลว่าดีกว่าเดาสุ่ม แต่ยังห่างจากเครื่องมือที่ใช้ตัดสินใจเดี่ยว ๆ ได้
-          ควรวางตำแหน่งเป็น “หนึ่งสัญญาณที่มีหลักฐาน” ประกอบการตัดสินใจ</div>
-        <div class="note"><b>3 · เอกสารฉบับเดียวกัน</b><br>
-          ภาษาผู้บริหารและจำนวนกิจกรรมนวัตกรรมนับจากรายงานประจำปีฉบับเดียวกัน จึงมีความเสี่ยงเรื่อง
-          ตัวแปรกำหนดภายใน (endogeneity) ที่ยังไม่ได้แก้</div>
+          AUC ${fmt(P.pooled.auc, 3)} แปลว่าถ้าสุ่มบริษัท-ปีจาก tercile บนหนึ่งรายกับที่เหลือหนึ่งราย คะแนนจัดรายบนให้สูงกว่าราว 61% ของครั้ง (เดาสุ่ม 50%) — ควรใช้เป็น “หนึ่งสัญญาณที่มีหลักฐาน” ประกอบการตัดสินใจ</div>
+        <div class="note"><b>3 · ข้อจำกัดของข้อมูล</b><br>
+          ผลลัพธ์เก็บโดยผู้เก็บข้อมูลหนึ่งคน (ตรวจซ้ำ 20%) · กรอบตัวอย่างคือบริษัทขนาดใหญ่ 30 อันดับแรกต่ออุตสาหกรรม · ต้องมีสารถึงผู้ถือหุ้นภาษาอังกฤษ ·
+          ฐานอ้างอิงกับการ fit ใช้ 928 บริษัท-ปีชุดเดียวกัน (ลดด้วย LOYO และ forward window แต่ไม่หมด)</div>
         <div class="note crit"><b>4 · ห้ามใช้ให้คะแนนบุคคล</b><br>
-          เพศ อายุ และความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล มาตรา 26
-          ระบบนี้ออกแบบให้ประเมิน<b>โครงสร้างองค์กร</b>เท่านั้น</div>
+          เพศ อายุ และความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล มาตรา 26 ระบบนี้ประเมิน<b>โครงสร้างระดับคณะ</b>เท่านั้น</div>
       </div>
     </div>`;
 }
@@ -1993,19 +2131,26 @@ function wireSector(h) {
   };
 }
 function wireBilling(h) {
+  /* แก้ไขครั้งที่ 2.3 — ยืนยันการชำระเงินในหน้า (ไม่ใช้ window.confirm) แล้วออกใบเสร็จตัวอย่าง (ดู v2_mvp.js) */
   h.querySelectorAll("[data-buy]").forEach(b => b.onclick = () => {
-    const n = +b.dataset.buy, p = PACKS.find(x => x.n === n);
-    if (!confirm(`ต้นแบบ — จำลองการชำระเงิน\n\nแพ็กเกจ ${n} token · ฿${fmt(p.baht)}\nระบบจริงจะพาไปหน้าชำระเงิน (พร้อมเพย์ / บัตรเครดิต)\n\nกดตกลงเพื่อจำลองว่าชำระสำเร็จ`)) return;
-    S.credits += n; S.log.unshift({ what: "topup", t: "-", cost: -n, label: `เติม ${n} token · ฿${fmt(p.baht)}`, at: new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" }) });
-    save(); toast(`เติม ${n} tokenแล้ว · คงเหลือ ${S.credits}`); render();
+    const n = +b.dataset.buy; if (!PACKS.find(x => x.n === n)) return;
+    S._pay = { n, m: (S._pay && S._pay.m) || "promptpay" }; render();
+    setTimeout(() => { const e = $("#mvPay"); if (e) e.scrollIntoView({ behavior: "smooth", block: "center" }); }, 60);
   });
   const r = h.querySelector("#btnResetDemo");
-  if (r) r.onclick = () => {
-    if (!confirm("รีเซ็ตข้อมูลสาธิตทั้งหมด?\n\ntoken กลับเป็นค่าเริ่มต้น · ล้างสิทธิ์ที่ปลดล็อกไว้ · คืนสิทธิ์รายงานฟรี · ล้างพอร์ตและมติที่บันทึกไว้")) return;
+  if (r) r.onclick = () => confirm2(r, () => {
     S.credits = 3; S.freeCo = null; S.unlocked = {}; S.sectors = {}; S.log = [];
     S.port = []; S.dec = {};
     save(); toast("รีเซ็ตแล้ว"); render();
-  };
+  }, "กดอีกครั้งเพื่อยืนยันการรีเซ็ต (token กลับเป็นค่าเริ่มต้น · ล้างสิทธิ์ที่ปลดล็อก)");
+}
+/** ยืนยันสองจังหวะในหน้า (แทน window.confirm) — คลิกแรกเปลี่ยนป้ายปุ่ม คลิกที่สองภายใน 4 วินาทีจึงทำงาน */
+function confirm2(btn, fn, label) {
+  if (!btn) return fn();
+  if (btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.classList.remove("mv-armed"); fn(); return; }
+  const old = btn.textContent;
+  btn.dataset.armed = "1"; btn.textContent = label || "กดอีกครั้งเพื่อยืนยัน"; btn.classList.add("mv-armed");
+  setTimeout(() => { if (btn.isConnected && btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.textContent = old; btn.classList.remove("mv-armed"); } }, 4000);
 }
 
 /* ---------------------------------------------------------------- แบรนด์ */

@@ -7,6 +7,7 @@
                 → ได้ผลแล้ว render() ใหม่หนึ่งครั้ง
    ไฟล์นี้ถูกต่อไว้หน้า v2_app.js ในสคริปต์เดียวกัน: ฟังก์ชัน wins/OCUT ถูกเรียกตอนใช้งานเท่านั้น
    ============================================================================ */
+window.OIS_SERVER = true;   // ประกาศก่อนทุกอย่าง — โค้ดส่วนอื่นตรวจได้ว่าเป็นฉบับเซิร์ฟเวอร์ (ฉบับออฟไลน์ไม่มีตัวแปรนี้และไม่มี OIS_API)
 const OIS_REMOTE = (() => {
   const amp = new Map(), t1 = new Map(), band = new Map();
   const qAmp = new Map(), qBand = new Map();          // key → item ที่รอส่ง
@@ -186,8 +187,35 @@ window.OIS_API = (() => {
     /** file = File/Blob ของ PDF (เช่น แบบ 56-1 One Report) → { ok, text } */
     ocr: file => { const f = new FormData(); f.append("file", file, file.name || "upload.pdf");
       return call("/api/ocr", { method: "POST", body: f }); },
-    /** { llm, anthropic, openai, ocr } — boolean เท่านั้น */
+    /** provider (ไม่บังคับ) = "anthropic" | "openai" — ถ้าเจ้านั้นไม่มี key เซิร์ฟเวอร์ใช้เจ้าที่มีแทน (ดู res.provider) */
+    llmWith: (task, payload, provider) => call("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ task, payload, provider }) }),
+    /** { llm, anthropic, openai, providers[], ocr, google, db, admin } */
     integrations: () => call("/api/integrations"),
+    /* ---- ฐานข้อมูลกลาง: เก็บคำตอบของผู้ทดสอบ (40 คน) ไว้ที่เซิร์ฟเวอร์ แทน localStorage ของแต่ละเครื่อง ----
+       kind: "survey" | "rfq" | "bodset" | "bod_oi" | "approval" | "dict" (meta เท่านั้น ไม่ส่งรายการคำ) | "feedback"
+       payload ≤ 64 KB · คืน { ok, id } หรือ { ok:false, status, error } */
+    /* รับได้ทั้ง submit(kind, payload, ticker) และ submit({ kind, ticker, payload }) */
+    submit: (kind, payload, ticker) => (kind && typeof kind === "object" ? (payload = kind.payload, ticker = kind.ticker, kind = kind.kind) : 0, call("/api/responses", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, payload, ticker: ticker || null,
+        client_id: (() => { try { let k = localStorage.getItem("ois_cid");
+          if (!k) { k = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()).slice(0, 40); localStorage.setItem("ois_cid", k); }
+          return k; } catch (e) { return null; } })() }) })),
+    /** รายการที่ผู้ใช้คนนี้ส่งไว้ (ล่าสุดก่อน) → { ok, items:[{id, kind, ticker, payload, created}] } */
+    mine: kind => call("/api/responses/mine" + (kind ? "?kind=" + encodeURIComponent(kind) : "")),
+    /** { email, name, role: "admin"|"user", provider: "google"|"password" } */
+    me: () => call("/api/me"),
+    /* admin({ kind }) → { items:[{payload,…}], n } (เฉพาะผู้ดูแล) · admin.summary() / users() / exportUrl() / backupUrl() */
+    admin: Object.assign(opts => call("/api/admin/responses?format=json" +
+        (opts && opts.kind ? "&kind=" + encodeURIComponent(opts.kind) : "")), {
+      /** จำนวนคำตอบต่อ kind / ผู้ใช้ / 7 วันล่าสุด (เฉพาะผู้ดูแล — คนอื่นได้ { ok:false, status:403 }) */
+      summary: () => call("/api/admin/summary"),
+      users: () => call("/api/admin/users"),
+      /** URL สำหรับลิงก์ดาวน์โหลด (CSV เปิดใน Excel ภาษาไทยได้ · json) — ใช้กับ <a href> หรือ location.href */
+      exportUrl: (kind, fmt) => "/api/admin/responses?format=" + encodeURIComponent(fmt || "csv") +
+        (kind ? "&kind=" + encodeURIComponent(kind) : ""),
+      backupUrl: () => "/api/admin/backup",
+    }),
     logout: () => { location.href = "/logout"; },
   };
 })();

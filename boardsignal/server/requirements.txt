@@ -1,7 +1,11 @@
-# เซิร์ฟเวอร์ OpenInnoScore — ทดสอบแล้วกับชุดเวอร์ชันนี้ (Python 3.12–3.13)
-# ใช้ Starlette (แกนเดียวกับ FastAPI) โดยตรง เพื่อให้ dependency น้อยที่สุด · การเรียก AI/OCR ใช้ urllib ของ Python
-# ชั้นคำนวณ (server/ois_engine.py) เป็น pure Python ไม่ต้องใช้ numpy
+# เซิร์ฟเวอร์ OpenInnoScore — Python 3.12–3.13
+# FastAPI (ตามขอบเขตงาน MVP1) ทำงานบนแกน Starlette · ถ้าติดตั้ง FastAPI ไม่ได้ app.py จะใช้ Starlette ตรง ๆ (เส้นทางเดียวกันทุกจุด)
+# fastapi 0.135.x ต้องการ starlette>=0.46 (ไม่มีเพดาน) จึงใช้คู่กับ starlette 1.6.0 ได้ — ทดสอบในเครื่องแล้วเฉพาะ starlette/uvicorn ชุดนี้
+# ชั้นคำนวณ (server/ois_engine.py), Google Sign-in, MCP และการเรียก AI/OCR ใช้ไลบรารีมาตรฐานของ Python (urllib, sqlite3)
+fastapi==0.135.0
 starlette==1.6.0
 uvicorn==0.53.0
 itsdangerous==2.2.0
 python-multipart==0.0.32
+# PostgreSQL (ไม่บังคับ — ใช้เมื่อตั้ง DATABASE_URL): เอาเครื่องหมาย # ออกจากบรรทัดถัดไป
+# psycopg[binary]==3.2.3

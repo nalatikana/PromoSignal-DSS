@@ -32,6 +32,8 @@ parts = {
     "/*__PILOT__*/": rd(ROOT / "src" / "v2_pilot.js"),
     "/*__REPORTS__*/": rd(ROOT / "src" / "v2_reports.js"),
     "/*__TIERS__*/": rd(ROOT / "src" / "v2_tiers.js"),
+    "/*__ASSESS__*/": rd(ROOT / "src" / "v2_assess.js"),
+    "/*__MVP__*/": rd(ROOT / "src" / "v2_mvp.js"),
 }
 OIS_FULL = json.loads(rd(ROOT / "src" / "ois_model.json"))
 

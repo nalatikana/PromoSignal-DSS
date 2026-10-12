@@ -197,12 +197,13 @@ const LS_GX = LS + "_gx";
     if (S.gxTable === undefined) S.gxTable = !!o.tb;
     if (S.gxPath === undefined) S.gxPath = !!o.pa;
     if (S.gxIndCmp === undefined) S.gxIndCmp = !!o.ic;
-  } catch (e) { S.uc = S.uc || "board"; S.gxTable = !!S.gxTable; S.gxPath = !!S.gxPath; S.gxIndCmp = !!S.gxIndCmp; }
+    if (S.gxMode === undefined) S.gxMode = ["self", "peers", "industry"].includes(o.md) ? o.md : (o.ic ? "industry" : "self");
+  } catch (e) { S.uc = S.uc || "board"; S.gxTable = !!S.gxTable; S.gxPath = !!S.gxPath; S.gxIndCmp = !!S.gxIndCmp; S.gxMode = S.gxMode || "self"; }
 })();
 const _saveGx = save;
 save = function () {
   _saveGx();
-  try { localStorage.setItem(LS_GX, JSON.stringify({ uc: S.uc || "board", tb: !!S.gxTable, pa: !!S.gxPath, ic: !!S.gxIndCmp })); } catch (e) { }
+  try { localStorage.setItem(LS_GX, JSON.stringify({ uc: S.uc || "board", tb: !!S.gxTable, pa: !!S.gxPath, ic: !!S.gxIndCmp, md: S.gxMode || "self" })); } catch (e) { }
 };
 
 /* ---------------------------------------------------------------- ส่วนประกอบร่วมของสองหน้า */
@@ -261,12 +262,23 @@ function gxCannot(c, v, k) {
 /* ---------------------------------------------------------------- Strategy Grid 2×2 */
 /* ---------------------------------------------------------------- สิทธิ์และชั้นเสริมของ Grid (แก้ไขครั้งที่ 2.2) */
 const gxRank = () => typeof tierRank === "function" ? tierRank() : 2;
-/** Free เห็นเฉพาะตำแหน่งบริษัทตนเอง — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ */
-const gxPeersOf = (c, show) => show && gxRank() >= 1 ? (S.peers || []).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
+/* แก้ไขครั้งที่ 2.3 · มุมมอง 3 แบบตามผู้ว่าจ้าง (1) ดูเฉพาะบริษัท — ทั่วไป (2) เทียบคู่แข่ง 3 ราย — Pro (3) เทียบทั้งอุตสาหกรรม — Pro Max
+   ชั้น "จุดอ้างอิงและเส้นทางย้ายโซน" ยังเป็นตัวเลือกเสริมแยก · โหมด (3) แทนกล่องเลือก "เปรียบเทียบอุตสาหกรรม" เดิม */
+const GX_MODES = [
+  { k: "self", l: "ดูเฉพาะบริษัท", tag: "ทั่วไป (Free)", need: 0 },
+  { k: "peers", l: "เทียบคู่แข่ง 3 ราย", tag: "Pro", need: 1 },
+  { k: "industry", l: "เทียบทั้งอุตสาหกรรม", tag: "Pro Max (Subscription)", need: 2 },
+];
+const gxMode = () => { const m = GX_MODES.find(x => x.k === S.gxMode) || GX_MODES[0]; return gxRank() >= m.need ? m.k : "self"; };
+/** Free เห็นเฉพาะตำแหน่งบริษัทตนเอง — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ · คู่เทียบแสดงเฉพาะโหมด "เทียบคู่แข่ง 3 ราย" */
+const gxPeersOf = (c, show) => show && gxMode() === "peers"
+  ? (typeof peersFor === "function" ? peersFor(c) : (S.peers || [])).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
+/** บริษัทอื่นในอุตสาหกรรมเดียวกัน (ชุดแสดงผล) — โหมด "เทียบทั้งอุตสาหกรรม" */
+const gxIndCos = (c, show) => show && gxMode() === "industry" ? indComps(c.ind).filter(x => x.t !== c.t && inDomainOf(x.ind)) : [];
 /** ชั้นจุดอ้างอิงใช้ได้กับ Pro ขึ้นไป และไม่แสดงในมุมมองธนาคาร (credit / bankbod) */
 const gxPathAllowed = L => !["credit", "bankbod"].includes(L.id);
 const gxPathOn = (L, show) => show && gxPathAllowed(L) && gxRank() >= 1 && !!S.gxPath;
-const gxIndOn = show => show && gxRank() >= 2 && !!S.gxIndCmp;
+const gxIndOn = show => show && gxMode() === "industry";
 const gxMed = a => { const b = a.slice().sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
 /** จุดอ้างอิงเชิงเปรียบเทียบ = ค่ามัธยฐาน (P_w, amp) ของ REF-928 ช่อง A ในอุตสาหกรรมเดียวกัน */
 function gxRefPoint(c) {
@@ -285,8 +297,8 @@ function gxIndShares(ind) {
 function gxSvg(c, v, show, selQ, opt) {
   opt = opt || {};
   const mP = OM.P, pw = x => wins(x.promo, "P");
-  const peers = gxPeersOf(c, show);
-  const marked = show ? [c, ...peers] : [];
+  const peers = gxPeersOf(c, show), others = gxIndCos(c, show);
+  const marked = show ? [c, ...peers, ...others] : [];
   const ref = opt.ref || null;
   const bg = opt.ind ? REF_PTS.filter(p => p[4] === c.ind) : REF_PTS;
   const px = REF_PTS.map(p => p[0]).concat(ref ? [ref.P] : []), ax = REF_PTS.map(p => p[1]).concat(ref ? [ref.A] : []);
@@ -351,6 +363,9 @@ function gxSvg(c, v, show, selQ, opt) {
         <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.8" font-weight="600" fill="var(--brand)" text-anchor="${flip ? "end" : "start"}" ${sk}>จุดอ้างอิงเชิงเปรียบเทียบ</text>
         <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${(ly + 13).toFixed(1)}" font-size="9.4" fill="var(--ink-2)" text-anchor="${flip ? "end" : "start"}" ${sk}>มัธยฐานช่อง Deliver ${ref.scope === "ind" ? "ในอุตสาหกรรมเดียวกัน" : "ทั้งฐาน"} · ไม่ใช่เป้าหมาย</text></g>`;
     })() : ""}
+    ${others.map(x => `<g class="mk mv-indmk" tabindex="0" role="button" transform="translate(${X(pw(x)).toFixed(1)},${Y(x.amp).toFixed(1)})"
+        data-t="${esc(x.t)}" data-n="${esc(x.n)}" data-i="${x.ipi}" data-z="${esc(ZONES[x.quad || zoneOf(x.promo, x.amp)].l)}" aria-label="${esc(x.t)} — บริษัทในอุตสาหกรรมเดียวกัน">
+      <circle r="9" fill="transparent"/><circle r="4.6" fill="var(--panel)" stroke="var(--s2)" stroke-width="2"/></g>`).join("")}
     ${peers.map((p, i) => num(p, i + 1)).join("")}${show ? num(c, 0) : ""}${lab}
     <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 12}" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">${esc(GX_X)}</text>
     <text transform="translate(14,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="11" fill="var(--ink-2)" text-anchor="middle">${esc(GX_Y)}</text>
@@ -373,8 +388,19 @@ function gxTable(c, v, show) {
       <tbody><tr class="hl"><td><b>${esc(c.t)}</b></td><td class="n">${fmt(wins(c.promo, "P"), 3)}</td><td class="n">${fmt(cP, 3)}</td>
         <td class="n">${fmt(c.amp, 3)}</td><td class="n">${fmt(c.B ?? cP * c.amp, 4)}</td><td class="n"><b>${fmt(c.ois ?? c.ipi, 1)}</b></td>
         <td class="n">${fmt(v.band[0], 1)}–${fmt(v.band[1], 1)}</td><td>${v.tier}</td><td>${ZONES[v.quad].l} (${v.quad})</td></tr></tbody></table></div>`
-      : `<p class="gx-sm" style="margin-top:8px">ไม่มีแถวของบริษัท — มุมมองนี้/บริษัทนี้วางบน Grid ไม่ได้ (R4)</p>`}`;
+      : `<p class="gx-sm" style="margin-top:8px">ไม่มีแถวของบริษัท — มุมมองนี้/บริษัทนี้วางบน Grid ไม่ได้ (R4)</p>`}
+    ${(() => {
+      const md = gxMode(), xs = md === "peers" ? gxPeersOf(c, show) : md === "industry" ? gxIndCos(c, show) : [];
+      if (!show || !xs.length) return "";
+      const all = [c, ...xs].sort((a, b) => (b.ois ?? b.ipi) - (a.ois ?? a.ipi));
+      return `<div class="tw" style="margin-top:10px"><table class="gx-tbl"><caption>${md === "peers" ? "เทียบคู่แข่ง 3 ราย" : "เทียบทั้งอุตสาหกรรม · " + esc(IND[c.ind] || "")} — เรียงตาม OpenInnoScore</caption>
+        <thead><tr><th>บริษัท</th><th class="n">OIS</th><th>Tier</th><th>ช่อง</th><th class="n">OIS ในอุตสาหกรรม</th><th>Quartile ในอุตสาหกรรม</th></tr></thead>
+        <tbody>${all.map(x => { const oi = x.oisInd ?? oisIndOf(signalB(x.promo, x.amp), x.ind), q = rpQuadOf(x);
+          return `<tr${x.t === c.t ? ' class="hl"' : ""}><td><b>${esc(x.t)}</b>${x.ind !== c.ind ? ` <span class="gx-sm">${esc(IND[x.ind])}</span>` : ""}</td><td class="n">${fmt(x.ois ?? x.ipi, 0)}</td>
+            <td>${tierOf(x.ois ?? x.ipi)}</td><td>${esc(ZONES[q].l)}</td><td class="n">${fmt(oi, 0)}</td><td>Q${tierOf(oi)}</td></tr>`; }).join("")}</tbody></table></div>`;
+    })()}`;
 }
+const rpQuadOf = x => x.quad || zoneOf(x.promo, x.amp);
 
 /** สถานะที่เลือกใต้กราฟ: ช่องใด และเป็นตำแหน่งของบริษัทหรือเป็นตัวอย่างประจำช่อง */
 function gxSel(c, v, show) {
@@ -480,6 +506,7 @@ function viewMatrix2() {
               <button data-gxtb="0" aria-selected="${!tbl}">ดูเป็นกราฟ</button>
               <button data-gxtb="1" aria-selected="${tbl}">ดูเป็นตาราง</button></div></div>
           ${msg}
+          ${gxModeBar(c, show)}
           ${gxLayerBar(L, show)}
           <div class="gx-svgwrap">${tbl ? gxTable(c, v, show) : gxSvg(c, v, show, sel.q, { ref, ind: indOn })}</div>
           ${tbl ? "" : `<div class="legend gx-legend">
@@ -487,7 +514,8 @@ function viewMatrix2() {
             <span><i style="background:var(--serious);opacity:.55"></i>C Develop</span>
             <span><i style="background:var(--ink-3);opacity:.45"></i>B Discipline · D Discover</span>
             ${show ? `<span><i style="background:var(--ink);border-radius:99px"></i><b>1</b> ${esc(c.t)} — คลิกเพื่อเปิดประเด็น</span>` : ""}
-            ${peers.map((p, i) => `<span><i style="background:${SER[i]};border-radius:99px"></i><b>${i + 2}</b> ${esc(p.t)} (คู่เทียบ)</span>`).join("")}</div>`}
+            ${peers.map((p, i) => `<span><i style="background:${SER[i]};border-radius:99px"></i><b>${i + 2}</b> ${esc(p.t)} (คู่เทียบ)</span>`).join("")}
+            ${indOn ? `<span><i style="background:transparent;border:2px solid var(--s2);border-radius:99px"></i>บริษัทอื่นใน${esc(IND[c.ind] || "อุตสาหกรรมเดียวกัน")} (${gxIndCos(c, show).length} บริษัท · คลิกเพื่อเปิด)</span>` : ""}</div>`}
           <div class="gx-qpick"><span class="gx-sm">ดูคำถามประจำช่อง:</span>${["D", "A", "C", "B"].map(k =>
             `<button class="btn g${k === sel.q ? " on" : ""}" data-gxq="${k}" style="--zc:${ZONES[k].c}">${ZONES[k].l}${show && k === v.quad ? " ●" : ""}</button>`).join("")}</div>
           <p class="gx-split">${esc(GX_SPLIT)}</p>
@@ -496,7 +524,9 @@ function viewMatrix2() {
         </div>
         <aside class="gx-side"><div class="gx-sideh">ที่มาของข้อมูลและสถานะตรวจคุณภาพ</div>${gxProv(c, v)}
           <p class="gx-sm">${indOn ? `จุดพื้นหลัง = REF-928 เฉพาะ${esc(IND[c.ind] || "อุตสาหกรรมเดียวกัน")} (ไม่ระบุชื่อ)` : "จุดพื้นหลัง = REF-928 ทั้งชุด (ไม่ระบุชื่อ)"} ·
-            ${gxRank() >= 1 ? "วงกลม 2–4 = คู่เทียบจากหน้า “เทียบคู่แข่ง” (คลิกเพื่อเลือกเปิดประเด็นของบริษัทนั้น)" : "ระดับ Free แสดงเฉพาะตำแหน่งบริษัทของคุณ — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ"}</p></aside>
+            ${gxMode() === "peers" ? "วงกลม 2–4 = คู่แข่ง 3 รายที่เลือก (ชุดเดียวกับหน้า “เทียบคู่แข่ง” · คลิกเพื่อเลือกเปิดประเด็นของบริษัทนั้น)"
+              : gxMode() === "industry" ? "วงกลมโปร่ง = บริษัทอื่นในอุตสาหกรรมเดียวกัน (ชุดแสดงผลปีบัญชี 2566)"
+              : gxRank() >= 1 ? "มุมมอง “ดูเฉพาะบริษัท” — เลือกมุมมองที่ 2 หรือ 3 เพื่อแสดงบริษัทอื่น" : "ระดับ Free แสดงเฉพาะตำแหน่งบริษัทของคุณ — ไม่แสดงจุดของบริษัทอื่นที่ระบุชื่อ"}</p></aside>
       </div>
       ${gxPanel(c, v, show, sel)}
       <p class="gx-disc">${esc(GX_DISC)}</p>
@@ -506,17 +536,36 @@ function viewMatrix2() {
     </div>`;
 }
 
-/** แถบชั้นเสริม — จุดอ้างอิง/เส้นทาง (Pro ขึ้นไป) และเทียบอุตสาหกรรม (Pro Max) */
+/** ตัวเลือกมุมมอง 3 แบบ (segmented control) — ระดับที่ยังไม่มีสิทธิ์แสดงเป็นปุ่มล็อก */
+function gxModeBar(c, show) {
+  if (!show) return "";
+  const r = gxRank(), m = gxMode();
+  const btns = GX_MODES.map((x, i) => r >= x.need
+    ? `<button role="radio" data-gxmode="${x.k}" aria-checked="${m === x.k}" aria-selected="${m === x.k}"><b>${i + 1}</b> ${esc(x.l)} <span class="mv-modetag">${esc(x.tag)}</span></button>`
+    : `<button role="radio" aria-checked="false" class="tr-locked" data-trlock="${x.need >= 2 ? "max" : "pro"}" title="${esc(x.l)} เป็นสิทธิ์ ${esc(x.tag)}">🔒 <b>${i + 1}</b> ${esc(x.l)} <span class="mv-modetag">${esc(x.tag)}</span></button>`).join("");
+  let pick = "";
+  if (m === "peers") {
+    const cur3 = gxPeersOf(c, show).map(x => x.t), same = indComps(c.ind).filter(x => x.t !== c.t).sort((a, b) => b.ipi - a.ipi);
+    const other = r >= 2 ? COMPS.filter(x => x.ind !== c.ind).sort((a, b) => a.ind - b.ind || b.ipi - a.ipi) : [];
+    const opts = sel => `<optgroup label="อุตสาหกรรมเดียวกัน · ${esc(IND[c.ind] || "")} (ค่าเริ่มต้นตามการจัดกลุ่มของ SET)">${same.map(x =>
+        `<option value="${esc(x.t)}"${x.t === sel ? " selected" : ""}>${esc(x.t)} · OIS ${x.ipi}</option>`).join("")}</optgroup>`
+      + (other.length ? `<optgroup label="อุตสาหกรรมอื่น (Pro Max)">${other.map(x =>
+        `<option value="${esc(x.t)}"${x.t === sel ? " selected" : ""}>${esc(x.t)} · ${esc(IND[x.ind])} · OIS ${x.ipi}</option>`).join("")}</optgroup>` : "");
+    pick = `<div class="mv-peerpick" id="gxPeerPick"><span class="gx-sm">คู่แข่ง 3 ราย (เลือกเองได้):</span>
+      ${[0, 1, 2].map(i => `<select class="sel" data-gxpeer="${i}" aria-label="คู่แข่งรายที่ ${i + 1}">${opts(cur3[i])}</select>`).join("")}
+      <button class="btn g" id="gxPeerAuto">เลือกอัตโนมัติ</button>
+      <span class="gx-sm">${r >= 2 ? "Pro Max เลือกข้ามอุตสาหกรรมได้" : "Pro เลือกได้ในอุตสาหกรรมเดียวกัน · ข้ามอุตสาหกรรมเป็นสิทธิ์ Pro Max"} · ใช้ชุดเดียวกับหน้า “เทียบคู่แข่ง”</span></div>`;
+  }
+  return `<div class="mv-modes"><span class="seglab">มุมมอง</span><div class="seg mv-seg" role="radiogroup" aria-label="มุมมองของ Grid">${btns}</div></div>${pick}`;
+}
+/** แถบชั้นเสริม — จุดอ้างอิง/เส้นทาง (Pro ขึ้นไป) · การเทียบอุตสาหกรรมย้ายไปเป็นมุมมองที่ 3 */
 function gxLayerBar(L, show) {
   if (!show) return "";
   const r = gxRank(), out = [];
   if (gxPathAllowed(L)) out.push(r >= 1
     ? `<label class="tr-tog"><input type="checkbox" id="gxPathTog"${S.gxPath ? " checked" : ""}> แสดงจุดอ้างอิงและเส้นทางย้ายโซน</label>`
     : `<button class="btn g tr-locked" data-trlock="pro" title="ชั้นนี้เป็นสิทธิ์ Pro / Pro Max">🔒 แสดงจุดอ้างอิงและเส้นทางย้ายโซน · Pro</button>`);
-  out.push(r >= 2
-    ? `<label class="tr-tog"><input type="checkbox" id="gxIndTog"${S.gxIndCmp ? " checked" : ""}> เปรียบเทียบในอุตสาหกรรมเดียวกัน</label>`
-    : `<button class="btn g tr-locked" data-trlock="max" title="เปรียบเทียบอุตสาหกรรมเป็นสิทธิ์ Pro Max">🔒 เปรียบเทียบอุตสาหกรรม · Pro Max</button>`);
-  return `<div class="tr-layers"><span class="gx-sm">ชั้นข้อมูลเสริม:</span>${out.join("")}</div>`;
+  return out.length ? `<div class="tr-layers"><span class="gx-sm">ชั้นข้อมูลเสริม:</span>${out.join("")}</div>` : "";
 }
 /** การ์ดใต้กราฟเมื่อเปิดชั้นจุดอ้างอิง — ระยะห่างรายแกน (ถ้อยคำเชิงความสัมพันธ์) และคะแนน ณ จุดอ้างอิง */
 function gxPathCard(c, ref) {
@@ -547,7 +596,11 @@ function gxIndCard(c) {
     <div class="tr-shares">${sh.map(x => `<div class="tr-share"><span style="color:${ZONES[x.k].c}"><b>${esc(ZONES[x.k].l)}</b></span>
       <div class="mbar"><span style="width:${(x.n / tot * 100).toFixed(1)}%;background:${ZONES[x.k].c}"></span></div>
       <span class="num">${fmt(x.n / tot * 100, 0)}%</span><span class="gx-sm">ทั้งฐาน ${fmt(x.all * 100, 0)}%</span></div>`).join("")}</div>
-    <p class="gx-sm" style="margin:6px 0 0">จุดพื้นหลังบนกราฟกรองเหลือเฉพาะอุตสาหกรรมเดียวกัน (ไม่ระบุชื่อ) · สัดส่วนเป็นการพรรณนาฐานอ้างอิง ไม่ใช่การจัดอันดับ</p></div>`;
+    ${(() => { const pool = indComps(c.ind).slice().sort((a, b) => b.ipi - a.ipi), k = pool.findIndex(x => x.t === c.t) + 1,
+        oi = c.oisInd ?? oisIndOf(signalB(c.promo, c.amp), c.ind), q = tierOf(oi);
+      return `<p class="gx-sm mv-indrank" style="margin:8px 0 0"><b>${esc(c.t)}</b>: อันดับ OIS #${k} จาก ${pool.length} บริษัทในชุดแสดงผลของกลุ่มนี้ ·
+        Quartile ในอุตสาหกรรม <b>Q${q}</b> (OIS ในอุตสาหกรรม ${fmt(oi, 0)} · เทียบ REF-928 เฉพาะกลุ่มเดียวกัน)</p>`; })()}
+    <p class="gx-sm" style="margin:6px 0 0">จุดพื้นหลังบนกราฟกรองเหลือเฉพาะอุตสาหกรรมเดียวกัน (ไม่ระบุชื่อ) · วงกลมโปร่ง = บริษัทในชุดแสดงผล · สัดส่วนเป็นการพรรณนาฐานอ้างอิง ไม่ใช่การจัดอันดับ</p></div>`;
 }
 
 function gxAddPlan(t, src) {
@@ -564,8 +617,20 @@ function wireMatrix2(h) {
   h.querySelectorAll("[data-gxtb]").forEach(b => b.onclick = () => { S.gxTable = b.dataset.gxtb === "1"; save(); render(); });
   const pt = h.querySelector("#gxPathTog"); if (pt) pt.onchange = () => { S.gxPath = pt.checked; save(); render(); };
   const it = h.querySelector("#gxIndTog"); if (it) it.onchange = () => { S.gxIndCmp = it.checked; save(); render(); };
+  h.querySelectorAll("[data-gxmode]").forEach(b => b.onclick = () => {
+    S.gxMode = b.dataset.gxmode; S.gxIndCmp = S.gxMode === "industry";
+    if (S.gxMode === "peers" && typeof peersFor === "function" && !(S.peers || []).length) S.peers = peersFor(cur());
+    save(); render(); });
+  h.querySelectorAll("[data-gxpeer]").forEach(sl => sl.onchange = () => {
+    const v = [...h.querySelectorAll("[data-gxpeer]")].map(x => x.value).filter(Boolean);
+    S.peers = [...new Set(v)].filter(t => t !== S.t).slice(0, 3);
+    if (typeof rememberPeers === "function") rememberPeers();
+    save(); render(); });
+  const pa = h.querySelector("#gxPeerAuto");
+  if (pa) pa.onclick = () => { S.peers = autoPeers(cur()).map(x => x.t); if (typeof rememberPeers === "function") rememberPeers(); render(); };
   h.querySelectorAll("[data-trlock]").forEach(b => b.onclick = () =>
-    toast(b.dataset.trlock === "max" ? "เปรียบเทียบอุตสาหกรรมเป็นสิทธิ์ Pro Max — ดูได้ที่หน้า เครดิตและแผน" : "ชั้นจุดอ้างอิงและเส้นทางย้ายโซนเป็นสิทธิ์ Pro / Pro Max"));
+    toast(b.dataset.trlock === "max" ? "เทียบทั้งอุตสาหกรรมเป็นสิทธิ์ Pro Max (Subscription) — ดูได้ที่หน้า เครดิตและแผน"
+      : b.closest(".mv-modes") ? "เทียบคู่แข่ง 3 รายเป็นสิทธิ์ Pro — ดูได้ที่หน้า เครดิตและแผน" : "ชั้นจุดอ้างอิงและเส้นทางย้ายโซนเป็นสิทธิ์ Pro / Pro Max"));
   const pick = q => { S.gxSel = q ? { t: S.t, q } : null; S._gxScroll = true; render(); };
   h.querySelectorAll("[data-gxq]").forEach(b => b.onclick = () => pick(b.dataset.gxq));
   h.querySelectorAll(".gx-q, .gx-cl, .gx-trow").forEach(r => r.addEventListener("click", () => pick(r.dataset.q)));

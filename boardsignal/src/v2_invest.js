@@ -778,7 +778,7 @@ function wirePort(h) {
     save(); toast("เพิ่มแล้ว · พอร์ตมี " + S.port.length + " บริษัท"); render();
   };
   const cl = h.querySelector("#pClear");
-  if (cl) cl.onclick = () => { if (!S.port.length || !confirm("ล้างพอร์ตทั้งหมด?")) return; S.port = []; save(); render(); };
+  if (cl) cl.onclick = () => { if (!S.port.length) return; confirm2(cl, () => { S.port = []; save(); render(); }, "กดอีกครั้งเพื่อล้างพอร์ตทั้งหมด"); };
   const so = h.querySelector("#pSort"); if (so) so.onchange = () => { S.psort = so.value; save(); render(); };
   const by = h.querySelector("#pBuy");
   if (by) by.onclick = () => { if (spend("port", "ALL", "พอร์ตลงทุน")) render(); };
@@ -1165,6 +1165,7 @@ function viewDocs() {
         <div class="tr-auto">
           <button class="btn g" disabled title="เฟสถัดไป · ต้องเชื่อม One Report / SET">⇣ ดึงรายงานประจำปีอัตโนมัติ (เฟสถัดไป · ต้องเชื่อม One Report/SET)</button>
           <span class="pill ${tierRank() >= 2 ? "blue" : "mute"}" style="font-size:10px">${tierRank() >= 2 ? "Pro Max · เตรียมไว้" : "สิทธิ์ Pro Max"}</span></div>
+        <div class="mv-assessrow">${assessCards(true)}</div>
       </div>`}
       <div class="stack">
         <div class="card">
@@ -1215,6 +1216,19 @@ function viewDocs() {
       </div>
     </div>`;
 }
+/** การ์ดลิงก์ไปหน้าแบบประเมิน (แก้ไขครั้งที่ 2.3) — RFQ เป็นแบบวัดตนเองแยกจากคะแนน · Dictionary ของผู้ใช้
+ *  หน้าปลายทางลงทะเบียนในไฟล์อื่น จึงตรวจ VIEWS ตอนคลิก ไม่ใช่ตอนวาด */
+function assessCards(compact) {
+  return `<div class="card tr-rfq mv-assess${compact ? " mv-compact" : ""}">
+      <h3>ทำแบบประเมิน CEO Regulatory Focus (RFQ) <span class="pill ok" style="font-size:10px">เปิดใช้แล้ว</span></h3>
+      <p class="desc" style="margin:0">แบบวัดตนเอง (self-report) ของ CEO ด้าน promotion / prevention focus — <b>เป็นแบบวัดแยก ไม่ถูกนำไปใช้ในคะแนน OpenInnoScore</b>
+        ซึ่งวัดจากภาษาในสารถึงผู้ถือหุ้น · ใช้ประกอบการหารือเท่านั้น</p>
+      <button class="btn s" data-mvgo="rfq" style="margin-top:9px">เริ่มทำแบบประเมิน RFQ →</button></div>
+    <div class="card mv-assess${compact ? " mv-compact" : ""}">
+      <h3>อัปโหลด Dictionary ของคุณเอง <span class="pill mute" style="font-size:10px">ผู้ใช้ทั่วไป</span></h3>
+      <p class="desc" style="margin:0">สร้างหรืออัปโหลดรายการคำของคุณเองเพื่อนับคำในข้อความ CEO — ผลจาก Dictionary ของผู้ใช้ใช้สำรวจข้อความ ไม่เข้าแบบจำลองที่ freeze แล้ว</p>
+      <button class="btn s" data-mvgo="dict" style="margin-top:9px">เปิดหน้า Dictionary ของผู้ใช้ →</button></div>`;
+}
 /** Level 1 · Free — ตรวจภาษา CEO ได้จากข้อความที่พิมพ์/วางเอง (≥ 2,000 คำ) หรือแบบสอบถาม RFQ · อัปโหลด PDF/TXT เป็นสิทธิ์ Pro */
 let _freeBuf = "";
 function docsFreeCard() {
@@ -1231,10 +1245,7 @@ function docsFreeCard() {
         ${(S.ceo || isEdited() || S.docs.length) ? `<button class="btn g" id="btnResetA">คืนค่าจากฐานข้อมูล</button>` : ""}</div>
       <p class="tr-sm" id="trFreeMsg">${ok ? "" : `ข้อความยังไม่ถึง ${fmt(FREE_MIN_WORDS)} คำ — ระบบจะยังไม่วิเคราะห์ เพราะข้อความสั้นทำให้สัดส่วนคำแกว่งมาก`}</p>
     </div>
-    <div class="card tr-rfq">
-      <h3>แบบสอบถาม RFQ <span class="pill warn" style="font-size:10px">รอแบบฟอร์ม</span></h3>
-      <p class="desc" style="margin:0">แบบสอบถาม RFQ — รอแบบฟอร์มจากผู้ว่าจ้าง · เมื่อได้รับแบบฟอร์มแล้วจะเปิดให้ตอบแทนการวางข้อความได้</p>
-      <button class="btn g" disabled style="margin-top:9px">เริ่มทำแบบสอบถาม (รอแบบฟอร์ม)</button></div>
+    ${assessCards()}
     <div class="card tr-up-lock">
       <h3>อัปโหลด PDF / TXT <span class="pill blue" style="font-size:10px">Pro</span></h3>
       <p class="desc" style="margin:0">ระดับ Pro อัปโหลดรายงานประจำปี (PDF/TXT) ให้ระบบสแกนคำอัตโนมัติ · Pro Max เพิ่มการดึงรายงานประจำปีให้อัตโนมัติ (เฟสถัดไป)</p>
@@ -1788,28 +1799,66 @@ const WI_PRESETS = [
   { k: "reg", en: "Regulatory-compliant minimum", th: "ขั้นต่ำตามแนวทางกำกับ", d: "fem → 30% ถ้าต่ำกว่า (ตลท.)", f: c => ({ fem: Math.max(c.fem, .30), dp: c.dp }) },
   { k: "new", en: "New CEO + Board Refresh", th: "CEO ใหม่ + ปรับบอร์ด", d: "dp → 75 · fem → p90", f: c => ({ fem: Math.max(c.fem, femQ(c.ind, .9)), dp: 75 }) },
 ];
+/* แก้ไขครั้งที่ 2.3 · What-if แบบ "จำนวนคน" ตามที่ผู้ว่าจ้างกำหนด — ปรับเฉพาะ จำนวนกรรมการทั้งหมด · จำนวนกรรมการหญิง ·
+   จำนวนกรรมการครอบครัว · political ties แบบ tick criteria แล้วแปลงเป็นสัดส่วน (จำนวน / ขนาดบอร์ด) เข้าสูตรเดิมทุกตำแหน่ง
+   ฐานคือสัดส่วนจริงของบริษัท (ไม่ปัดเป็นจำนวนคน) จนกว่าผู้ใช้จะขยับตัวนับ — แถว "ปัจจุบัน" จึงตรงกับทุกหน้า */
+const BS_DEFAULT = 11;                                   // ขนาดบอร์ดตั้งต้นเมื่อฐานข้อมูลไม่มีจำนวนกรรมการ
+const BS_MIN = 3, BS_MAX = 25;
+/** นิยาม political ties ตาม Data Dictionary REF-928 (bod_politicalties = 1 เมื่อ bod_military + bod_political ≥ 1) */
+const POL_TICK = "มีกรรมการอย่างน้อย 1 คนที่ (ก) มียศทหารหรือตำรวจที่เปิดเผย หรือ (ข) ดำรงหรือเคยดำรงตำแหน่งตามเกณฑ์บุคคลที่มีสถานภาพทางการเมือง (PEP) ของ ปปง. เช่น รัฐมนตรี ส.ส. ส.ว. ปลัดกระทรวง อธิบดี ผู้ว่าราชการจังหวัด";
+const wiBase = c => { const n = c.bsize || BS_DEFAULT; return { n, nf: Math.round(c.fem * n), nfam: Math.round(c.fam * n), assumed: !c.bsize }; };
+/** แปลงจำนวนคน → สัดส่วนที่เข้าสูตร (fem / fam) · ครอบครัวถูกจำกัดในช่วงที่พบจริงใน REF-928 */
+function wiSync(c, w) {
+  const b = wiBase(c), lk = wiCtxLocked();
+  w.n = clamp(Math.round(w.n), BS_MIN, BS_MAX);
+  w.nf = clamp(Math.round(w.nf), 0, w.n);
+  if (lk) w.nfam = w.n === b.n ? b.nfam : Math.round(c.fam * w.n);
+  w.nfam = clamp(Math.round(w.nfam), 0, w.n);
+  w.fem = w.n === b.n && w.nf === b.nf ? c.fem : w.nf / w.n;
+  const famRaw = lk || (w.n === b.n && w.nfam === b.nfam) ? c.fam : w.nfam / w.n, famCap = Math.max(FAM_MAX, c.fam);
+  w.famOver = famRaw > famCap + 1e-9;
+  w.fam = Math.min(famRaw, famCap);
+  if (lk) w.pol = c.pol;
+  w.pol = w.pol ? 1 : 0;
+  w._fs = w.fem; w._ms = w.fam;
+  return w;
+}
 function wiInit2(force) {
-  const c = cur();
+  const c = cur(), b = wiBase(c);
   if (!S.wi || S.wi.t !== c.t || force)
     S.wi = { t: c.t, fem: c.fem, fam: c.fam, ten: c.ten, pol: c.pol, dp: c.dp, src: "ค่าจริงของบริษัท", preset: "cur" };
+  const w = S.wi;
   // อายุงานตรึงไว้เสมอ (δT = 0) · ครอบครัว / political ties ตรึงไว้ในมุมมองธนาคาร หรือเมื่อยังไม่เคยตั้ง
-  S.wi.ten = c.ten;
-  if (S.wi.fam === undefined || wiCtxLocked()) S.wi.fam = c.fam;
-  if (S.wi.pol === undefined || wiCtxLocked()) S.wi.pol = c.pol;
-  S.wi.fam = clamp(S.wi.fam, 0, Math.max(FAM_MAX, c.fam));
-  S.wi.pol = S.wi.pol ? 1 : 0;
-  return S.wi;
+  w.ten = c.ten;
+  if (w.fam === undefined) w.fam = c.fam;
+  if (w.pol === undefined) w.pol = c.pol;
+  if (w.n === undefined) w.n = b.n;
+  /* สัดส่วนถูกตั้งจากที่อื่น (Zone C · ตัวทดลองของ Free · โค้ดเดิม) → แปลงกลับเป็นจำนวนคน ณ ขนาดบอร์ดปัจจุบัน */
+  const same = (x, y) => Math.abs(x - y) < 1e-9;
+  if (w.nf === undefined || w._fs === undefined || !same(w.fem, w._fs))
+    w.nf = same(w.fem, c.fem) && w.n === b.n ? b.nf : Math.round(clamp(w.fem, 0, 1) * w.n);
+  if (w.nfam === undefined || w._ms === undefined || !same(w.fam, w._ms))
+    w.nfam = same(w.fam, c.fam) && w.n === b.n ? b.nfam : Math.round(clamp(w.fam, 0, 1) * w.n);
+  return wiSync(c, w);
+}
+/** Quartile ในอุตสาหกรรม — จาก OIS_ind (เปอร์เซ็นไทล์เทียบเฉพาะแถว REF-928 ในอุตสาหกรรมเดียวกัน) */
+const QUART_LAB = { 1: "บนสุด 25%", 2: "25% ถัดลงมา (บนครึ่ง)", 3: "25% ล่างครึ่ง", 4: "ล่างสุด 25%" };
+function indQuart(promo, amp, ind) {
+  const oi = oisIndOf(signalB(promo, amp), ind), q = tierOf(oi);
+  return { oi, q, lab: `Q${q} (${QUART_LAB[q]})`, ind: IND[ind] || "" };
 }
 wiInit = wiInit2;
 /** ฉากทัศน์เปรียบเทียบ — เฉพาะคันโยกที่พิจารณา */
 function wiScenarios2(c, w) {
   const base = wiScore(c, w).ipi, out = [];
   const mk = (l, why, fem, dp) => { const v = wiScore(c, { fem, dp, fam: w.fam, pol: w.pol }).ipi; if (v !== base) out.push({ l, why, v, d: v - base }); };
-  mk("สัดส่วนกรรมการหญิง +10 จุด", "คันโยกด้านบอร์ดที่สัมพันธ์กับคะแนนมากที่สุดตามสูตร", clamp(w.fem + .1, 0, 1), w.dp);
-  mk("สัดส่วนกรรมการหญิงถึง p90 ของอุตสาหกรรม", "ค่าที่ดีที่สุดที่พบจริงในกลุ่ม", Math.max(w.fem, femQ(c.ind, .9)), w.dp);
-  if (w.fem < .3) mk("สัดส่วนกรรมการหญิง 30% (แนวทาง ตลท.)", "ขั้นต่ำตามแนวทางกำกับ", .3, w.dp);
+  const n = w.n || BS_DEFAULT, nf = w.nf ?? Math.round(w.fem * n);
+  if (nf < n) mk(`กรรมการหญิง +1 คน (${nf} → ${nf + 1} จาก ${n})`, "แทนที่กรรมการที่ครบวาระ 1 ตำแหน่ง · ขนาดบอร์ดเท่าเดิม", (nf + 1) / n, w.dp);
+  if (nf + 1 < n) mk(`กรรมการหญิง +2 คน (${nf} → ${nf + 2} จาก ${n})`, "แทนที่กรรมการที่ครบวาระ 2 ตำแหน่ง · ขนาดบอร์ดเท่าเดิม", (nf + 2) / n, w.dp);
+  const n30 = Math.ceil(.3 * n - 1e-9);
+  if (nf < n30) mk(`กรรมการหญิง ${n30} คน จาก ${n} (≥ 30% · แนวทาง ตลท.)`, "ขั้นต่ำตามแนวทางกำกับ", n30 / n, w.dp);
   if (w.dp < 85) mk("CEO promotion focus +15 เปอร์เซ็นไทล์", "ทดสอบถ้อยคำ ไม่ต้องแก้โครงสร้างบอร์ด", w.fem, clamp(w.dp + 15, 0, 100));
-  mk("ถ้าสัดส่วนกรรมการหญิงลดลง 10 จุด", "กรณีกรรมการหญิงครบวาระแล้วไม่ได้แทนที่ด้วยผู้หญิง", clamp(w.fem - .1, 0, 1), w.dp);
+  if (nf > 0) mk(`ถ้ากรรมการหญิงลดลง 1 คน (${nf} → ${nf - 1})`, "กรณีกรรมการหญิงครบวาระแล้วไม่ได้แทนที่ด้วยผู้หญิง", (nf - 1) / n, w.dp);
   out.sort((a, b) => b.d - a.d);
   if (!out.length) return `<div class="note">ทุกการปรับที่ทดสอบให้ผลเท่าเดิม</div>`;
   return out.slice(0, 5).map(o => `<div style="display:flex;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">
@@ -1820,13 +1869,13 @@ function wiScenarios2(c, w) {
 }
 /** Board Persona — คุณสมบัติเชิงโครงสร้างที่สัมพันธ์กับคะแนน ไม่อ้างเหตุ-ผล ไม่ชี้ตัวบุคคล */
 function persona2(c, w, ipi) {
-  const want = [], fn = femaleN(w.fem, c.bsize);
+  const want = [], fn = w.nf !== undefined ? w.nf : femaleN(w.fem, c.bsize);
   if (w.fem < .3) want.push("กรรมการอิสระ<b>หญิง</b>ที่มีประสบการณ์สายเทคโนโลยีหรือการพัฒนาผลิตภัณฑ์ — สัดส่วนกรรมการหญิงสัมพันธ์เชิงบวกกับการหนุนสัญญาณในฐานอ้างอิง");
   if (fn !== null && fn < CRIT_N) want.push(`บอร์ดนี้มีกรรมการหญิง ≈ ${fn} คน — งานวิจัยพบว่าความสัมพันธ์มีนัยเมื่อมี ≥ ${CRIT_N} คน (Table 4)`);
   if (w.dp < 50) want.push("<b>ผู้นำที่สื่อสารวิสัยทัศน์เชิงโอกาสได้ชัด</b> — คะแนนภาษายังต่ำกว่าครึ่งของฐานอ้างอิง (ทดสอบถ้อยคำได้ใน CEO text testing)");
   if (!want.length) want.push("โครงสร้างปัจจุบันอยู่ในกลุ่มที่สัมพันธ์กับสัญญาณ open innovation แล้ว — โจทย์คือ<b>รักษาสมดุล</b>เมื่อกรรมการครบวาระ");
   return `<div style="font-size:12.8px;line-height:1.85">
-    ณ สถานะจำลองนี้ (OIS ${ipi} · CEO Promotion Focus ${w.dp} · กรรมการหญิง ${pct1(w.fem)}${c.bsize ? ` ≈ ${femaleN(w.fem, c.bsize)} คนจาก ${c.bsize}` : ""})
+    ณ สถานะจำลองนี้ (OIS ${ipi} · CEO Promotion Focus ${w.dp} · กรรมการหญิง ${w.nf !== undefined ? `${w.nf} คนจาก ${w.n} (${pct1(w.fem)})` : pct1(w.fem)})
     โปรไฟล์กรรมการที่สอดคล้องกับข้อสังเกตคือ</div>
     <ul style="margin:9px 0 0;padding-left:19px;font-size:12.5px;line-height:1.85;color:var(--ink-2)">
       ${want.map(x => `<li>${x}</li>`).join("")}</ul>
@@ -1852,25 +1901,30 @@ function ctxRows(c) {
 }
 
 /** ตัวแปรบริบทที่ปรับได้ในระดับ Pro — ครอบครัว (ตัวเลื่อนในช่วง REF-928) และ political ties (สลับ 0/1 เท่านั้น) พร้อมป้ายเตือนถาวร */
+/** ตัวนับจำนวนคน (− ค่า +) — ใช้ทั้ง Studio ตัวเต็มและโหมดทดลองของ Free */
+function mvStep(key, val, min, max, label, dis) {
+  const d = dis ? " disabled aria-disabled=\"true\"" : "";
+  return `<div class="mv-step" role="group" aria-label="${esc(label)}">
+    <button type="button" data-mvstep="${key}" data-d="-1" aria-label="ลด${esc(label)} 1 คน"${d || (val <= min ? " disabled" : "")}>−</button>
+    <output id="mvOut-${key}" aria-live="polite">${val}</output>
+    <button type="button" data-mvstep="${key}" data-d="1" aria-label="เพิ่ม${esc(label)} 1 คน"${d || (val >= max ? " disabled" : "")}>+</button></div>`;
+}
 function ctxCtrls(c, w) {
-  const lk = wiCtxLocked(), dis = lk ? " disabled aria-disabled=\"true\"" : "";
+  const lk = wiCtxLocked(), b = wiBase(c);
   return `<div class="tr-ctxh">ตัวแปรบริบท — ปรับได้เพื่อเข้าใจโมเดล ไม่ใช่คันโยกที่ระบบเสนอ</div>
     ${lk ? `<div class="note warn tr-banklock">🔒 ${esc(LOCK_BANK)} — ครอบครัวและ political ties ตรึงไว้ที่ค่าจริง</div>` : ""}
     <div class="tr-ctx${lk ? " locked" : ""}">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-        <span>สัดส่วนกรรมการครอบครัว</span>
-        <span class="num"><b>${pct1(w.fam)}</b> <span style="color:var(--ink-3);font-size:10.5px">เดิม ${pct1(c.fam)}</span></span></div>
-      <input type="range" id="wiFam" min="0" max="${Math.max(FAM_MAX, c.fam)}" step="any" value="${w.fam}"${dis}
-        style="width:100%;accent-color:var(--ink-3)" aria-describedby="wiFamWarn">
+      <div class="mv-steprow"><div><b>จำนวนกรรมการครอบครัว (คน)</b>
+          <div class="mv-sub">สัดส่วนที่เข้าสูตร ${pct1(w.fam)} · เดิม ${pct1(c.fam)} (≈ ${b.nfam} คน จาก ${b.n})</div></div>
+        ${mvStep("nfam", w.nfam, 0, w.n, "จำนวนกรรมการครอบครัว", lk)}</div>
+      <div class="mv-sub" style="margin-top:2px">นิยาม: กรรมการที่มีนามสกุลเดียวกับกลุ่มนามสกุลที่ถือหุ้นรวม ≥ 30% (Data Dictionary REF-928)</div>
+      ${w.famOver ? `<div class="note warn mv-clampnote" role="note">${w.nfam} คน จาก ${w.n} = ${pct1(w.nfam / w.n)} สูงกว่าช่วงที่พบจริงใน REF-928 (สูงสุด ${pct1(FAM_MAX)}) — ระบบใช้ ${pct1(w.fam)} แทนก่อนเข้าสูตร</div>` : ""}
       <div class="tr-warn" id="wiFamWarn">⚠ ${esc(WARN_FAM)}</div>
-      <div style="font-size:10.5px;color:var(--ink-3)">ช่วงตัวเลื่อน 0–${pct1(FAM_MAX)} = ช่วงที่พบจริงในฐานอ้างอิง REF-928</div>
     </div>
     <div class="tr-ctx${lk ? " locked" : ""}">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:5px;gap:8px">
-        <span>political ties <span style="color:var(--ink-3);font-size:10.5px">เดิม ${c.pol ? "1 · มี" : "0 · ไม่มี"}</span></span>
-        <div class="seg" role="radiogroup" aria-label="political ties">
-          <button data-wipol="0" role="radio" aria-selected="${!w.pol}"${dis}>0 · ไม่มี</button>
-          <button data-wipol="1" role="radio" aria-selected="${!!w.pol}"${dis}>1 · มี</button></div></div>
+      <label class="mv-tick"><input type="checkbox" id="wiPolTick"${w.pol ? " checked" : ""}${lk ? " disabled" : ""}>
+        <span><b>political ties (ติ๊กเมื่อเข้าเกณฑ์)</b> <span class="mv-sub">เดิม ${c.pol ? "1 · มี" : "0 · ไม่มี"}</span><br>
+          <span class="mv-crit">${esc(POL_TICK)}</span></span></label>
       <div class="tr-warn">⚠ ${esc(WARN_POL)}</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin:8px 0 12px">
@@ -1922,9 +1976,21 @@ function downsideBlock(c) {
 }
 
 function viewStudioPro() {
-  const c = cur(), w = wiInit2();
+  const c = cur(), w = wiInit2(), wb = wiBase(c);
   const s1 = wiScore(c, w), ipi1 = s1.ipi, d = ipi1 - c.ipi;
   const z0 = zoneOf(c.promo, c.amp), zone1 = s1.zone;
+  const q0 = indQuart(c.promo, c.amp, c.ind), q1 = indQuart(s1.promo, s1.amp, c.ind);
+  const t0 = tierOf(c.ois ?? c.ipi), t1 = tierOf(oisOf(signalB(s1.promo, s1.amp)));
+  const quartBlock = `<div class="mv-quart" id="mvQuart">
+      <div class="mv-q hero"><div class="k">Quartile ในอุตสาหกรรม · สถานะจำลอง</div>
+        <div class="v" id="mvQ1">Q${q1.q}</div>
+        <div class="u">${esc(QUART_LAB[q1.q])} ในกลุ่ม${esc(q1.ind)} · OIS ในอุตสาหกรรม ${fmt(q1.oi, 0)}</div></div>
+      <div class="mv-q"><div class="k">Quartile ในอุตสาหกรรม · ปัจจุบัน</div><div class="v">Q${q0.q}</div>
+        <div class="u">${esc(QUART_LAB[q0.q])} · OIS ในอุตสาหกรรม ${fmt(q0.oi, 0)}</div></div>
+      <div class="mv-q"><div class="k">Tier ทั้งฐาน REF-928</div><div class="v">Tier ${t1}</div>
+        <div class="u">${t1 !== t0 ? `เปลี่ยนจาก Tier ${t0}` : "เท่าเดิม"} · ${q1.q !== q0.q ? `<b>ย้าย Quartile ในอุตสาหกรรม Q${q0.q} → Q${q1.q}</b>` : "อยู่ Quartile เดิมในอุตสาหกรรม"}</div></div>
+    </div>
+    <p class="mv-sub" style="margin:4px 0 12px">Quartile ในอุตสาหกรรม = ตำแหน่งของ Signal B เทียบเฉพาะบริษัท-ปีในอุตสาหกรรมเดียวกันของ REF-928 (OIS_ind · Q1 = บนสุด 25%) — เป็นการจำลองว่าจะอยู่ Quartile ใด ไม่ใช่การพยากรณ์ผลนวัตกรรม</p>`;
   const inner = `
   <div class="card" style="margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
@@ -1957,23 +2023,26 @@ function viewStudioPro() {
     </div>
 
     <div class="card">
-      <h3>② องค์ประกอบคณะกรรมการ · 3 ตัวแปร</h3>
-      <p class="desc">กรรมการหญิง · กรรมการครอบครัว · political ties — ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตร E4–E7 ไม่ใช่การพยากรณ์ · คันโยกที่ระบบเสนอมีเฉพาะกรรมการหญิง</p>
-      ${WI_CTRL2.map(v => `<div style="margin-bottom:13px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span>${v.l} <span class="hlp" title="ตัวแปรที่สัมพันธ์กับการหนุนสัญญาณมากที่สุดในสูตร">ⓘ</span></span>
-          <span class="num"><b>${v.fmt(w[v.k])}</b> <span style="color:var(--ink-3);font-size:10.5px">เดิม ${v.fmt(c[v.k])}${c.bsize ? ` · ≈ ${femaleN(w[v.k], c.bsize)} คนจาก ${c.bsize}` : ""}</span></span></div>
-        <input type="range" data-wi="${v.k}" min="${v.min}" max="${v.max}" step="${v.step}" value="${w[v.k]}" style="width:100%;accent-color:var(--brand)">
-      </div>`).join("")}
-      ${c.bsize ? `<div style="font-size:10.8px;color:${femaleN(w.fem, c.bsize) < CRIT_N ? "var(--warn)" : "var(--ink-3)"};margin:-6px 0 12px">${esc(critMassLine(Object.assign({}, c, { fem: w.fem })))}</div>` : `<div style="font-size:10.8px;color:var(--ink-3);margin:-6px 0 12px">${esc(critMassLine(c))}</div>`}
+      <h3>② องค์ประกอบคณะกรรมการ · ปรับเป็นจำนวนคน</h3>
+      <p class="desc">ปรับได้เฉพาะ จำนวนกรรมการทั้งหมด · จำนวนกรรมการหญิง · จำนวนกรรมการครอบครัว · political ties (ติ๊กตามเกณฑ์) —
+        ระบบแปลงเป็นสัดส่วน (จำนวน ÷ ขนาดบอร์ด) แล้วเข้าสูตร E4–E7 ชุดเดิม · ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตร ไม่ใช่การพยากรณ์ · คันโยกที่ระบบเสนอมีเฉพาะกรรมการหญิง</p>
+      <div class="mv-steprow"><div><b>จำนวนกรรมการทั้งหมด (คน)</b>
+          <div class="mv-sub">${wb.assumed ? `ฐานข้อมูลยังไม่มีจำนวนกรรมการของบริษัทนี้ — ตั้งต้นที่ ${BS_DEFAULT} คน (กรอกจำนวนจริงได้ใน Zone A)` : `ค่าจริง ${wb.n} คน (จาก Zone A)`} · ช่วงใน REF-928 คือ 3–18 คน</div></div>
+        ${mvStep("n", w.n, BS_MIN, BS_MAX, "จำนวนกรรมการทั้งหมด")}</div>
+      <div class="mv-steprow"><div><b>จำนวนกรรมการหญิง (คน)</b> <span class="hlp" title="ตัวแปรที่สัมพันธ์กับการหนุนสัญญาณมากที่สุดในสูตร และทนต่อ fixed-effects">ⓘ</span>
+          <div class="mv-sub">สัดส่วนที่เข้าสูตร <b>${pct1(w.fem)}</b> · เดิม ${pct1(c.fem)} (≈ ${wb.nf} คน จาก ${wb.n})</div></div>
+        ${mvStep("nf", w.nf, 0, w.n, "จำนวนกรรมการหญิง")}</div>
+      <div class="mv-sub" style="margin:-2px 0 12px;color:${w.nf < CRIT_N ? "var(--warn)" : "var(--ink-3)"}">กรรมการหญิง ${w.nf} คน — ${w.nf < CRIT_N ? `ต่ำกว่า critical mass (≥ ${CRIT_N} คน, Table 4) ความสัมพันธ์ในช่วงนี้ยังไม่มีหลักฐานรองรับ` : `ถึง critical mass (≥ ${CRIT_N} คน, Table 4)`}</div>
       ${ctxCtrls(c, w)}
       <button class="btn s" id="btnWiReset" style="width:100%;justify-content:center">↺ กลับไปใช้โครงสร้างบอร์ดจริง</button>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:14px">
-    <h3>ผลลัพธ์จำลอง <span style="font-weight:300;color:var(--ink-3);font-size:12px">· ตามสูตร เชิงความสัมพันธ์</span></h3>
-    ${wiCtxMoved(c, w) ? `<div class="tr-ctxchip" role="note">⚠ ${esc(CHIP_CTX)} · ครอบครัว ${pct1(c.fam)} → ${pct1(w.fam)} · political ties ${c.pol} → ${w.pol}</div>` : ""}
+    <h3>ผลลัพธ์จำลอง — อยู่ Quartile ใดในอุตสาหกรรม <span style="font-weight:300;color:var(--ink-3);font-size:12px">· ตามสูตร เชิงความสัมพันธ์</span></h3>
+    <div class="mv-sub" style="margin-bottom:8px">สถานะจำลอง: กรรมการ ${w.n} คน · หญิง ${w.nf} คน (${pct1(w.fem)}) · ครอบครัว ${w.nfam} คน (${pct1(w.fam)}) · political ties ${w.pol ? "1 · เข้าเกณฑ์" : "0 · ไม่เข้าเกณฑ์"} · CEO Promotion Focus ${w.dp}</div>
+    ${wiCtxMoved(c, w) ? `<div class="tr-ctxchip" role="note">⚠ ${esc(CHIP_CTX)} · ครอบครัว ${pct1(c.fam)} → ${pct1(w.fam)} · political ties ${c.pol} → ${w.pol}${w.n !== wb.n && Math.abs(w.fam - c.fam) > 1e-9 ? " · การเปลี่ยนขนาดบอร์ดทำให้สัดส่วนกรรมการครอบครัวเปลี่ยนด้วย" : ""}</div>` : ""}
+    ${quartBlock}
     <div class="grid g4 tight" style="gap:10px;margin:10px 0 14px">
       <div class="stat"><div class="k">OpenInnoScore ปัจจุบัน</div><div class="v num">${c.ipi}</div><div class="u">${ZONES[z0].l}</div></div>
       <div class="stat hero"><div class="k">OpenInnoScore จำลอง</div><div class="v num">${ipi1}</div><div class="u">${ZONES[zone1].l}</div></div>
@@ -2012,23 +2081,36 @@ function viewStudioPro() {
     ไม่ใช่การรับประกันว่าปรับแล้วนวัตกรรมจะเพิ่มจริง · <b>political ties เป็นข้อมูลบริบท ไม่ใช่คันโยก และไม่ใช้เป็นเหตุผลเชิงบวก</b> ·
     <b>ห้ามใช้ผลนี้ประเมินหรือคัดเลือกรายบุคคล</b> เพราะเพศและความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล มาตรา 26</div>`;
   return pageHead("จำลองสถานการณ์", "What-if Studio",
-    `ปรับได้ทั้งสองด้านพร้อมกัน — ภาษาของ CEO จากเอกสารจริง และสัดส่วนกรรมการหญิง — แล้วดูว่า OpenInnoScore ตามสูตรขยับไปเท่าไหร่และย้ายโซนหรือไม่`) + inner;
+    `ปรับเป็นจำนวนคน — จำนวนกรรมการทั้งหมด กรรมการหญิง กรรมการครอบครัว และ political ties (ติ๊กตามเกณฑ์) พร้อมภาษาของ CEO — แล้วดูว่าบริษัทจะอยู่ Quartile ใดในอุตสาหกรรม และย้ายโซนหรือไม่ (ตามสูตร เชิงความสัมพันธ์)`) + inner;
 }
 function wireStudioPro(h) {
   const c = cur(), w = wiInit2();
-  h.querySelectorAll("[data-wi]").forEach(r => r.oninput = () => { w[r.dataset.wi] = +r.value; w.preset = null; render(); });
+  h.querySelectorAll("[data-mvstep]").forEach(b => b.onclick = () => {
+    const k = b.dataset.mvstep, d = +b.dataset.d;
+    if (k === "nfam" && wiCtxLocked()) return toast(LOCK_BANK);
+    if (k === "n") {                                   // เพิ่ม/ลดขนาดบอร์ด — จำนวนหญิง/ครอบครัวคงเดิม (ไม่เกินขนาดบอร์ด)
+      w.n = clamp(w.n + d, BS_MIN, BS_MAX);
+    } else w[k] = clamp((w[k] || 0) + d, 0, w.n);
+    w.preset = null; wiSync(c, w); render();
+  });
+  const pt = h.querySelector("#wiPolTick");
+  if (pt) pt.onchange = () => { if (wiCtxLocked()) { pt.checked = !!c.pol; return toast(LOCK_BANK); } w.pol = pt.checked ? 1 : 0; w.preset = null; wiSync(c, w); render(); };
   h.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
     const p = WI_PRESETS.find(x => x.k === b.dataset.preset); if (!p) return;
-    const v = p.f(c); w.fem = v.fem; w.dp = v.dp; w.preset = p.k; w.fam = c.fam; w.pol = c.pol;   // ฉากทัศน์ไม่ขยับตัวแปรบริบท
+    const v = p.f(c), wb = wiBase(c);
+    // ฉากทัศน์ไม่ขยับตัวแปรบริบท และคืนขนาดบอร์ดเป็นค่าตั้งต้น · สัดส่วนเป้าหมายแปลงเป็นจำนวนคน
+    w.n = wb.n; w.nfam = wb.nfam; w.pol = c.pol; w.dp = v.dp; w.preset = p.k;
+    let nf = Math.abs(v.fem - c.fem) < 1e-9 ? wb.nf : Math.round(v.fem * wb.n);
+    if (p.k === "reg") nf = Math.max(wb.nf, Math.ceil(.3 * wb.n - 1e-9));
+    else if (v.fem > c.fem + 1e-9) nf = Math.max(nf, wb.nf);
+    else if (v.fem < c.fem - 1e-9) nf = Math.min(nf, wb.nf);
+    w.nf = clamp(nf, 0, wb.n); wiSync(c, w);
     w.src = p.k === "cur" || p.k === "sq" ? "ค่าจริงของบริษัท" : `ฉากทัศน์ “${T(p.en, p.th)}”`;
     if (p.k === "cur") { S.ceo = null; _ceoBuf = ""; }
     toast(`ฉากทัศน์ · ${T(p.en, p.th)}`); render();
   });
   const dp = h.querySelector("#slDp");
   if (dp) dp.oninput = () => { w.dp = +dp.value; w.src = "ปรับด้วยตัวเลื่อนเอง"; w.preset = null; render(); };
-  const fam = h.querySelector("#wiFam");
-  if (fam) fam.oninput = () => { if (wiCtxLocked()) return; w.fam = +fam.value; w.preset = null; render(); };
-  h.querySelectorAll("[data-wipol]").forEach(b => b.onclick = () => { if (wiCtxLocked()) return toast(LOCK_BANK); w.pol = +b.dataset.wipol; w.preset = null; render(); });
   const rs = h.querySelector("#btnWiReset");
   if (rs) rs.onclick = () => { const k = wiInit2(true); k.dp = w.dp; k.src = w.src; render(); };
   const cr = h.querySelector("#btnCeoReset");
@@ -2071,9 +2153,14 @@ function tzRange(c, k) {
   return { lo: Math.min(c[k], tg[k]), hi: Math.max(c[k], tg[k]) };
 }
 function tzState(c) {
-  const k = teaserKey(c), r = tzRange(c, k);
-  if (!S.tz || S.tz.t !== c.t || S.tz.k !== k) S.tz = { t: c.t, k, v: c[k] };
-  S.tz.v = clamp(S.tz.v, r.lo, r.hi);
+  const k = teaserKey(c), r = tzRange(c, k), b = wiBase(c);
+  /* แก้ไขครั้งที่ 2.3 — ทดลองเป็น "จำนวนกรรมการหญิง (คน)" ในช่วงจากค่าจริงถึงค่าที่ดีที่สุดในอุตสาหกรรม */
+  let lo = Math.min(b.nf, Math.round(r.lo * b.n)), hi = Math.max(b.nf, Math.round(r.hi * b.n));
+  if (r.hi > c.fem + 1e-9 && hi === b.nf && b.nf < b.n) hi = b.nf + 1;
+  if (!S.tz || S.tz.t !== c.t || S.tz.k !== k) S.tz = { t: c.t, k, nf: b.nf };
+  S.tz.nf = clamp(S.tz.nf ?? b.nf, lo, hi);
+  Object.assign(S.tz, { lo, hi, n: b.n, b0: b.nf, assumed: b.assumed });
+  S.tz.v = S.tz.nf === b.nf ? c.fem : S.tz.nf / b.n;
   return S.tz;
 }
 const tzProfile = (c, k, v) => Object.assign(profOf(c), { [k]: v });
@@ -2114,15 +2201,13 @@ function studioTeaser(c) {
     "This is not a mock-up. The slider runs the same moderation equation Pro users run — only CEO language is pinned to this firm's real value. Figures are formula-based associations, not predictions.",
     "นี่ไม่ใช่ภาพจำลอง ตัวเลื่อนนี้คิดด้วยสมการ moderation ตัวเดียวกับที่ผู้ใช้ Pro ใช้ — ต่างกันแค่ภาษา CEO ถูกตรึงไว้ที่ค่าจริงของบริษัท · ตัวเลขเป็นความสัมพันธ์ตามสูตร ไม่ใช่การพยากรณ์")}</p>
 
-        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin:14px 0 4px">
-          <span>${esc(lab)}</span>
-          <span class="num"><b>${ctrl.fmt(z.v)}</b>
-            <span style="color:var(--ink-3);font-size:10.5px">${T("actual", "ค่าจริง")} ${ctrl.fmt(c[k])}</span></span></div>
-        <input type="range" id="tzSl" min="${rg.lo}" max="${rg.hi}" step="${ctrl.step}" value="${z.v}"
-          style="width:100%;accent-color:var(--brand)">
+        <div class="mv-steprow" style="margin-top:14px"><div><b>จำนวนกรรมการหญิง (คน)</b>
+            <div class="mv-sub">สัดส่วนที่เข้าสูตร <b>${ctrl.fmt(z.v)}</b> · ${T("actual", "ค่าจริง")} ${ctrl.fmt(c[k])} (≈ ${z.b0} คน จาก ${z.n}${z.assumed ? " · ขนาดบอร์ดสมมติ " + BS_DEFAULT + " คน" : ""})</div></div>
+          ${mvStep("tz", z.nf, z.lo, z.hi, "จำนวนกรรมการหญิง")}</div>
         <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3);margin-top:3px">
-          <span>${ctrl.fmt(rg.lo)}${rg.lo === c[k] ? " · " + T("this firm today", "ค่าจริงวันนี้") : ""}</span>
-          <span>${ctrl.fmt(rg.hi)}${rg.hi !== c[k] ? " · " + T("best seen in this industry", "ดีที่สุดที่พบในอุตสาหกรรมนี้") : ""}</span></div>
+          <span>${z.lo} คน${z.lo === z.b0 ? " · " + T("this firm today", "ค่าจริงวันนี้") : ""}</span>
+          <span>${z.hi} คน${z.hi !== z.b0 ? " · " + T("best seen in this industry", "ใกล้ค่าที่ดีที่สุดที่พบในอุตสาหกรรมนี้") : ""}</span></div>
+        <div class="mv-sub" style="margin-top:6px">Quartile ในอุตสาหกรรม (จำลอง): <b id="mvTzQ">${esc(indQuart(c.promo, amp1, c.ind).lab)}</b> ในกลุ่ม${esc(IND[c.ind] || "")} · ปัจจุบัน ${esc(indQuart(c.promo, c.amp, c.ind).lab)}</div>
         <div style="font-size:10.8px;color:var(--ink-3);margin-top:6px">${esc(critMassLine(c))}</div>
 
         <div class="grid g4 tight" style="gap:10px;margin:15px 0 12px">
@@ -2203,8 +2288,8 @@ function studioTeaser(c) {
   </div>`;
 }
 function wireTeaser(h) {
-  const c = cur(), z = tzState(c), sl = h.querySelector("#tzSl");
-  if (sl) sl.oninput = () => { z.v = +sl.value; render(); };
+  const c = cur(), z = tzState(c);
+  h.querySelectorAll('[data-mvstep="tz"]').forEach(b => b.onclick = () => { z.nf = clamp(z.nf + +b.dataset.d, z.lo, z.hi); tzState(c); render(); });
 }
 
 viewStudio = function () {
@@ -2219,11 +2304,29 @@ VIEWS.studio = viewStudio;
 wireStudio = function (h) { return isUnlocked("studio") ? wireStudioPro(h) : wireTeaser(h); };
 
 /* ---------------------------------------------------------------- เทียบคู่แข่งข้ามอุตสาหกรรม (F5) */
+/* แก้ไขครั้งที่ 2.3 — จำคู่เทียบ 3 รายที่ผู้ใช้เลือกไว้ต่อบริษัท (ค่าเริ่มต้น = อุตสาหกรรมเดียวกันตามการจัดกลุ่มของ SET)
+   ใช้ร่วมกับ Strategy Grid โหมด "เทียบคู่แข่ง 3 ราย" */
+const PEER_KEY = "ois_peers_v1";
+S.peerMap = (() => { try { return JSON.parse(localStorage.getItem(PEER_KEY) || "{}") || {}; } catch (e) { return {}; } })();
+function peersFor(c) {
+  const ok = t => byT[t] && t !== c.t && (tierRank() >= 2 || byT[t].ind === c.ind);
+  let p = (S.peers || []).filter(ok);
+  if (!p.length) p = (S.peerMap[c.t] || []).filter(ok);
+  if (!p.length) p = autoPeers(c).map(x => x.t);
+  return [...new Set(p)].slice(0, 3);
+}
+function rememberPeers(t) {
+  t = t || S.t;
+  if (!S.peers || !S.peers.length) return;
+  S.peerMap[t] = S.peers.slice(0, 3);
+  try { localStorage.setItem(PEER_KEY, JSON.stringify(S.peerMap)); } catch (e) { }
+}
 const _viewPeer = viewPeer, _wirePeer = wirePeer;
 viewPeer = function () {
   const c = cur();
   if (tierRank() < 2 && S.peerAll) { S.peerAll = false; S.peers = []; }      // ข้ามอุตสาหกรรม = สิทธิ์ Pro Max
-  if (!S.peers.length) S.peers = autoPeers(c).map(x => x.t);
+  if (!S.peers.length) S.peers = peersFor(c);
+  rememberPeers(c.t);
   let h = _viewPeer();
   const tog = tierRank() >= 2
     ? `<button class="btn ${S.peerAll ? "p" : "g"}" id="btnPeerAll" style="font-size:12px;padding:6px 12px" title="เลือกบริษัทจากทุกอุตสาหกรรม / ข้ามประเภทธุรกิจ">${S.peerAll ? "✓ " : ""}ข้ามอุตสาหกรรม</button>`
@@ -2284,6 +2387,11 @@ render = function () {
   wireActions(host);
   (WIRES2[S.view] || (() => { }))(host);
   wireInvestCommon(host);
+  host.querySelectorAll("[data-mvgo]").forEach(b => b.onclick = () => {
+    const v = b.dataset.mvgo;
+    if (typeof VIEWS[v] === "function" && $("#v-" + v)) go(v);
+    else toast("หน้านี้ยังไม่พร้อมในไฟล์ฉบับนี้");
+  });
   host.querySelectorAll("[data-pro]").forEach(b => b.onclick = () => {
     const c = cur(), z = S.tz;                       // ยกค่าที่ผู้ใช้ลองเลื่อนไว้ไปตั้งต้นใน Studio ตัวเต็ม
     goPro();
@@ -2312,7 +2420,7 @@ render = function () {
   });
   host.querySelectorAll("[data-rmrep]").forEach(b => b.onclick = () => { S.report.splice(+b.dataset.rmrep, 1); save(); render(); });
   const rc = host.querySelector("#btnRepClear");
-  if (rc) rc.onclick = () => { if (!confirm(T("Clear every item from the report?", "ล้างรายการในรายงานทั้งหมด?"))) return; S.report = []; save(); render(); };
+  if (rc) rc.onclick = () => confirm2(rc, () => { S.report = []; save(); render(); }, T("Click again to clear the report", "กดอีกครั้งเพื่อล้างรายการในรายงานทั้งหมด"));
   syncChrome();
   const fr = $("#fRemark"); if (fr) { const rm = validRemark(); fr.textContent = rm.l; fr.style.color = rm.k === "ok" ? "var(--ok)" : "var(--warn)"; }
 };

@@ -209,7 +209,8 @@ function whatIfReport(c, w) {
   const sim = rpScen(c, w.fem, w.dp, w.fam, w.pol);
   const ctxMoved = Math.abs((w.fam ?? c.fam) - c.fam) > 1e-9 || (w.pol ?? c.pol) !== c.pol;
   const simEv = [...(Math.abs(w.fem - c.fem) > 1e-9 ? RP_EV_FEM : []), ...(w.dp !== c.dp ? RP_EV_CEO : [])];
-  const simAs = [Math.abs(w.fem - c.fem) > 1e-9 ? `สัดส่วนกรรมการหญิง ${pct1(w.fem)} (ค่าจริง ${pct1(c.fem)})` : "สัดส่วนกรรมการหญิงคงค่าจริง",
+  const simAs = [...(w.n !== undefined ? [`องค์ประกอบแบบจำนวนคน: กรรมการ ${w.n} คน · หญิง ${w.nf} คน · ครอบครัว ${w.nfam} คน · political ties ${w.pol ? "เข้าเกณฑ์" : "ไม่เข้าเกณฑ์"}${typeof indQuart === "function" ? ` → Quartile ในอุตสาหกรรม ${indQuart(sim.promo ?? (w.dp === c.dp ? c.promo : promoAtPct(w.dp)), ampOf(w.fam, w.pol, w.fem), c.ind).lab}` : ""}`] : []),
+    Math.abs(w.fem - c.fem) > 1e-9 ? `สัดส่วนกรรมการหญิง ${pct1(w.fem)} (ค่าจริง ${pct1(c.fem)})` : "สัดส่วนกรรมการหญิงคงค่าจริง",
     w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง",
     ...(ctxMoved ? [`ตัวแปรบริบทถูกขยับ: กรรมการครอบครัว ${pct1(w.fam)} (ค่าจริง ${pct1(c.fam)}) · political ties ${w.pol} (ค่าจริง ${c.pol}) — ผลจากตัวแปรบริบท ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย`] : [])];
   RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: ctxMoved ? "ค่าที่ตั้งไว้บนหน้านี้ · ผลจากตัวแปรบริบท — ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย" : "ค่าที่ตั้งไว้บนหน้านี้", ctx: ctxMoved, ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];

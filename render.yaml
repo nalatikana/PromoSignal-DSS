@@ -1,26 +1,48 @@
-# Render Blueprint — OpenInnoScore™ เซิร์ฟเวอร์ส่วนตัว
+# Render Blueprint — OpenInnoScore™ เซิร์ฟเวอร์ส่วนตัว (MVP1: Prototype-SaaS สำหรับผู้ทดสอบ 40 คน)
 # วางไฟล์นี้ที่ "รากของ repo" PromoSignal-DSS (Render อ่าน render.yaml จากรากเท่านั้น)
 # ถ้าโฟลเดอร์ boardsignal/ ถูกแยกออกมาเป็น repo ของตัวเอง ให้ลบบรรทัด rootDir ออก
 services:
   - type: web
     name: openinnoscore
     runtime: python
-    plan: starter            # free ใช้ได้แต่หลับหลังไม่มีคนใช้ 15 นาที (เปิดครั้งแรกรอ ~1 นาที)
+    plan: starter            # ต้องเป็นแผนเสียเงิน — แผน free ต่อ persistent disk ไม่ได้ (ข้อมูลผู้ทดสอบจะหายทุกครั้งที่ deploy)
     region: singapore
     rootDir: boardsignal
     buildCommand: pip install -r server/requirements.txt && python build_v2.py --server
     startCommand: uvicorn server.app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
     healthCheckPath: /api/health
     autoDeploy: true
+    disk:                    # ฐานข้อมูล SQLite (ผู้ใช้ / ผลแบบสอบถาม / audit log) — Render snapshot ให้วันละครั้ง
+      name: ois-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
-      - key: APP_PASSWORD
-        sync: false          # Render จะถามค่าตอนสร้าง Blueprint — ห้ามเขียนรหัสลงไฟล์นี้
-      - key: APP_USERS
-        sync: false          # ไม่บังคับ: "ชื่อ1:รหัส1,ชื่อ2:รหัส2"
+      - key: DB_PATH
+        value: /var/data/ois.db
       - key: SECRET_KEY
         generateValue: true
+      # ---- การเข้าสู่ระบบ (ต้องมีอย่างน้อยหนึ่งแบบ: Google หรือรหัสผ่าน)
+      - key: GOOGLE_CLIENT_ID
+        sync: false          # จาก Google Cloud Console → Credentials → OAuth client (Web application)
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: PUBLIC_URL
+        sync: false          # เช่น https://openinnoscore.onrender.com (ไม่มี / ท้าย) — ใช้สร้าง redirect URI ของ Google
+      - key: ALLOWED_EMAILS
+        sync: false          # อีเมลผู้ทดสอบ หรือ @โดเมน คั่นด้วย , (หรือตั้ง ALLOW_ANY_GOOGLE=1)
+      - key: ADMIN_EMAILS
+        sync: false          # อีเมล Google ของผู้ดูแล (ส่งออกผล / ดูสรุป)
+      - key: APP_PASSWORD
+        sync: false          # รหัสผ่านสำรอง/ผู้ดูแล — ห้ามเขียนรหัสลงไฟล์นี้ (เว้นว่างได้ถ้าใช้ Google)
+      - key: APP_USERS
+        sync: false          # ไม่บังคับ: "ชื่อ1:รหัส1,ชื่อ2:รหัส2"
+      - key: ADMIN_USER
+        sync: false          # ชื่อบัญชีรหัสผ่านที่เป็นผู้ดูแล (เช่น owner)
+      # ---- AI agent (MCP / GPT Action) และผู้ให้บริการ AI
+      - key: API_TOKENS
+        sync: false          # token สุ่มยาว ≥ 16 ตัวอักษร คั่นด้วย , (เช่น หนึ่งตัวต่อ Claude หนึ่งตัวต่อ GPT)
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: OPENAI_API_KEY
@@ -28,4 +50,7 @@ services:
       - key: OCR_PROVIDER
         sync: false
       - key: OCR_API_KEY
+        sync: false
+      # ---- ไม่บังคับ: PostgreSQL แทน SQLite (ต้องเปิด psycopg ใน server/requirements.txt ด้วย)
+      - key: DATABASE_URL
         sync: false

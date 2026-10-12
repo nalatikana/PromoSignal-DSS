@@ -1,0 +1,212 @@
+# OpenInnoScore Output API — สำหรับ Custom GPT (Actions) · สร้างจาก server/public_api.py ด้วย gen_openapi.py
+# แก้ servers.url เป็น URL ของบริการบน Render · Authentication ใน GPT Builder: API Key → Bearer
+openapi: 3.1.0
+info:
+  title: OpenInnoScore Output API
+  version: 1.0.0
+  description: ผลลัพธ์ที่คำนวณแล้วของ OpenInnoScore (Signal B) สำหรับ AI agent — ไม่มีสูตร สัมประสิทธิ์ หรือข้อมูลรายแถวของฐานอ้างอิง
+servers:
+- url: https://YOUR-SERVICE.onrender.com
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+  schemas:
+    CompanyRef:
+      type: object
+      properties:
+        ticker:
+          type: string
+        name:
+          type: string
+        industry:
+          type: string
+        industry_id:
+          type: integer
+        fy:
+          type: integer
+    Company:
+      type: object
+      properties:
+        ticker:
+          type: string
+        name:
+          type: string
+        industry:
+          type: string
+        industry_id:
+          type: integer
+        fy:
+          type: integer
+        ois:
+          type:
+          - number
+          - 'null'
+          description: OpenInnoScore 0–100 (เปอร์เซ็นไทล์เทียบ REF-928) · null เมื่อปีบัญชี FAIL
+        ois_industry:
+          type:
+          - number
+          - 'null'
+        tier:
+          type:
+          - integer
+          - 'null'
+          description: 1 (บนสุด)–4 · null เมื่อนอกกลุ่มอ้างอิงหรือปี FAIL
+        tier_uncertain:
+          type: boolean
+        band90:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+        quadrant:
+          type: string
+          enum:
+          - A
+          - B
+          - C
+          - D
+        quadrant_name:
+          type: string
+        zone:
+          type: string
+        zone_th:
+          type: string
+        regime:
+          type:
+          - string
+          - 'null'
+          enum:
+          - PASS
+          - CAUTION
+          - FAIL
+          - null
+        flag_oi:
+          type: boolean
+        status_message:
+          type: string
+        chips:
+          type: array
+          items:
+            type: object
+        in_domain:
+          type: boolean
+        weak_industry:
+          type: boolean
+        withheld:
+          type: boolean
+        disclaimer:
+          type: string
+    BoardQuestions:
+      type: object
+      properties:
+        ticker:
+          type: string
+        usecase:
+          type: string
+        quadrant:
+          type: string
+        heading:
+          type: string
+        what_data_shows:
+          type: string
+        what_cannot_be_concluded:
+          type: string
+        questions:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+        evidence_to_check:
+          type: array
+          items:
+            type: string
+        ask:
+          type: string
+        status_message:
+          type: string
+        disclaimer:
+          type: string
+security:
+- bearer: []
+paths:
+  /api/v1/companies:
+    get:
+      operationId: listCompanies
+      summary: รายชื่อบริษัทในฐาน (ผลลัพธ์เท่านั้น)
+      parameters:
+      - name: industry
+        in: query
+        required: false
+        schema:
+          type: string
+        description: รหัสอุตสาหกรรม 1–7 หรือชื่อภาษาไทย
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  companies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompanyRef'
+                  industries:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          description: ต้องมี token
+  /api/v1/companies/{ticker}:
+    get:
+      operationId: getCompanySignal
+      summary: 'สัญญาณ OpenInnoScore ของบริษัท: คะแนน tier ช่วง 90% quadrant สถานะ และป้ายเตือน'
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '404':
+          description: ไม่พบบริษัท
+  /api/v1/companies/{ticker}/board-questions:
+    get:
+      operationId: getBoardQuestions
+      summary: คำถามหารือ 3 ข้อของคณะกรรมการตาม quadrant และ use case
+      parameters:
+      - name: ticker
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: usecase
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - board
+          - credit
+          - search
+          - investor
+          default: board
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardQuestions'
+        '404':
+          description: ไม่พบบริษัท

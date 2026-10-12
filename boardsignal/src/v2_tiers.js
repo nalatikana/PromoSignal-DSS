@@ -31,7 +31,7 @@ const PERM = [
   ["รายงานวินิจฉัยบริษัท", "ฟรี 1 บริษัทแรก", "บริษัทที่ 2 ขึ้นไป · 1 เครดิต/บริษัท", "ฉบับเต็มไม่จำกัด"],
   ["Peer Benchmark", "✕", "1 vs 3 ราย ในอุตสาหกรรมเดียวกัน · 1 เครดิต", "ข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ"],
   ["What-if Studio", "✕ (ทดลอง 1 ตัวแปรเป็นตัวอย่าง)", "บอร์ด 3 ตัวแปร + ตรวจภาษา CEO · 1 เครดิต", "+ ฉากทัศน์ขาลง (Downside) · รายไตรมาส: เฟสถัดไป"],
-  ["ตรวจภาษา CEO", "พิมพ์/วางข้อความเอง ≥ 2,000 คำ · แบบสอบถาม RFQ (รอแบบฟอร์ม)", "อัปโหลด PDF/TXT สแกนคำอัตโนมัติ", "+ ดึงรายงานประจำปีอัตโนมัติ (เฟสถัดไป)"],
+  ["ตรวจภาษา CEO", "พิมพ์/วางข้อความเอง ≥ 2,000 คำ · แบบประเมิน RFQ (แบบวัดแยก ไม่เข้าคะแนน) · Dictionary ของผู้ใช้", "อัปโหลด PDF/TXT สแกนคำอัตโนมัติ", "+ ดึงรายงานประจำปีอัตโนมัติ (เฟสถัดไป)"],
   ["ภาพรวมอุตสาหกรรม", "✕", "Top 5 ในกลุ่มตนเอง (ทั้งกลุ่ม + CSV ปลดได้ 5 เครดิต/กลุ่ม)", "ทั้งอุตสาหกรรม + ส่งออก CSV (รวมใน Subscription)"],
   ["Agentic AI · ร่าง 56-1", "✕", "ร่างรายงานการกำกับดูแลนวัตกรรมแนบ 56-1 + Template", "+ วิเคราะห์เชิงลึก · AI Strategic Advice · ข้อสั่งการ/Compliance"],
   ["Email Approval Workflow", "✕", "✕", "ส่งขออนุมัติผู้บริหาร (จำลอง · อีเมลจริงต้องใช้เซิร์ฟเวอร์)"],
@@ -293,7 +293,18 @@ VIEWS.billing = viewBillingTr;
 
 /* ---------------------------------------------------------------- 7 · ร่าง 56-1 · Template และการอนุมัติ */
 const T561_KEY = "ois_t561_v1";
-const T561_PH = ["ชื่อบริษัท", "ปีบัญชี", "กระบวนการประเมิน", "ประเด็นพัฒนา", "การดำเนินการที่เสร็จและมีมติ", "ผลประเมิน BOD"];
+const T561_PH = ["ชื่อบริษัท", "ปีบัญชี", "กระบวนการประเมิน", "ประเด็นพัฒนา", "การดำเนินการที่เสร็จและมีมติ", "ผลประเมิน BOD", "ผล RFQ"];
+/** ข้อความสรุปจากหน้าแบบประเมิน (ไฟล์ v2_assess.js) — รองรับทั้ง string และ { text | summary } · ไม่มีฟังก์ชัน/ไม่มีผล → "" */
+function mvSummaryText(fn, ...args) {
+  try {
+    if (typeof window[fn] !== "function") return "";
+    const r = window[fn](...args);
+    if (!r) return "";
+    if (typeof r === "string") return r.trim();
+    if (typeof r === "object") return String(r.text || r.summary || "").trim();
+  } catch (e) { }
+  return "";
+}
 const T561_DEFAULT = () => ({ id: "default", name: "แบบมาตรฐาน · 56-1 ส่วนที่ 2 ข้อ 7–8", secs: [
   { h: "ส่วนที่ 2 ข้อ 7 · โครงสร้างการกำกับดูแลกิจการและข้อมูลสำคัญเกี่ยวกับคณะกรรมการ — การประเมินผลการปฏิบัติงานของคณะกรรมการด้านการกำกับดูแลนวัตกรรม",
     b: "ในปีบัญชี {{ปีบัญชี}} คณะกรรมการ{{ชื่อบริษัท}}ได้ประเมินผลการปฏิบัติงานของคณะกรรมการในระดับคณะ เพิ่มเติมในประเด็นการกำกับดูแลนวัตกรรมแบบเปิด โดยมีกระบวนการดังนี้\n{{กระบวนการประเมิน}}\n\n{{ผลประเมิน BOD}}" },
@@ -301,9 +312,10 @@ const T561_DEFAULT = () => ({ id: "default", name: "แบบมาตรฐา�
     b: "ประเด็นพัฒนาที่คณะกรรมการกำหนดจากการประเมิน ได้แก่\n{{ประเด็นพัฒนา}}\n\nการดำเนินการที่แล้วเสร็จและผ่านมติของคณะกรรมการในรอบปี\n{{การดำเนินการที่เสร็จและมีมติ}}" },
 ] });
 const T561 = (() => {
-  const d = { tpl: [T561_DEFAULT()], cur: "default", ap: {} };
+  const d = { tpl: [T561_DEFAULT()], cur: "default", ap: {}, sd: {} };
   try { const o = JSON.parse(localStorage.getItem(T561_KEY) || "null");
-    if (o && Array.isArray(o.tpl) && o.tpl.length) { d.tpl = o.tpl; d.cur = o.cur || o.tpl[0].id; d.ap = o.ap || {}; } } catch (e) { }
+    if (o && Array.isArray(o.tpl) && o.tpl.length) { d.tpl = o.tpl; d.cur = o.cur || o.tpl[0].id; d.ap = o.ap || {}; }
+    if (o && o.sd && typeof o.sd === "object") d.sd = o.sd; } catch (e) { }
   if (!d.tpl.some(t => t.id === "default")) d.tpl.unshift(T561_DEFAULT());
   return d;
 })();
@@ -341,10 +353,11 @@ function t561Values(c) {
     "ประเด็นพัฒนา": isu.length ? [...new Set(isu)].map(x => "- " + x).join("\n") : "[ยังไม่มีประเด็นพัฒนาที่ผ่านการหารือ]",
     "การดำเนินการที่เสร็จและมีมติ": done.length ? done.map((r, i) => `${i + 1}. ${r.issue} — การดำเนินการตามมติ: ${r.dec}`).join("\n")
       : "[ยังไม่มีรายการที่ดำเนินการแล้วเสร็จและมีมติ — ส่วนนี้แสดงเฉพาะการดำเนินการที่เกิดขึ้นจริงและผ่านการอนุมัติ]",
-    "ผลประเมิน BOD": bod.done.length
+    "ผล RFQ": mvSummaryText("rfqSummary", c.t) || "[ยังไม่มีผลแบบประเมิน RFQ — ทำได้ที่หน้า RFQ · เป็นแบบวัดตนเองของ CEO แยกจากคะแนน]",
+    "ผลประเมิน BOD": mvSummaryText("bodSetSummary", c.t, c.fy || FY_SHOWN) || (bod.done.length
       ? `ผลการประเมินตนเองระดับคณะ: ประเด็นที่คณะกรรมการเห็นว่ามีการดำเนินการเป็นส่วนใหญ่หรืออย่างเป็นระบบแล้ว ได้แก่ ${bod.hi.map(i => i.id).join(", ") || "—"}`
         + ` · ประเด็นที่กำหนดเป็นแนวทางพัฒนาในปีถัดไป ได้แก่ ${bod.lo.map(i => i.id).join(", ") || "—"} · ผลเป็นภาพรวมระดับคณะ ไม่มีการประเมินหรือให้คะแนนกรรมการรายบุคคล`
-      : "[ยังไม่มีผลประเมินตนเอง OI-1…OI-6 — ทำได้ที่หน้า BOD Self-Assessment]",
+      : "[ยังไม่มีผลประเมินตนเองของคณะกรรมการ — ทำได้ที่หน้าแบบประเมินตนเองของคณะกรรมการ (SET) หรือ BOD Self-Assessment OI-1…6]"),
   };
 }
 /** กฎก่อนส่งออก — ไม่มีชื่อบริษัทอื่น (ใช้ตัวแทนชื่อ) · ไม่อ้างคะแนนแบบจำลองเป็นหลักฐานประสิทธิผลของบอร์ด */
@@ -383,6 +396,105 @@ function t561Mail(c, a) {
       <span class="tr-mail-btns"><span>✓ อนุมัติ</span><span>↺ ส่งกลับแก้</span></span>
       <span class="gx-sm">กดได้จากอุปกรณ์ใดก็ได้ (Anydevice Approval) — ในต้นแบบจำลองด้วยปุ่มด้านล่าง</span></div></div>`;
 }
+/* ---------------------------------------------------------------- 7ข · Structured Data สำหรับกรอกใน SETLink (แก้ไขครั้งที่ 2.3)
+   ขั้นตอนของ SET: กรอก Structured Data → อัปโหลดรูปเล่ม → ตรวจสอบและอนุมัติ → เผยแพร่
+   ระบบนี้ช่วยเตรียมเฉพาะฟิลด์ของ 56-1 ส่วนที่ 2 ข้อ 7 และข้อ 8 · ไม่ส่งข้อมูลให้ SET · รูปแบบฟิลด์เป็นสมมติฐาน */
+const SD_NOTE = "รูปแบบฟิลด์สมมติ — ตรวจกับแบบฟอร์ม Structured Data ของ SETLink ก่อนใช้จริง";
+const SD_METHODS = ["", "ประเมินทั้งคณะ", "ประเมินรายบุคคล", "ประเมินทั้งคณะและรายบุคคล", "ประเมินทั้งคณะ + คณะกรรมการชุดย่อย", "ประเมินทั้งคณะ + รายบุคคล + คณะกรรมการชุดย่อย"];
+const SD_COMMITTEES = [["audit", "คณะกรรมการตรวจสอบ"], ["nomrem", "คณะกรรมการสรรหาและพิจารณาค่าตอบแทน"], ["cgrisk", "คณะกรรมการบรรษัทภิบาล / บริหารความเสี่ยง"]];
+function sdFields(c) {
+  const bs = c.bsize, done = typeof fuDoneItems === "function" ? fuDoneItems(c.t) : [];
+  const bodTxt = mvSummaryText("bodSetSummary", c.t, c.fy || FY_SHOWN), bod = t561Bod();
+  const evalDone = !!bodTxt || bod.done.length > 0;
+  const F = [
+    { sec: 7, k: "board_total", l: "จำนวนกรรมการทั้งหมด (คน)", t: "int", v: bs || "", src: bs ? "Zone A" : "" },
+    { sec: 7, k: "board_independent", l: "จำนวนกรรมการอิสระ (คน)", t: "int", v: "", src: "" },
+    { sec: 7, k: "board_executive", l: "จำนวนกรรมการที่เป็นผู้บริหาร (คน)", t: "int", v: "", src: "" },
+    { sec: 7, k: "board_female", l: "จำนวนกรรมการหญิง (คน)", t: "int", v: bs ? Math.round(c.fem * bs) : "", src: bs ? "Zone A (สัดส่วน × จำนวนกรรมการ)" : "" },
+    { sec: 7, k: "board_family", l: "จำนวนกรรมการที่เป็นครอบครัวผู้ถือหุ้นใหญ่ (คน)", t: "int", v: bs ? Math.round(c.fam * bs) : "", src: bs ? "Zone A (สัดส่วน × จำนวนกรรมการ)" : "" },
+    { sec: 7, k: "avg_tenure_years", l: "อายุการดำรงตำแหน่งเฉลี่ยของกรรมการ (ปี)", t: "num", v: isFinite(c.ten) ? Math.round(c.ten * 10) / 10 : "", src: "แผงข้อมูล / Zone A" },
+    ...SD_COMMITTEES.flatMap(([k, l]) => [
+      { sec: 7, k: `cmt_${k}_total`, l: `${l} · จำนวนกรรมการ`, t: "int", v: "", src: "", cmt: k },
+      { sec: 7, k: `cmt_${k}_independent`, l: `${l} · กรรมการอิสระ`, t: "int", v: "", src: "", cmt: k }]),
+    { sec: 7, k: "board_self_assessment_done", l: "มีการประเมินตนเองของคณะกรรมการในปีนี้", t: "yn", v: evalDone ? "Y" : "", src: evalDone ? "หน้าแบบประเมินตนเอง" : "" },
+    { sec: 7, k: "board_self_assessment_method", l: "รูปแบบการประเมิน", t: "sel", v: evalDone ? "ประเมินทั้งคณะ" : "", src: evalDone ? "หน้าแบบประเมินตนเอง" : "" },
+    { sec: 8, k: "board_meetings", l: "จำนวนครั้งการประชุมคณะกรรมการในปี", t: "int", v: "", src: "" },
+    { sec: 8, k: "board_attendance_pct", l: "อัตราการเข้าประชุมเฉลี่ย (%)", t: "num", v: "", src: "" },
+    { sec: 8, k: "dev_actions_completed", l: "จำนวนการดำเนินการพัฒนาที่แล้วเสร็จและมีมติ", t: "int", v: done.length || "", src: done.length ? "หน้า Follow-up" : "" },
+    { sec: 8, k: "dev_actions_list", l: "รายการการดำเนินการที่แล้วเสร็จและมีมติ", t: "text", v: done.map((r, i) => `${i + 1}. ${r.issue} — ${r.dec}`).join("\n"), src: done.length ? "หน้า Follow-up" : "" },
+    { sec: 8, k: "bod_evaluation_summary", l: "สรุปผลการประเมินคณะกรรมการ (ระดับคณะ)", t: "text", v: t561Values(c)["ผลประเมิน BOD"].replace(/^\[.*\]$/, ""), src: evalDone ? "หน้าแบบประเมินตนเอง" : "" },
+  ];
+  const o = (T561.sd || {})[c.t] || {};
+  F.forEach(f => { if (o[f.k] !== undefined) { f.v = o[f.k]; f.ed = true; } });
+  return F;
+}
+const sdFilled = F => F.filter(f => String(f.v ?? "").trim() !== "").length;
+function sdJson(c, F) {
+  const val = f => f.t === "int" || f.t === "num" ? (f.v === "" ? null : +f.v) : f.t === "yn" ? (f.v === "Y" ? true : f.v === "N" ? false : null) : (f.v || null);
+  const pick = sec => Object.fromEntries(F.filter(f => f.sec === sec && !f.cmt).map(f => [f.k, val(f)]));
+  return { schema: "OIS-SETLink-StructuredData-draft-0.1", note: SD_NOTE,
+    disclaimer: "ระบบนี้ไม่ส่งข้อมูลให้ SET — ผู้ใช้กรอกใน SETLink เอง", company: { ticker: c.t, name: c.n }, fiscal_year: c.fy || FY_SHOWN,
+    part2_item7_board_structure: Object.assign(pick(7), { committees: SD_COMMITTEES.map(([k, l]) => ({ key: k, name: l,
+      members: val(F.find(f => f.k === `cmt_${k}_total`)), independent: val(F.find(f => f.k === `cmt_${k}_independent`)) })) }),
+    part2_item8_governance_performance: pick(8), generated_at: new Date().toISOString() };
+}
+function sdCsv(c, F) {
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  return [["section", "field_key", "label_th", "value", "source"].map(q).join(","),
+    ...F.map(f => [`56-1 ส่วนที่ 2 ข้อ ${f.sec}`, f.k, f.l, f.v, f.ed ? "ผู้ใช้แก้" : f.src || ""].map(q).join(","))].join("\n");
+}
+function sdPanel(c) {
+  const F = sdFields(c), n = sdFilled(F);
+  const inp = f => {
+    const id = "sd_" + f.k;
+    if (f.t === "yn") return `<select class="sel" id="${id}" data-sd="${f.k}"><option value=""${!f.v ? " selected" : ""}>— ยังไม่ระบุ —</option>
+      <option value="Y"${f.v === "Y" ? " selected" : ""}>Y · มี</option><option value="N"${f.v === "N" ? " selected" : ""}>N · ไม่มี</option></select>`;
+    if (f.t === "sel") return `<select class="sel" id="${id}" data-sd="${f.k}">${SD_METHODS.map(m => `<option value="${esc(m)}"${m === f.v ? " selected" : ""}>${esc(m || "— ยังไม่ระบุ —")}</option>`).join("")}</select>`;
+    if (f.t === "text") return `<textarea class="inp" id="${id}" data-sd="${f.k}" rows="3">${esc(f.v)}</textarea>`;
+    return `<input class="inp" id="${id}" data-sd="${f.k}" type="number" min="0" step="${f.t === "num" ? "0.1" : "1"}" value="${esc(f.v)}">`;
+  };
+  const row = f => `<div class="mv-sdrow${f.t === "text" ? " wide" : ""}"><label for="sd_${f.k}">${esc(f.l)}</label>${inp(f)}
+    <span class="mv-sdsrc">${f.ed ? `<span class="pill blue">ผู้ใช้แก้</span>` : f.src ? `<span class="pill mute">เติมจาก ${esc(f.src)}</span>` : `<span class="pill warn">ต้องกรอก</span>`}</span></div>`;
+  const sec = k => F.filter(f => f.sec === k);
+  return `<div class="card mv-sd" id="mvSd" style="margin-top:14px">
+    <h3>Structured Data (สำหรับกรอกใน SETLink) <span class="pill ${n === F.length ? "ok" : "warn"}">กรอกแล้ว ${n} / ${F.length} ฟิลด์</span></h3>
+    <div class="note warn" style="margin-bottom:10px"><b>${esc(SD_NOTE)}</b> · ใช้เตรียมข้อมูลก่อนกรอกในระบบ SETLink (ขั้นที่ 1 ของ 56-1 One Report) · ระบบนี้ไม่ส่งข้อมูลให้ SET</div>
+    <div class="grid g2" style="gap:16px;align-items:start">
+      <div><div class="tr-k">ส่วนที่ 2 ข้อ 7 · โครงสร้างการกำกับดูแลกิจการและข้อมูลสำคัญเกี่ยวกับคณะกรรมการ</div>
+        ${sec(7).filter(f => !f.cmt).map(row).join("")}
+        <div class="tr-k" style="margin-top:10px">คณะกรรมการชุดย่อย (ถ้ามี)</div>
+        ${sec(7).filter(f => f.cmt).map(row).join("")}</div>
+      <div><div class="tr-k">ส่วนที่ 2 ข้อ 8 · รายงานผลการดำเนินงานสำคัญด้านการกำกับดูแลกิจการ</div>
+        ${sec(8).map(row).join("")}
+        <p class="gx-sm">ค่าที่เติมให้มาจากข้อมูลในระบบ (Zone A · Follow-up · แบบประเมินตนเอง) — ตรวจกับเอกสารจริงก่อนใช้ · ไม่ใช้คะแนนแบบจำลองเป็นหลักฐานประสิทธิผลของคณะกรรมการ</p></div>
+    </div>
+    <div class="gx-row" style="margin-top:10px"><button class="btn s" id="sdJson">ส่งออก JSON</button><button class="btn s" id="sdCsv">ส่งออก CSV</button>
+      <button class="btn g" id="sdReset">ล้างค่าที่แก้ (กลับไปใช้ค่าที่เติมให้)</button></div>
+  </div>`;
+}
+/** แถบขั้นตอนตาม SETLink — ระบบนี้ทำได้ขั้น 1 (เตรียมข้อมูล) และขั้น 3 (อนุมัติภายในองค์กร) เท่านั้น */
+function setlinkFlow(c) {
+  const F = sdFields(c), n = sdFilled(F), b = t561Build(c), st = t561State(c, b).k, r = tierRank();
+  const steps = [
+    ["กรอก Structured Data", `เตรียมในระบบนี้ · ${n}/${F.length} ฟิลด์`, n === F.length ? "done" : "on", "#mvSd"],
+    ["อัปโหลดรูปเล่ม", "ทำนอกระบบ — อัปโหลดไฟล์ 56-1 ฉบับเต็มใน SETLink", "ext", ""],
+    ["ตรวจสอบและอนุมัติ", r >= 2 ? `ขั้นอนุมัติของระบบนี้ · สถานะ: ${({ draft: "ร่าง", pending: "รออนุมัติ", approved: "อนุมัติแล้ว", returned: "ส่งกลับแก้", changed: "แก้หลังส่ง — ต้องส่งใหม่" })[st] || st}` : "Email Approval เป็นสิทธิ์ Pro Max · Pro ตรวจทานเอง", st === "approved" ? "done" : r >= 2 ? "on" : "ext", ".tr-appr"],
+    ["เผยแพร่", "ทำใน SETLink — ระบบนี้ไม่ส่งข้อมูลให้ SET", "ext", ""],
+  ];
+  return `<ol class="mv-flow" aria-label="ขั้นตอน 56-1 One Report ผ่าน SETLink">${steps.map(([h, p, k, a], i) =>
+    `<li class="${k}"${a ? ` data-sdgo="${a}" tabindex="0" role="button"` : ""}><b>${i + 1}</b><div><i>${esc(h)}</i><span>${esc(p)}</span></div></li>`).join("")}</ol>`;
+}
+function wireSd(h, c) {
+  const set = (k, v) => { T561.sd = T561.sd || {}; (T561.sd[c.t] = T561.sd[c.t] || {})[k] = v; t561Save(); render(); };
+  h.querySelectorAll("[data-sd]").forEach(el => el.onchange = () => set(el.dataset.sd, el.value.trim()));
+  const base = `56-1_StructuredData_ส่วนที่2_ข้อ7-8_${c.t}_${(c.fy || FY_SHOWN) + 543}`;
+  const j = h.querySelector("#sdJson"); if (j) j.onclick = () => t561Dl(base + ".json", JSON.stringify(sdJson(c, sdFields(c)), null, 2), "application/json;charset=utf-8");
+  const v = h.querySelector("#sdCsv"); if (v) v.onclick = () => t561Dl(base + ".csv", sdCsv(c, sdFields(c)), "text/csv;charset=utf-8");
+  const r = h.querySelector("#sdReset"); if (r) r.onclick = () => confirm2(r, () => { if (T561.sd) delete T561.sd[c.t]; t561Save(); render(); }, "กดอีกครั้งเพื่อล้างค่าที่แก้");
+  h.querySelectorAll("[data-sdgo]").forEach(li => { const f = () => { const t = h.querySelector(li.dataset.sdgo); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); };
+    li.onclick = f; li.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } }; });
+}
+
 function viewT561() {
   const r = tierRank(), c = cur();
   const head = pageHead("Agentic AI · 56-1", "ร่าง 56-1 · Template และการอนุมัติ",
@@ -467,7 +579,9 @@ function viewT561() {
         r >= 2 ? `<button class="tr-link" data-goto="${v}"><b>${esc(l)}</b><span>${esc(d)}</span></button>`
           : `<button class="tr-link off" data-setplan="max"><b>🔒 ${esc(l)}</b><span>${esc(d)}</span></button>`).join("")}</div></div>`;
   return head + (typeof reportChain === "function" ? reportChain(4).replace('aria-current="page"', "").replace(" on\"", "\"") : "")
-    + `<div class="tr-t5grid"><div class="stack">${editor}${maxCard}</div><div class="stack">${preview}${approval}${exportCard}</div></div>`;
+    + setlinkFlow(c)
+    + `<div class="tr-t5grid"><div class="stack">${editor}${maxCard}</div><div class="stack">${preview}${approval}${exportCard}</div></div>`
+    + sdPanel(c);
 }
 function t561Dl(name, text, type) {
   const a = document.createElement("a");
@@ -478,6 +592,7 @@ function t561Dl(name, text, type) {
 function wireT561(h) {
   if (typeof wireChain === "function") wireChain(h);
   const c = cur(), tpl = t561Tpl();
+  wireSd(h, c);
   const afterEdit = () => { const a = t561Ap(c.t); t561Save(); render(); return a; };
   const sel = h.querySelector("#t5Tpl"); if (sel) sel.onchange = () => { T561.cur = sel.value; _t561Ai = null; t561Save(); render(); };
   const nm = h.querySelector("#t5Name"); if (nm) nm.onchange = () => { tpl.name = nm.value.trim() || tpl.name; t561Save(); render(); };
@@ -498,12 +613,11 @@ function wireT561(h) {
     const id = "t" + Date.now().toString(36), cp = JSON.parse(JSON.stringify(tpl));
     cp.id = id; cp.name = (tpl.name || "Template") + " (สำเนา)";
     T561.tpl.push(cp); T561.cur = id; t561Save(); toast("บันทึกเป็น Template ใหม่แล้ว"); render(); };
-  const rs = h.querySelector("#t5Reset"); if (rs) rs.onclick = () => {
-    if (!confirm("คืนค่า Template นี้เป็นแบบมาตรฐาน (56-1 ส่วนที่ 2 ข้อ 7–8)?")) return;
-    const d = T561_DEFAULT(); tpl.secs = d.secs; if (tpl.id === "default") tpl.name = d.name; afterEdit(); toast("คืนค่าเริ่มต้นแล้ว"); };
-  const dl = h.querySelector("#t5Del"); if (dl) dl.onclick = () => {
-    if (!confirm(`ลบ Template “${tpl.name}”?`)) return;
-    T561.tpl = T561.tpl.filter(t => t.id !== tpl.id); T561.cur = "default"; t561Save(); render(); };
+  const rs = h.querySelector("#t5Reset"); if (rs) rs.onclick = () => confirm2(rs, () => {
+    const d = T561_DEFAULT(); tpl.secs = d.secs; if (tpl.id === "default") tpl.name = d.name; afterEdit(); toast("คืนค่าเริ่มต้นแล้ว"); },
+    "กดอีกครั้งเพื่อคืนค่าเป็นแบบมาตรฐาน");
+  const dl = h.querySelector("#t5Del"); if (dl) dl.onclick = () => confirm2(dl, () => {
+    T561.tpl = T561.tpl.filter(t => t.id !== tpl.id); T561.cur = "default"; t561Save(); render(); }, `กดอีกครั้งเพื่อลบ “${tpl.name}”`);
   /* การอนุมัติ (Pro Max) */
   const push = (a, act, note) => { a.hist.push({ at: t561Now(), act, role: a.role, note: note || "" }); };
   const sub = h.querySelector("#t5Submit"); if (sub) sub.onclick = () => {
@@ -557,10 +671,12 @@ WIRES2.t561 = function (h) { if (!canSeeCo(S.t) || tierRank() < 1) return; wireT
 
 /* ---------------------------------------------------------------- 8 · คู่มือการใช้งาน (ในหน้าระบบ) */
 const MAN_SECS = [["man-start", "เริ่มต้น"], ["man-plans", "ระดับสิทธิ์และเครดิต"], ["man-flow", "เส้นทางการทำงาน"], ["man-t561", "ร่าง 56-1"],
-  ["man-read", "อ่านผลอย่างไร"], ["man-whatif", "What-if"], ["man-uc", "Use Case"], ["man-rules", "กติกาสำคัญ"], ["man-pilot", "หน้า Pilot"], ["man-faq", "คำถามที่พบบ่อย"]];
+  ["man-read", "อ่านผลอย่างไร"], ["man-whatif", "What-if (จำนวนคน)"], ["man-uc", "Use Case"], ["man-rules", "กติกาสำคัญ"], ["man-pilot", "หน้า Pilot"],
+  ["man-assess", "RFQ · Dictionary · ประเมินตนเองของบอร์ด"], ["man-data", "ชุดข้อมูล · Evidence Pack · Structured Data"], ["man-rcpt", "ใบเสร็จตัวอย่าง"], ["man-faq", "คำถามที่พบบ่อย"]];
 const MAN_HELP = { profile: "man-v-profile", docs: "man-v-docs", fit: "man-v-fit", zonec: "man-v-zonec", matrix: "man-v-matrix", compass: "man-v-compass",
   peer: "man-v-peer", studio: "man-whatif", followup: "man-v-followup", t561: "man-t561", sector: "man-plans", billing: "man-plans", port: "man-flow", ic: "man-flow",
-  arch: "man-rules", valid: "man-read", bod: "man-pilot", outdomain: "man-pilot", directives: "man-pilot", survey: "man-pilot", syslog: "man-pilot", integr: "man-pilot" };
+  arch: "man-rules", valid: "man-read", bod: "man-pilot", rfq: "man-assess", dict: "man-assess", bodset: "man-assess",
+  datasets: "man-data", evidence: "man-data", outdomain: "man-pilot", directives: "man-pilot", survey: "man-pilot", syslog: "man-pilot", integr: "man-pilot" };
 const MAN_CHIPS = [
   ["tier ไม่แน่นอน", "ช่วง 90% ของคะแนนคร่อมมากกว่าหนึ่ง tier — อย่าสรุประดับจากตัวเลขเดียว"],
   ["Caution: ปีนี้ไม่ผ่านเกณฑ์ validity", "ปีบัญชีนั้นตกเกณฑ์อย่างน้อยหนึ่งข้อในตาราง validity — อ่านผลอย่างระมัดระวัง"],
@@ -590,7 +706,7 @@ function viewManual() {
     <nav class="tr-toc" aria-label="สารบัญคู่มือ">${MAN_SECS.map(([id, l], i) => `<button data-mango="${id}">${i + 1}. ${esc(l)}</button>`).join("")}</nav>
     <div class="tr-mbody">
     <section class="card" id="man-start"><h3>1 · เริ่มต้น</h3>
-      <ol class="tr-ol"><li>หน้าเข้าสู่ระบบ: เลือกระดับผู้ใช้ (Free · Pro · Pro Max) เลือก “บริษัทของคุณ” แล้วกดเข้าสู่ระบบด้วย Google (ต้นแบบจำลองการล็อกอิน)</li>
+      <ol class="tr-ol"><li>หน้าเข้าสู่ระบบ: เลือกระดับผู้ใช้ (Free · Pro · Pro Max) เลือก “บริษัทของคุณ” แล้วกดเข้าสู่ระบบ — ไฟล์ HTML ออฟไลน์จำลองการล็อกอิน · ในเวอร์ชันเว็บ (เซิร์ฟเวอร์) ใช้ Google Sign-in จริง</li>
         <li>บริษัทของคุณ = บริษัทที่ดูรายงานวินิจฉัยฉบับเต็มได้ฟรี · Free รับ ${PLAN_TOKENS.free} เครดิตทันที</li>
         <li>แถบบนแสดงระดับและเครดิตคงเหลือ · เปลี่ยนบริษัท/อุตสาหกรรมได้จากตัวเลือกด้านบน · ปุ่ม “เติม” พาไปหน้าเครดิตและแผน</li></ol></section>
     <section class="card" id="man-plans"><h3>2 · ระดับสิทธิ์และเครดิต</h3>
@@ -628,7 +744,9 @@ function viewManual() {
       <div class="tr-k" style="margin-top:10px">ป้าย (chips) บนแถบสถานะ</div>
       <dl class="tr-dl">${MAN_CHIPS.map(([k, d]) => `<dt><span class="chip">${esc(k)}</span></dt><dd>${esc(d)}</dd>`).join("")}</dl></section>
     <section class="card" id="man-whatif"><h3>6 · What-if Studio</h3>
-      <ul class="tr-ol"><li>Free ทดลอง 1 ตัวแปร (สัดส่วนกรรมการหญิง) · Pro ปลดล็อกรายบริษัท 1 เครดิต: บอร์ด 3 ตัวแปร + ตรวจภาษา CEO · Pro Max เพิ่มฉากทัศน์ขาลง</li>
+      <ul class="tr-ol"><li><b>ปรับเป็นจำนวนคน</b> ตามที่ผู้ว่าจ้างกำหนด: จำนวนกรรมการทั้งหมด · จำนวนกรรมการหญิง · จำนวนกรรมการครอบครัว (ปุ่ม − / +) และ political ties แบบติ๊กตามเกณฑ์ (ยศทหาร/ตำรวจ หรือตำแหน่งตามเกณฑ์ PEP ของ ปปง.) — ระบบแปลงเป็นสัดส่วน (จำนวน ÷ ขนาดบอร์ด) แล้วเข้าสูตรเดิม · ถ้าฐานข้อมูลไม่มีจำนวนกรรมการ ระบบตั้งต้นที่ 11 คน (กรอกจำนวนจริงได้ใน Zone A)</li>
+        <li>ผลลัพธ์หลักคือ <b>Quartile ในอุตสาหกรรม</b> (Q1 = บนสุด 25% ของบริษัท-ปีในอุตสาหกรรมเดียวกันของ REF-928) คู่กับ Tier ทั้งฐานและโซน — เป็นการจำลองตำแหน่ง ไม่ใช่การพยากรณ์</li>
+        <li>Free ทดลอง 1 ตัวแปร (จำนวนกรรมการหญิง) · Pro ปลดล็อกรายบริษัท 1 เครดิต: บอร์ดแบบจำนวนคน + ตรวจภาษา CEO · Pro Max เพิ่มฉากทัศน์ขาลง</li>
         <li>กรรมการครอบครัว: ${esc(typeof WARN_FAM !== "undefined" ? WARN_FAM : "")}</li>
         <li>political ties (0/1 เท่านั้น): ${esc(typeof WARN_POL !== "undefined" ? WARN_POL : "")}</li>
         <li>เมื่อขยับสองตัวนี้ ผลจะติดป้าย “${esc(typeof CHIP_CTX !== "undefined" ? CHIP_CTX : "")}” · มุมมองธนาคารล็อกสองตัวนี้ไว้ · อายุงานไม่มีผลต่อคะแนน (δT = 0)</li>
@@ -648,12 +766,29 @@ function viewManual() {
         <li><button class="lnk" data-goto="outdomain">โหมดนอกกลุ่มอ้างอิง (ธนาคาร)</button> — โปรไฟล์เชิงพรรณนาสำหรับบริษัทนอกฐาน</li>
         <li><button class="lnk" data-goto="directives">ข้อสั่งการบอร์ด / Compliance</button> — สิทธิ์ Pro Max (เปิดให้ทดลองใน Pilot)</li>
         <li><button class="lnk" data-goto="survey">แบบสอบถามทดสอบการยอมรับ</button> · <button class="lnk" data-goto="syslog">System log</button> · <button class="lnk" data-goto="integr">การเชื่อมต่อ (Phase ถัดไป)</button></li></ul></section>
-    <section class="card" id="man-faq"><h3>10 · คำถามที่พบบ่อย</h3>
+    <section class="card" id="man-assess"><h3>10 · RFQ · Dictionary ของผู้ใช้ · แบบประเมินตนเองของคณะกรรมการ</h3>
+      <ul class="tr-ol"><li><button class="lnk" data-mango2="rfq">แบบประเมิน CEO Regulatory Focus (RFQ)</button> — แบบวัดตนเอง (self-report) ของ CEO · <b>เป็นแบบวัดแยก ไม่ถูกนำไปใช้ในคะแนน</b> ซึ่งวัดจากภาษาในสารถึงผู้ถือหุ้น · ผลสรุปใช้ในตัวแทน <code>{{ผล RFQ}}</code> ของร่าง 56-1 และใน Evidence Pack ได้</li>
+        <li><button class="lnk" data-mango2="dict">Dictionary ของผู้ใช้</button> — สร้างหรืออัปโหลดรายการคำเองเพื่อสำรวจข้อความ (ขอบเขตข้อ 2.3) · ไม่เปลี่ยนพจนานุกรมและสูตรที่ freeze แล้ว</li>
+        <li><button class="lnk" data-mango2="bodset">แบบประเมินตนเองของคณะกรรมการ (SET)</button> — ผู้ใช้ทั่วไปตอบแบบประเมิน Board Evaluation · ผลระดับคณะเติมลงตัวแทน <code>{{ผลประเมิน BOD}}</code> และช่อง “สรุปผลการประเมินคณะกรรมการ” ของ Structured Data · ไม่ประเมินกรรมการรายบุคคล</li>
+        <li>ทางเข้า: Zone A (การ์ด “ทำแบบประเมิน RFQ” และ “อัปโหลด Dictionary ของคุณเอง”) หรือเมนูด้านซ้าย</li></ul></section>
+    <section class="card" id="man-data"><h3>11 · ชุดข้อมูล · Evidence Pack · Structured Data 56-1</h3>
+      <ul class="tr-ol"><li><button class="lnk" data-mango2="datasets">ชุดข้อมูลและ Data Dictionary</button> — 3 ชุดข้อมูล (REF-928 ที่ freeze · ชุดให้คะแนนบริษัทจดทะเบียน · ข้อมูลที่ผู้ใช้กรอก) พร้อมนิยามตัวแปร DV / IV / MV / CV และหัวข้อที่มาใน 56-1 One Report ·
+          “เพิ่มฟิลด์เอง” เก็บในเครื่อง และ<b>ยังไม่เข้าแบบจำลอง (Phase II)</b> · นำเข้า JSON (รูปแบบ SET Smart Marketplace · One Report Structured Data) ผ่านชั้นแปลงฟิลด์ — โครงร่างสมมติ รอ Data Specification ของ SET</li>
+        <li><button class="lnk" data-mango2="evidence">Evidence Pack</button> — รวมทุกอย่างที่แสดงสำหรับแฟ้มการตัดสินใจหนึ่งบริษัท: ข้อมูลกรณี ภาษา CEO บริบทบอร์ด คะแนนพร้อมช่วง 90% Tier/quadrant แถบสถานะ ป้าย กติกา R1–R8 และที่มาของข้อมูล · พิมพ์ / .md / JSON · สิทธิ์ Pro ขึ้นไป</li>
+        <li>หน้า <button class="lnk" data-mango2="t561">ร่าง 56-1</button> มีแผง “Structured Data (สำหรับกรอกใน SETLink)” สำหรับส่วนที่ 2 ข้อ 7–8 (ส่งออก JSON / CSV) และแถบขั้นตอน SETLink: กรอก Structured Data → อัปโหลดรูปเล่ม (นอกระบบ) → ตรวจสอบและอนุมัติ → เผยแพร่ (ทำใน SETLink — ระบบนี้ไม่ส่งข้อมูลให้ SET) · รูปแบบฟิลด์สมมติ ตรวจกับแบบฟอร์มจริงก่อนใช้</li>
+        <li>หน้า <button class="lnk" data-mango2="valid">Validity</button> แสดงตัวเลขตาม Table 3–5 ของงานวิจัย และ Marginal plot (Moderation Analysis) ของความชันตามสัดส่วนกรรมการหญิง/ครอบครัว</li></ul></section>
+    <section class="card" id="man-rcpt"><h3>12 · การเติมเครดิตและใบเสร็จตัวอย่าง</h3>
+      <ul class="tr-ol"><li>เลือกแพ็กเกจที่หน้า <button class="lnk" data-mango2="billing">เครดิตและแผน</button> → ยืนยันการชำระเงิน (จำลอง) ในหน้า → ระบบเติมเครดิตและออก<b>ใบเสร็จตัวอย่าง</b> (เลขที่ วันที่ แพ็กเกจ ยอดก่อนภาษี VAT 7% ยอดรวม อีเมลผู้ซื้อ)</li>
+        <li>ดูและพิมพ์ใบเสร็จได้จากรายการ “ใบเสร็จตัวอย่าง” · ทุกฉบับมีลายน้ำ <b>“ตัวอย่าง — ไม่ใช่ใบเสร็จรับเงิน/ใบกำกับภาษีจริง”</b> · ระบบชำระเงินจริงเป็นเฟส 2 (Payment API)</li></ul></section>
+    <section class="card" id="man-faq"><h3>13 · คำถามที่พบบ่อย</h3>
       ${MAN_FAQ.map(([q, a]) => `<details class="tr-faq"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</section>
     </div></div>`;
 }
 function wireManual(h) {
   h.querySelectorAll("[data-mango]").forEach(b => b.onclick = () => { const t = h.querySelector("#" + b.dataset.mango); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  /* ลิงก์ไปหน้าที่ลงทะเบียนในไฟล์อื่น — ตรวจตอนคลิก (หน้าอาจยังไม่มีในไฟล์ฉบับนี้) */
+  h.querySelectorAll("[data-mango2]").forEach(b => b.onclick = () => { const v = b.dataset.mango2;
+    if (typeof VIEWS[v] === "function" && $("#v-" + v)) go(v); else toast("หน้านี้ยังไม่พร้อมในไฟล์ฉบับนี้"); });
   if (S._manSec) {
     const id = S._manSec; S._manSec = null;
     setTimeout(() => { const t = h.querySelector("#" + id); if (t) { t.scrollIntoView({ behavior: "smooth", block: "start" }); t.classList.add("tr-flash"); setTimeout(() => t.classList.remove("tr-flash"), 1600); } }, 380);
@@ -724,6 +859,14 @@ buildNav();
   $$("#planPick .planopt").forEach(l => l.onclick = () => { $$("#planPick .planopt").forEach(x => x.classList.remove("on")); l.classList.add("on"); });
   /* ข้อความเดิมบนหน้าเข้าสู่ระบบยังเป็นราคารอบก่อน (token ขั้นต่ำ 3) — ปรับให้ตรงหัวข้อ 5 */
   const g = $("#gate");
+  /* แก้ไขครั้งที่ 2.3 — ไฟล์ออฟไลน์จำลองการล็อกอิน · เวอร์ชันเว็บ (เซิร์ฟเวอร์) ใช้ Google Sign-in จริง */
+  if (g && !OIS_SRV) {
+    const dv = g.querySelector(".divider"); if (dv) dv.textContent = "ไฟล์ออฟไลน์ · จำลองการล็อกอิน";
+    const gb = $("#btnGoogle"); if (gb && !gb.querySelector(".mv-gsim")) gb.insertAdjacentHTML("beforeend", `<span class="mv-gsim">(จำลองในไฟล์ออฟไลน์)</span>`);
+    const nt = [...g.querySelectorAll(".note")].find(n => /Google OAuth/.test(n.textContent));
+    if (nt) nt.innerHTML = `ไฟล์ HTML ออฟไลน์นี้<b>จำลอง</b>การเข้าสู่ระบบด้วย Google · <b>ในเวอร์ชันเว็บ (เซิร์ฟเวอร์) ใช้ Google Sign-in จริง</b> (OAuth 2.0) และเก็บเฉพาะอีเมลกับรหัสผู้ใช้ ไม่เก็บรหัสผ่าน ·
+      แพ็กเกจเครดิตเริ่มต้น 5 เครดิต 490 บาท · การชำระเงินในต้นแบบเป็นการจำลอง (ระบบชำระเงินจริงเป็นเฟส 2)`;
+  }
   if (g && document.createTreeWalker) {
     const w = document.createTreeWalker(g, NodeFilter.SHOW_TEXT); let n;
     while ((n = w.nextNode())) {

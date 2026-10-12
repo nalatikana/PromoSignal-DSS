@@ -37,6 +37,33 @@ const plCsv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").repla
 const plBE = () => new Date().getFullYear() + 543;
 const plMean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : NaN;
 const plId = () => Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6);
+/** ส่วนเบี่ยงเบนมาตรฐานตัวอย่าง (n − 1) */
+const plSD = a => { const x = a.filter(v => typeof v === "number" && !isNaN(v)); if (x.length < 2) return NaN;
+  const m = plMean(x); return Math.sqrt(x.reduce((s, v) => s + (v - m) ** 2, 0) / (x.length - 1)); };
+/** Cronbach's alpha — rows = [[ข้อ1, ข้อ2, …], …] เฉพาะแถวที่ครบ · α = k/(k−1)·(1 − Σσ²ᵢ/σ²รวม) ใช้ความแปรปรวนตัวอย่าง */
+function plAlpha(rows) {
+  const R = rows.filter(r => r.every(v => typeof v === "number" && !isNaN(v))); if (R.length < 2) return NaN;
+  const k = R[0].length; if (k < 2) return NaN;
+  const vr = a => { const s = plSD(a); return s * s; };
+  const sumItem = [...Array(k)].reduce((s, _, i) => s + vr(R.map(r => r[i])), 0), tot = vr(R.map(r => r.reduce((s, v) => s + v, 0)));
+  return tot > 0 ? k / (k - 1) * (1 - sumItem / tot) : NaN;
+}
+/** ส่งเข้าเซิร์ฟเวอร์เมื่อเป็นฉบับเซิร์ฟเวอร์ (window.OIS_API.submit) — คืน Promise<boolean> · โหมดออฟไลน์คืน false ทันที */
+function plSubmit(kind, ticker, payload) {
+  const api = window.OIS_API; if (!api || typeof api.submit !== "function") return Promise.resolve(false);
+  return Promise.resolve().then(() => api.submit({ kind, ticker: ticker || null, payload }))
+    .then(r => !(r && (r.ok === false || r.enabled === false))).catch(() => false);
+}
+/** ยืนยันในหน้า (แทน window.confirm) — แทรกแถบยืนยัน/ยกเลิกถัดจากปุ่ม */
+function plAsk(btn, msg, fn) {
+  const old = btn.parentElement && btn.parentElement.querySelector(".as-ask"); if (old) old.remove();
+  const d = document.createElement("span"); d.className = "as-ask"; d.setAttribute("role", "alert");
+  d.innerHTML = `<span>${esc(msg)}</span><button type="button" class="btn p as-yes">ยืนยัน</button><button type="button" class="btn g as-no">ยกเลิก</button>`;
+  btn.insertAdjacentElement("afterend", d);
+  d.querySelector(".as-yes").onclick = () => { d.remove(); fn(); };
+  d.querySelector(".as-no").onclick = () => d.remove();
+  d.querySelector(".as-no").focus();
+}
 /** ปุ่มมาตราส่วน 1–5 — ใช้ร่วมกันทุกหน้า */
 function plScale(key, val, labs) {
   return `<div class="pl-scale" data-scale="${esc(key)}">${[1, 2, 3, 4, 5].map(v =>
@@ -117,7 +144,7 @@ function wireBod(h) {
   const c = h.querySelector("#plBodCopy"); if (c) c.onclick = () => plCopy(PL.bod.draft);
   const j = h.querySelector("#plBodJson"); if (j) j.onclick = () => plDl(`ois_bod_oi_${plBE()}.json`,
     JSON.stringify({ level: "board-aggregate", year: plBE(), items: OI_ITEMS.map(i => ({ id: i.id, ref: i.ref, score: PL.bod.a[i.id] || null, evidence: PL.bod.ev[i.id] || "" })) }, null, 2));
-  const x = h.querySelector("#plBodClear"); if (x) x.onclick = () => { if (!confirm("ล้างคำตอบ OI-1…6 ทั้งหมด?")) return; PL.bod = { a: {}, ev: {}, draft: "" }; plSave(); render(); };
+  const x = h.querySelector("#plBodClear"); if (x) x.onclick = () => plAsk(x, "ล้างคำตอบ OI-1…6 ทั้งหมด?", () => { PL.bod = { a: {}, ev: {}, draft: "" }; plSave(); render(); });
   const td = h.querySelector("#plBodToDir"); if (td) td.onclick = () => {
     const lo = OI_ITEMS.filter(i => PL.bod.a[i.id] && PL.bod.a[i.id] <= 2);
     let n = 0;
@@ -452,6 +479,7 @@ function viewSurvey() {
         ${sv.resp.length ? `<span class="chip">บันทึกในเครื่องแล้ว <b>${sv.resp.length}</b> ชุด</span>` : ""}</div></div>`;
   else if (st === SV_DONE) body = `<div class="card" style="text-align:center;padding:36px"><div style="font-size:30px">✓</div><h3 style="justify-content:center">ขอบคุณที่ร่วมทดสอบ</h3>
       <p class="desc">คำตอบของท่านถูกบันทึกในเครื่องนี้ด้วยรหัสสุ่ม (ไม่มีข้อมูลระบุตัวตน) · ผลจะรายงานเป็นกลุ่มเมื่อ n ≥ 5</p>
+      ${_svSrv ? `<div class="note ${_svSrv === "ok" ? "ok" : _svSrv === "fail" ? "warn" : ""}" id="plSvSrv" style="margin:0 auto 12px;max-width:420px">${_svSrv === "ok" ? "บันทึกเข้าเซิร์ฟเวอร์แล้ว" : _svSrv === "fail" ? "บันทึกเข้าเซิร์ฟเวอร์ไม่สำเร็จ — คำตอบยังอยู่ในเครื่องนี้" : "กำลังบันทึกเข้าเซิร์ฟเวอร์…"}</div>` : ""}
       <button class="btn s" data-svstep="0">กลับหน้าแรกของแบบสอบถาม</button></div>`;
   else if (!r) body = `<div class="note">ยังไม่ได้ให้ความยินยอม</div>`;
   else if (st === 1) body = `<div class="card"><h3>ส่วนที่ 1 · ข้อมูลทั่วไป (ช่วงกว้าง)</h3>
@@ -505,9 +533,50 @@ function viewSurvey() {
     `ตามแนวทางยกเว้นการพิจารณาจริยธรรม (REC exemption): ไม่เก็บข้อมูลระบุตัวตน · ผลรายงานเป็นกลุ่ม · ถอนตัวได้ทุกเมื่อ`)
     + prog + body + svAdmin();
 }
+let _svSrv = null, _svSrvR = null, _svSrvMsg = "";
+/** แปลงผลจาก OIS_API.admin เป็นอาร์เรย์คำตอบ — รองรับ [..] / {items|rows|responses|data:[..]} และแถวแบบ {payload} */
+function svFromServer(res) {
+  const arr = Array.isArray(res) ? res : res && (res.items || res.rows || res.responses || res.data || res.results);
+  if (!Array.isArray(arr)) return null;
+  return arr.map(x => { let p = x && x.payload !== undefined ? x.payload : x; if (typeof p === "string") { try { p = JSON.parse(p); } catch (e) { p = null; } } return p; })
+    .filter(p => p && typeof p === "object" && p.sus && p.tam).map(p => Object.assign({ p1: {}, task: {}, comp: {}, open: {}, wtp: {} }, p));
+}
+const SV_BAND = [[4.51, "มากที่สุด"], [3.51, "มาก"], [2.51, "ปานกลาง"], [1.51, "น้อย"], [1, "น้อยที่สุด"]];
+/** การแปลผลค่าเฉลี่ยมาตราส่วน 5 ระดับ (Best & Kahn, 1993) — ปัดเป็นทศนิยม 2 ตำแหน่งก่อนเทียบช่วง */
+const svBand = m => { if (isNaN(m)) return "—"; const r = Math.round(m * 100) / 100; return (SV_BAND.find(([lo]) => r >= lo) || SV_BAND[SV_BAND.length - 1])[1]; };
+/** สถิติเชิงพรรณนา TAM / SUS — ค่าเฉลี่ย SD การแจกแจงความถี่รายข้อ และ Cronbach's alpha รายโครงสร้าง TAM (n ≥ 5) */
+function svAdminDesc(R) {
+  const col = (g, i) => R.map(x => x[g] && x[g][i]).filter(v => v >= 1 && v <= 5);
+  const freq = a => [1, 2, 3, 4, 5].map(v => a.filter(x => x === v).length);
+  const itemRow = (g, i, t) => { const a = col(g, i), f = freq(a), m = plMean(a);
+    return `<tr><td class="n">${i}</td><td class="as-dtq" title="${esc(t)}">${esc(t)}</td><td class="n">${a.length}</td>${f.map(c => `<td class="n">${c}</td>`).join("")}
+      <td class="n"><b>${fmt(m, 2)}</b></td><td class="n">${fmt(plSD(a), 2)}</td><td>${svBand(m)}</td></tr>`; };
+  const head = `<thead><tr><th class="n">ข้อ</th><th>ข้อคำถาม</th><th class="n">n</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">x̄</th><th class="n">SD</th><th>แปลผล</th></tr></thead>`;
+  const grp = TAM_GRP.map(([k, l, a, b]) => {
+    const per = R.map(x => tamMean(x.tam, a, b)).filter(v => !isNaN(v));
+    const rows = R.map(x => [...Array(b - a + 1)].map((_, j) => x.tam[a + j])).filter(r => r.every(v => v >= 1 && v <= 5));
+    const al = rows.length >= 5 ? plAlpha(rows) : NaN;
+    return `<tr class="as-dtg"><td colspan="8"><b>${k} · ${esc(l)}</b> (ข้อ ${a}–${b}) · α = ${rows.length >= 5 ? fmt(al, 2) : `<span class="pill mute">n < 5</span>`}</td>
+      <td class="n"><b>${fmt(plMean(per), 2)}</b></td><td class="n">${fmt(plSD(per), 2)}</td><td><b>${svBand(plMean(per))}</b></td></tr>`
+      + TAM_ITEMS.slice(a - 1, b).map((t, j) => itemRow("tam", a + j, t)).join("");
+  }).join("");
+  const susAll = R.map(x => susScore(x.sus)).filter(v => !isNaN(v));
+  const tamAll = R.map(x => tamMean(x.tam, 1, TAM_ITEMS.length)).filter(v => !isNaN(v));
+  return `<h3 style="margin-top:16px">สถิติเชิงพรรณนา · TAM และ SUS (n = ${R.length})</h3>
+    <p class="desc">ความถี่ = จำนวนผู้ตอบในแต่ละระดับ 1–5 · x̄ = ค่าเฉลี่ย · SD = ส่วนเบี่ยงเบนมาตรฐานตัวอย่าง · Cronbach's α รายโครงสร้าง TAM คำนวณเมื่อมีผู้ตอบครบทุกข้อ ≥ 5 คน<br>
+      เกณฑ์แปลผลค่าเฉลี่ย 5 ระดับ (Best &amp; Kahn, 1993): 4.51–5.00 = มากที่สุด · 3.51–4.50 = มาก · 2.51–3.50 = ปานกลาง · 1.51–2.50 = น้อย · 1.00–1.50 = น้อยที่สุด</p>
+    <div class="grid g4 tight">
+      <div class="stat"><div class="k">TAM รวม 17 ข้อ</div><div class="v" id="plTamAll">${fmt(plMean(tamAll), 2)}</div><div class="u">SD ${fmt(plSD(tamAll), 2)} · ${svBand(plMean(tamAll))}</div></div>
+      <div class="stat"><div class="k">SUS (0–100)</div><div class="v">${fmt(plMean(susAll), 1)}</div><div class="u">SD ${fmt(plSD(susAll), 1)} · n = ${susAll.length}</div></div></div>
+    <div class="tw as-dtw" style="margin-top:10px"><table class="as-dt" id="plTamDesc">${head}<tbody>${grp}</tbody></table></div>
+    <h3 style="margin-top:14px;font-size:12.5px">SUS รายข้อ</h3>
+    <p class="desc">ข้อคู่ (2, 4, 6, 8, 10) เป็นข้อความเชิงลบ — คำแปลผลบอกระดับความเห็นด้วยกับข้อความ ไม่ใช่ระดับความใช้งานง่าย · คะแนน SUS รวมกลับคะแนนข้อคู่แล้ว (Brooke, 1996)</p>
+    <div class="tw as-dtw"><table class="as-dt" id="plSusDesc">${head}<tbody>${SUS_ITEMS.map((t, i) => itemRow("sus", i + 1, t)).join("")}</tbody></table></div>`;
+}
 function svAdmin() {
   if (S.plan !== "pro") return "";
-  const R = PL.survey.resp, n = R.length;
+  const R = _svSrvR || PL.survey.resp, n = R.length;
+  const canSrv = !!(window.OIS_API && typeof window.OIS_API.admin === "function");
   const sus = R.map(x => susScore(x.sus)).filter(v => !isNaN(v)), susM = plMean(sus);
   const tam = TAM_GRP.map(([k, l, a, b]) => [k, plMean(R.map(x => tamMean(x.tam, a, b)).filter(v => !isNaN(v)))]);
   const comp = plMean(R.map(x => compPct(x.comp)));
@@ -515,15 +584,18 @@ function svAdmin() {
   const sub = (lab, key) => { const g = {}; R.forEach(x => { const v = x.p1[key] || "ไม่ระบุ"; (g[v] = g[v] || []).push(x); });
     return `<tr><th colspan="3">${lab}</th></tr>` + Object.entries(g).map(([v, xs]) => `<tr><td>${esc(v)}</td><td class="n">${xs.length}</td>
       <td class="n">${xs.length >= 5 ? fmt(plMean(xs.map(x => susScore(x.sus)).filter(q => !isNaN(q))), 1) : `<span class="pill mute">n < 5 ไม่แสดง</span>`}</td></tr>`).join(""); };
-  return `<div class="card pl-admin" style="margin-top:16px"><h3>ผลรวม (n = ${n}) <span class="pill mute">ผู้ดูแล · Pro</span></h3>
+  return `<div class="card pl-admin" style="margin-top:16px"><h3>ผลรวม (n = ${n}) <span class="pill mute">ผู้ดูแล · Pro</span>
+      <span class="pill ${_svSrvR ? "blue" : "mute"}">${_svSrvR ? "ข้อมูลจากเซิร์ฟเวอร์" : "ข้อมูลในเครื่องนี้"}</span></h3>
     <p class="desc">ค่าเฉลี่ยระดับกลุ่มเท่านั้น · กลุ่มย่อยแสดงเมื่อ n ≥ 5 · ไม่มีตัวระบุตัวตนในข้อมูล</p>
+    ${canSrv ? `<div class="pl-tools" style="margin-bottom:10px"><button class="btn s" id="plSvLoadSrv">โหลดคำตอบทั้งหมดจากเซิร์ฟเวอร์</button>
+      ${_svSrvR ? `<button class="btn g" id="plSvLocal">กลับไปใช้ข้อมูลในเครื่อง</button>` : ""}<span class="as-sm">${esc(_svSrvMsg)}</span></div>` : ""}
     <div class="grid g4 tight">
       <div class="stat"><div class="k">SUS เฉลี่ย</div><div class="v" style="color:${susM >= 68 ? "var(--ok)" : "inherit"}">${fmt(susM, 1)}</div><div class="u">เป้าหมาย ≥ 68 (n=${sus.length})</div></div>
       ${tam.map(([k, m]) => `<div class="stat"><div class="k">TAM · ${k}</div><div class="v">${fmt(m, 2)}</div><div class="u">จาก 5</div></div>`).join("")}
       <div class="stat"><div class="k">ความเข้าใจถูกต้อง</div><div class="v">${svPct(comp)}</div><div class="u">5 ข้อ</div></div>
       ${task.map(([k, p], i) => `<div class="stat"><div class="k">งาน ${i + 1} (${k}) ถูกต้อง</div><div class="v">${svPct(p)}</div></div>`).join("")}</div>
     <div class="tw" style="margin-top:12px"><table><thead><tr><th>กลุ่มย่อย</th><th class="n">n</th><th class="n">SUS เฉลี่ย</th></tr></thead><tbody>${sub("สายงาน", "role")}${sub("ประสบการณ์", "exp")}</tbody></table></div>
-    ${svAdminAB(R)}${svAdminWtp(R)}
+    ${svAdminDesc(R)}${svAdminAB(R)}${svAdminWtp(R)}
     <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="plSvCsv">Export CSV</button><button class="btn g" id="plSvJson">Export JSON</button><button class="btn g" id="plSvClear">ล้างคำตอบทั้งหมด</button></div></div>`;
 }
 /** การทดสอบที่ 1 · Grid vs ตาราง — แสดงตัวเลขเมื่อแต่ละกลุ่ม n ≥ 5 */
@@ -589,7 +661,10 @@ function wireSurvey(h) {
     r.taskOk = Object.fromEntries(SV_TL.map(k => [k, !!(tk[k] && tk[k].correct)]));
     r.task_ms = SV_TL.every(k => tk[k]) ? SV_TL.reduce((s, k) => s + tk[k].ms, 0) : null;
     r.demo = d.c.t; r.day = new Date().toISOString().slice(0, 10); r.sus_score = susScore(r.sus);
-    sv.resp.push(r); sv.cur = null; sv.step = SV_DONE; plSave(); toast("บันทึกแบบสอบถามแล้ว (ไม่มีข้อมูลระบุตัวตน)"); render();
+    sv.resp.push(r); sv.cur = null; sv.step = SV_DONE; plSave(); toast("บันทึกแบบสอบถามแล้ว (ไม่มีข้อมูลระบุตัวตน)");
+    _svSrv = window.OIS_API && typeof window.OIS_API.submit === "function" ? "pending" : null;
+    if (_svSrv) plSubmit("survey", r.demo, r).then(ok => { _svSrv = ok ? "ok" : "fail"; if (ok) { r.srv = true; plSave(); toast("บันทึกเข้าเซิร์ฟเวอร์แล้ว"); } if (S.view === "survey") render(); });
+    render();
   };
   const x = h.querySelector("#plSvCsv"); if (x) x.onclick = () => plDl("ois_survey_responses.csv", plCsv([
     ["id", "day", "demo", "arm", "lens", "role", "exp", "task_tier", "task_quad", "task_reg", "tier_ok", "quad_ok", "reg_ok",
@@ -597,14 +672,21 @@ function wireSurvey(h) {
       ...SUS_ITEMS.map((_, i) => "sus" + (i + 1)), "sus_score", ...TAM_ITEMS.map((_, i) => "tam" + (i + 1)),
       "wtp_s1", "wtp_s2", "wtp_s3", "wtp_buy_role", "wtp_trial3m", "wtp_hrs_saved", "wtp_new_issue", "wtp_new_issue_txt", "wtp_pay_for",
       ...COMP_Q.map((_, i) => "comp" + (i + 1)), "open1", "open2"],
-    ...sv.resp.map(r => { const tk = r.tasks || {}, w = r.wtp || {};
+    ...(_svSrvR || sv.resp).map(r => { const tk = r.tasks || {}, w = r.wtp || {};
       return [r.id, r.day, r.demo, r.arm ?? "", r.lens ?? "", r.p1.role, r.p1.exp, r.task.tier, r.task.quad, r.task.reg, r.taskOk?.tier, r.taskOk?.quad, r.taskOk?.reg,
       ...SV_TL.flatMap(k => tk[k] ? [tk[k].ans, tk[k].correct ? 1 : 0, tk[k].ms] : ["", "", ""]), r.task_ms ?? "", (r.perm?.q4 || []).join("|"), (r.perm?.q5 || []).join("|"),
       ...SUS_ITEMS.map((_, i) => r.sus[i + 1]), r.sus_score, ...TAM_ITEMS.map((_, i) => r.tam[i + 1]),
       ...["s1", "s2", "s3"].map(k => w[k] ? SV_WTP_OPT[w[k]] : ""), w.role, w.trial, w.hrs ?? "", w.newIss, w.newIssTxt, w.pay,
       ...COMP_Q.map((q, i) => r.comp[i] === q.c ? 1 : 0), r.open.f1, r.open.f2]; })]), "text/csv;charset=utf-8");
-  const j = h.querySelector("#plSvJson"); if (j) j.onclick = () => plDl("ois_survey_responses.json", JSON.stringify(sv.resp, null, 2));
-  const cl = h.querySelector("#plSvClear"); if (cl) cl.onclick = () => { if (!confirm(`ลบคำตอบทั้งหมด ${sv.resp.length} ชุด?`)) return; sv.resp = []; plSave(); render(); };
+  const j = h.querySelector("#plSvJson"); if (j) j.onclick = () => plDl("ois_survey_responses.json", JSON.stringify(_svSrvR || sv.resp, null, 2));
+  const ls = h.querySelector("#plSvLoadSrv"); if (ls) ls.onclick = async () => {
+    ls.disabled = true; ls.textContent = "กำลังโหลด…";
+    try { const arr = svFromServer(await window.OIS_API.admin({ kind: "survey" }));
+      if (arr) { _svSrvR = arr; _svSrvMsg = `โหลดแล้ว ${arr.length} ชุด`; } else { _svSrvR = null; _svSrvMsg = "เซิร์ฟเวอร์ไม่ส่งข้อมูลกลับ (หรือไม่มีสิทธิ์ผู้ดูแล) — ใช้ข้อมูลในเครื่อง"; }
+    } catch (e) { _svSrvR = null; _svSrvMsg = "โหลดจากเซิร์ฟเวอร์ไม่สำเร็จ — ใช้ข้อมูลในเครื่อง"; }
+    render(); };
+  const lc = h.querySelector("#plSvLocal"); if (lc) lc.onclick = () => { _svSrvR = null; _svSrvMsg = ""; render(); };
+  const cl = h.querySelector("#plSvClear"); if (cl) cl.onclick = () => plAsk(cl, `ลบคำตอบทั้งหมด ${sv.resp.length} ชุดในเครื่องนี้?`, () => { sv.resp = []; _svSrvR = null; plSave(); render(); });
 }
 
 /* ============================================================================
@@ -657,7 +739,7 @@ function wireSyslog(h) {
   };
   h.querySelectorAll("[data-isclose]").forEach(b => b.onclick = () => { const i = PL.log.issues[+b.dataset.isclose]; i.closed = !i.closed; plSave(); render(); });
   const j = h.querySelector("#plLogJson"); if (j) j.onclick = () => plDl("ois_syslog.json", JSON.stringify(PL.log, null, 2));
-  const c = h.querySelector("#plLogClear"); if (c) c.onclick = () => { if (!confirm("ล้าง log ทั้งหมด?")) return; PL.log = { crash: 0, errs: [], render: {}, issues: [] }; plSave(); render(); };
+  const c = h.querySelector("#plLogClear"); if (c) c.onclick = () => plAsk(c, "ล้าง log ทั้งหมด?", () => { PL.log = { crash: 0, errs: [], render: {}, issues: [] }; plSave(); render(); });
 }
 
 /* ============================================================================
@@ -669,12 +751,36 @@ const INTEGR = [
   { k: "onereport", t: "One Report (SET)", cost: "—", d: "ตอนนี้ = กรอกข้อมูลองค์ประกอบคณะกรรมการเองใน Zone A · เมื่อเปิดใช้: ดึงข้อมูล 56-1 One Report ผ่าน API ของ SET เป็น Phase ถัดไป เพื่อลดการกรอกมือและให้ปีบัญชีตรงกับฐานอ้างอิง" },
   { k: "mail", t: "Email แจ้งเตือน / Anydevice Approval", cost: "—", d: "เมื่อเปิดใช้: ส่งสรุปข้อสั่งการที่ยังเปิดอยู่ไปยังกล่องจดหมายของตำแหน่งตามรอบติดตาม และให้ผู้รับผิดชอบกดรับทราบ/อนุมัติจากอุปกรณ์ใดก็ได้ · เนื้อหามีเฉพาะหัวข้อ กำหนดส่ง สถานะ" },
 ];
+/* สถานะบริการบนเซิร์ฟเวอร์ — อ่านจาก OIS_API.integrations() (boolean เท่านั้น) · ไม่มี OIS_API = โหมดออฟไลน์ */
+let _plInteg = null;
+const PL_SRV_SVC = [["ai", "AI (Claude / OpenAI)", d => d.llm ?? d.ai ?? (d.anthropic || d.openai), d => d.anthropic ? "Claude" : d.openai ? "OpenAI" : ""],
+  ["ocr", "OCR PDF", d => d.ocr], ["db", "ฐานข้อมูล (เก็บแบบสอบถาม / แบบประเมิน)", d => d.db ?? d.database ?? d.store], ["google", "Google Sign-in", d => d.google ?? d.oauth ?? d.google_auth]];
+function plIntegLoad() {
+  const api = window.OIS_API;
+  if (!api || typeof api.integrations !== "function" || (_plInteg && _plInteg.st !== "err")) return;
+  _plInteg = { st: "loading", d: {} };
+  Promise.resolve().then(() => api.integrations()).then(d => { _plInteg = { st: d && d.ok !== false ? "ok" : "err", d: d || {} }; })
+    .catch(() => { _plInteg = { st: "err", d: {} }; }).then(() => { if (S.view === "integr") render(); });
+}
+function plIntegStatus() {
+  const api = window.OIS_API, has = !!(api && typeof api.integrations === "function");
+  if (!has) return `<div class="card as-srvst" id="plSrvSt"><h3>สถานะการเชื่อมต่อ <span class="pill mute">โหมดออฟไลน์</span></h3>
+    <p class="desc" style="margin:0">ไฟล์นี้เปิดแบบออฟไลน์ (ไฟล์ HTML เดียว) — ไม่มีการเชื่อมต่อ AI, OCR, ฐานข้อมูล หรือ Google · ข้อมูลทั้งหมดอยู่ใน localStorage ของเครื่องนี้</p></div>`;
+  plIntegLoad();
+  const I = _plInteg || { st: "loading", d: {} };
+  return `<div class="card as-srvst" id="plSrvSt"><h3>สถานะการเชื่อมต่อบนเซิร์ฟเวอร์ <span class="pill ${I.st === "ok" ? "ok" : I.st === "err" ? "crit" : "mute"}">${I.st === "ok" ? "เชื่อมต่อแล้ว" : I.st === "err" ? "ตรวจสอบไม่สำเร็จ" : "กำลังตรวจสอบ…"}</span></h3>
+    <div class="as-svc">${PL_SRV_SVC.map(([k, l, f, ex]) => { const v = I.st === "ok" ? f(I.d) : undefined, x = ex && v ? ex(I.d) : "";
+      return `<div><span class="pill ${v === true ? "ok" : v === false ? "mute" : "mute"}">${v === true ? "เปิดใช้" : v === false ? "ยังไม่เปิดใช้" : "ไม่ทราบสถานะ"}</span> <b>${esc(l)}</b>${x ? ` <span class="chip">${esc(x)}</span>` : ""}</div>`; }).join("")}</div>
+    <p class="desc" style="margin:8px 0 0">ค่าจาก /api/integrations เป็น boolean เท่านั้น — ไม่มีการส่ง API key มายังเบราว์เซอร์ · “ไม่ทราบสถานะ” = เซิร์ฟเวอร์รุ่นนี้ยังไม่รายงานรายการนั้น</p></div>`;
+}
 function viewIntegr() {
-  const I = PL.integr;
-  return pageHead("Pilot · Phase ถัดไป", "การเชื่อมต่อ (Phase ถัดไป — ต้องมีเซิร์ฟเวอร์)",
-    `ต้นแบบนี้ทำงานในเบราว์เซอร์ทั้งหมด · การเชื่อมต่อด้านล่างยังไม่เปิดใช้ — ตั้งค่าได้เฉพาะ URL ของ endpoint ฝั่งเซิร์ฟเวอร์เพื่อทดสอบว่าเข้าถึงได้หรือไม่ ·
+  const I = PL.integr, srv = !!(window.OIS_API && typeof window.OIS_API.integrations === "function");
+  return pageHead("Pilot · การเชื่อมต่อ", srv ? "การเชื่อมต่อ (ฉบับเซิร์ฟเวอร์)" : "การเชื่อมต่อ (โหมดออฟไลน์ — บริการเปิดใช้บนเซิร์ฟเวอร์)",
+    `${srv ? "ฉบับเซิร์ฟเวอร์: สถานะ AI / OCR / ฐานข้อมูล / Google แสดงด้านล่าง" : "ต้นแบบไฟล์เดียวทำงานในเบราว์เซอร์ทั้งหมด"} · การ์ดด้านล่างใช้ทดสอบว่า endpoint ฝั่งเซิร์ฟเวอร์เข้าถึงได้หรือไม่ ·
      <b>ไม่มีช่องกรอก API key ในเครื่องผู้ใช้</b> และการทดสอบไม่ส่งเอกสารใด ๆ`)
-    + `<div class="grid g2">${INTEGR.map(x => { const r = I.res[x.k]; return `<div class="card"><h3>${esc(x.t)} <span class="pill mute">ยังไม่เปิดใช้</span>${x.cost !== "—" ? `<span class="chip">${esc(x.cost)}</span>` : ""}</h3>
+    + plIntegStatus()
+    + `<div class="grid g2" style="margin-top:14px">${INTEGR.map(x => { const r = I.res[x.k], on = srv && _plInteg && _plInteg.st === "ok" && (x.k === "ocr" ? _plInteg.d.ocr === true : x.k === "llm" ? !!(_plInteg.d.llm ?? (_plInteg.d.anthropic || _plInteg.d.openai)) : false);
+      return `<div class="card"><h3>${esc(x.t)} <span class="pill ${on ? "ok" : "mute"}">${on ? "เปิดใช้บนเซิร์ฟเวอร์" : "ยังไม่เปิดใช้"}</span>${x.cost !== "—" ? `<span class="chip">${esc(x.cost)}</span>` : ""}</h3>
       <p class="desc">${x.d}</p>
       <label class="pl-lab">Endpoint ฝั่งเซิร์ฟเวอร์ (URL)<input class="inp" data-ep="${x.k}" value="${esc(I.ep[x.k] || "")}" placeholder="https://api.example.com/${x.k}" spellcheck="false"></label>
       <div class="pl-tools"><button class="btn s" data-eptest="${x.k}">ทดสอบการเชื่อมต่อ</button>
@@ -708,6 +814,6 @@ NAV.push({ id: "bod", g: 4, ico: "☑", lab: "BOD Self-Assessment (OI-1…6)" },
   { id: "directives", g: 4, ico: "≡", lab: "ข้อสั่งการบอร์ด / Compliance (Level 3)" },
   { id: "survey", g: 4, ico: "✎", lab: "แบบสอบถามทดสอบการยอมรับ" },
   { id: "syslog", g: 4, ico: "⌁", lab: "System log" },
-  { id: "integr", g: 4, ico: "⚙", lab: "การเชื่อมต่อ (Phase ถัดไป)" });
+  { id: "integr", g: 4, ico: "⚙", lab: window.OIS_API ? "การเชื่อมต่อ" : "การเชื่อมต่อ (โหมดออฟไลน์)" });
 buildNav();
 if (S.user) syncNavLocks();
