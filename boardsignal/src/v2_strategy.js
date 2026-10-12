@@ -190,3 +190,6 @@ VIEWS.compass = viewCompass;
 if (typeof WIRES2 === "object" && WIRES2) WIRES2.compass = wireCompass;
 NAV.splice(NAV.findIndex(n => n.id === "matrix") + 1, 0,
   { id: "compass", g: 2, ico: "◳", lab: "รายงาน Strategy Compass", lock: "report" });
+/* แก้ไขครั้งที่ 2 — เมนูถูกประกอบไปแล้วใน initV2 ก่อนไฟล์นี้ทำงาน จึงต้องประกอบใหม่ ไม่เช่นนั้นปุ่ม Compass ไม่ปรากฏ */
+buildNav();
+if (S.user) syncNavLocks();

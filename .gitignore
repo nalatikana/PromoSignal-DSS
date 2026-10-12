@@ -11,3 +11,6 @@ data/panel_scored.csv
 data/firm_key_CONFIDENTIAL.csv
 data/unit_overrides.csv
 *_CONFIDENTIAL*
+
+# ชุด REF-928 ที่ให้คะแนนแล้ว (NDA) — build_ois_data.py อ่านจากที่นี่ แต่ไม่ commit
+boardsignal/ref/

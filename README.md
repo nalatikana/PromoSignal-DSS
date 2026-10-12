@@ -11,6 +11,20 @@ repo นี้เก็บต้นแบบ **สองตัว** ที่ส
 
 ---
 
+## OpenInnoScore™ — แก้ไขครั้งที่ 2 (12 ตุลาคม 2569) · ฉบับล่าสุด
+
+ต้นแบบหลักปัจจุบันคือ **`docs/openinnoscore/index.html`** (สำเนาเดียวกันที่ `docs/revision-2/index.html`) สร้างจาก `boardsignal/build_v2.py`
+
+- เครื่องคำนวณ **Signal B** ตามเอกสารสมการ v2: winsorise → centring → `amp = β₁ + δF·cF + δG·cG + δW·cW` (δT ปิดด้วย evidence gate) → `B = cP × amp` → เปอร์เซ็นไทล์ mid-rank เทียบ **ฐานอ้างอิง REF-928 ที่ freeze แล้ว** → tier 1–4 (75/50/25) + quadrant + ช่วง 90% (Krinsky & Robb 500 ชุด)
+- ค่าคงที่อยู่ใน `boardsignal/model/ois_core.py` และ `boardsignal/src/ois_model.json` (ความลับทางการค้า — ไม่แสดงบนหน้าจอ; ฉบับใช้งานจริงต้องอยู่หลัง API) · ไฟล์ `boardsignal/ref/` (REF928_scored / band) อยู่ใน `.gitignore`
+- ตรวจความถูกต้อง: Python และเบราว์เซอร์ให้ OIS / tier / quadrant ตรงกับ STATA ทั้ง 928 แถว
+- หน้าจอ 20 หน้า: Company Profile · Zone A/B/C · 2×2 (928 จุด) · Board Strategy Compass · เทียบคู่แข่ง · What-if · อุตสาหกรรม · พอร์ต · โหมดที่ประชุม · Token · สถาปัตยกรรม · Validity · **Pilot**: BOD Self-Assessment OI-1…6 · โหมดนอกกลุ่มอ้างอิง · ข้อสั่งการ/Compliance · แบบสอบถาม (SUS + TAM) · System log · การเชื่อมต่อ (OCR / LLM / One Report / Email — ต้องมีเซิร์ฟเวอร์)
+- build: `cd boardsignal && python3 model/build_ois_data.py && python3 build_v2.py` (ต้องมี `boardsignal/ref/*.csv` จากชุดส่งมอบ NDA)
+
+รายละเอียดการแก้ไขทั้งหมดอยู่ในรายงาน "OpenInnoScore-รายงานการแก้ไขครั้งที่2.docx" ในแฟ้มงาน (ไม่อยู่ใน repo)
+
+> หมายเหตุ: หัวข้อ **Board Signal** ด้านล่างเป็นเวอร์ชันแรก (สูตร IPI และสัมประสิทธิ์ชุดเก่า) เก็บไว้เพื่อเทียบเท่านั้น — ไม่ใช่สูตรที่ใช้ในปัจจุบัน
+
 ## PromoSignal DSS
 
 ต้นแบบระบบสนับสนุนการตัดสินใจ — ทำนายจำนวน **นวัตกรรมเปิด** (พันธมิตร / JV / MOU) จากภาษาผู้บริหารและโครงสร้างคณะกรรมการ
