@@ -16,12 +16,14 @@ parts = {
     "/*__PDFWORKER__*/": rd(SHARED / "vendor" / "pdf.worker.min.js"),
     "/*__PDFJS__*/": rd(SHARED / "vendor" / "pdf.min.js"),
     "/*__DATA__*/": json.dumps(json.loads(rd(ROOT / "src" / "prof_data.json")), ensure_ascii=False),
+    "/*__OIS__*/": json.dumps(json.loads(rd(ROOT / "src" / "ois_model.json")), ensure_ascii=False),
     "/*__LOGO__*/": json.dumps(b64png(ROOT / "src" / "brandsrc" / "ois_mark_256.png")),
     "/*__LOGO_LOCKUP__*/": json.dumps(b64png(ROOT / "src" / "brandsrc" / "ois_lockup_480.png")),
     "/*__LOGO_SMALL__*/": json.dumps(b64png(ROOT / "src" / "brandsrc" / "ois_mark_96.png")),
     "/*__LEX__*/": rd(ROOT / "src" / "lex.js"),
     "/*__APP__*/": rd(ROOT / "src" / "v2_app.js"),
     "/*__INVEST__*/": rd(ROOT / "src" / "v2_invest.js"),
+    "/*__STRATEGY__*/": rd(ROOT / "src" / "v2_strategy.js"),
 }
 for k, v in parts.items():
     assert k in html, f"ไม่พบ placeholder {k}"

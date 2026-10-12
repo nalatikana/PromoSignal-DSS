@@ -16,10 +16,10 @@ function qAt(arr, p) {
   return a[lo] + (a[hi] - a[lo]) * (i - lo);
 }
 /** ค่ากลางตลาดของแต่ละตัวแปร — ใช้เป็นจุดตั้งต้นของแผนภาพน้ำตก */
-const MKT = { promo: NEU.promo, fem: MEAN.bod_female, fam: MEAN.bod_family, pol: MEAN.bod_politicalties, ten: MEAN.bod_tenure };
+const MKT = { promo: OM.P, fem: OM.W, fam: OM.F, pol: OM.G, ten: OM.T };
 
-/** OI ของโปรไฟล์ใด ๆ — เก็บทศนิยมไว้ก่อน ยังไม่ปัดเศษ */
-const ipiRaw = o => .5 * promoPct(o.promo) + .5 * ampPct(ampOf(o.fam, o.pol, o.fem, o.ten));
+/** OpenInnoScore ของโปรไฟล์ใด ๆ — เก็บทศนิยมไว้ก่อน ยังไม่ปัดเศษ (E4 → E5 → E7) */
+const ipiRaw = o => oisOf(signalB(o.promo, ampOf(o.fam, o.pol, o.fem, o.ten)));
 const profOf = c => ({ promo: c.promo, fem: c.fem, fam: c.fam, pol: c.pol, ten: c.ten });
 /** ค่าชดเชยการปัดเศษของแต่ละบริษัท — ทำให้โปรไฟล์เดิมได้ OI ตรงกับที่แสดงทุกหน้าเสมอ */
 const calOf = c => c.ipi - ipiRaw(profOf(c));
@@ -38,12 +38,13 @@ function niceRound(vals, total) {
 
 /* ---------------------------------------------------------------- 1 · แผนภาพน้ำตก */
 const WF_STEPS = [
-  { k: "promo", l: "ภาษาเชิงรุกของ CEO", note: "เทียบกับค่าเฉลี่ยตลาด 0.58" },
-  { k: "fem", l: "สัดส่วนกรรมการหญิง", note: "ตัวขยายสัญญาณที่แรงที่สุดในโมเดล" },
-  { k: "fam", l: "สัดส่วนกรรมการครอบครัว", note: "ยิ่งมากยิ่งลดทอนสัญญาณ" },
-  { k: "pol", l: "กรรมการสายนโยบาย", note: "สัมพันธ์กับการเข้าถึงทรัพยากรและพันธมิตร" },
-  { k: "ten", l: "อายุงานเฉลี่ยของบอร์ด", note: "ยิ่งนานยิ่งลดการขยายเล็กน้อย" },
+  { k: "promo", l: "CEO Promotion Focus", note: "cP = ค่าหลัง winsorise ลบค่าเฉลี่ยฐานอ้างอิง 0.571" },
+  { k: "fem", l: "สัดส่วนกรรมการหญิง", note: "δW = +3.73 — ค่าที่มีน้ำหนักมากที่สุดใน amp" },
+  { k: "fam", l: "สัดส่วนกรรมการครอบครัว", note: "δF = −0.98 — ข้อมูลบริบท ไม่ใช่คันโยก (R6)" },
+  { k: "pol", l: "กรรมการที่เข้าเกณฑ์ political ties", note: "δG = +0.42 — ไม่ใช้เป็นเหตุผลเชิงบวก (R6)" },
 ];
+/* อายุงานเฉลี่ยของบอร์ด (δT) ถูกปิดด้วย evidence gate g_T = 0 ตามสมการ E4
+   จึงไม่ปรากฏในแผนภาพน้ำตก — ค่าของมันเป็นศูนย์เสมอ */
 /** แยกส่วนประกอบของ OI แบบสะสมทีละตัวแปร — ผลรวมเท่ากับ OI จริงเสมอ
  *  ปัดเศษครั้งเดียวตอนท้ายด้วยวิธี largest remainder จึงไม่มีเศษหลงเหลือให้ตัวเลขไม่ตรงกัน */
 function waterfall(c) {
@@ -197,7 +198,7 @@ function investBlock(c) {
   return `
   <div class="card" style="margin-top:14px">
     <h3>คะแนนนี้มาจากไหน — แผนภาพน้ำตก</h3>
-    <p class="desc">เริ่มจากบริษัทสมมติที่ทุกตัวแปรเท่าค่ากลางตลาด (OI ${fmt(w.base)}) แล้วเปลี่ยนเป็นค่าจริงของ ${esc(c.t)} ทีละตัว
+    <p class="desc">เริ่มจากบริษัทสมมติที่ทุกตัวแปรเท่าค่ากลางฐานอ้างอิง (OIS ${fmt(w.base)}) แล้วเปลี่ยนเป็นค่าจริงของ ${esc(c.t)} ทีละตัว
       ผลรวมของทุกขั้นเท่ากับ OI จริง ${fmt(w.total)} เสมอ — จึงอ่านได้ว่าตัวแปรใดเป็นตัวได้ ตัวใดเป็นตัวเสีย</p>
     ${waterfallSvg(c)}
     <div class="grid g2" style="margin-top:13px">
@@ -503,11 +504,11 @@ function thesis(c) {
   const pool = indComps(c.ind).sort((a, b) => b.ipi - a.ipi), rk = pool.findIndex(x => x.t === c.t) + 1;
   const best = w.steps.slice().sort((a, b) => b.d - a.d)[0], worst = w.steps.slice().sort((a, b) => a.d - b.d)[0];
   const out = [
-    { h: "ตำแหน่งวันนี้", t: `OI ${c.ipi} — อันดับ ${rk} จาก ${pool.length} ใน${IND[c.ind]}`,
+    { h: "ตำแหน่งวันนี้", t: `OIS ${c.ipi} — อันดับ ${rk} จาก ${pool.length} ใน${IND[c.ind]}`,
       d: `อยู่ในกลุ่ม ${z.l} · ภาษาผู้นำอยู่ที่เปอร์เซ็นไทล์ ${c.dp} และโครงสร้างบอร์ดอยู่ที่ ${ampPct(c.amp)}` },
     { h: "ตัวขับและตัวฉุด", t: `${WF_SHORT[best.k]} ${best.d >= 0 ? "+" : "−"}${fmt(Math.abs(best.d))} · ${WF_SHORT[worst.k]} ${worst.d >= 0 ? "+" : "−"}${fmt(Math.abs(worst.d))}`,
       d: `เทียบกับบริษัทสมมติที่ทุกตัวแปรเท่าค่ากลางตลาด คะแนนได้มาจาก${WF_SHORT[best.k]}มากที่สุด และเสียไปกับ${WF_SHORT[worst.k]}มากที่สุด` },
-    { h: "ศักยภาพและจังหวะ", t: u.delta > 0 ? `เพิ่มได้อีก ${fmt(u.delta)} จุด → OI ${fmt(u.best)}` : `ถึงเพดานของกลุ่มแล้ว`,
+    { h: "ศักยภาพและจังหวะ", t: u.delta > 0 ? `เพิ่มได้อีก ${fmt(u.delta)} จุด → OIS ${fmt(u.best)}` : `ถึงเพดานของกลุ่มแล้ว`,
       d: `คะแนนลำดับการเข้าพบ ${e.score} จาก 100 · ${recommendation(c).d}` },
   ];
   return out;
@@ -763,7 +764,7 @@ function wirePort(h) {
   });
   h.querySelectorAll(".opt").forEach(g => {
     tipOn(g, el => `<div class="tk">ความเสี่ยง${el.dataset.r}</div><b>${el.dataset.t}</b> · ${el.dataset.n}<br>
-      OI ${el.dataset.i} · เพิ่มได้ +${el.dataset.u} · ลำดับเข้าพบ ${el.dataset.e}<br>คลิกเพื่อเปิดรายงาน`);
+      OIS ${el.dataset.i} · เพิ่มได้ +${el.dataset.u} · ลำดับเข้าพบ ${el.dataset.e}<br>คลิกเพื่อเปิดรายงาน`);
     g.onclick = () => { S.t = g.dataset.t; S.peers = []; S.wi = null; $("#selCo").value = S.t; syncChrome(); go("fit"); };
   });
   const cv = h.querySelector("#pCsv");
@@ -823,7 +824,7 @@ function wireInvestCommon(h) {
   h.querySelectorAll(".wfb[data-d]").forEach(g => {
     if (!g.dataset.d) return;
     tipOn(g, el => `<div class="tk">ขั้นของแผนภาพน้ำตก</div><b>${el.dataset.l}</b><br>
-      เปลี่ยนคะแนน ${el.dataset.d > 0 ? "+" : ""}${el.dataset.d} จุด → OI ${el.dataset.to}`);
+      เปลี่ยนคะแนน ${el.dataset.d > 0 ? "+" : ""}${el.dataset.d} จุด → OIS ${el.dataset.to}`);
   });
 }
 
@@ -1153,8 +1154,8 @@ function insightList(c) {
   const out = [];
   out.push({ kind: "strength", tag: T("Strength", "จุดแข็ง"), impact: best.d,
     h: T(`${VARS[best.k].en} adds ${fmt(best.d)} points to the score`, `${VARS[best.k].th} เพิ่มคะแนน ${fmt(best.d)} จุด`),
-    p: T(`Starting from a firm at the market median on every variable (OI ${fmt(w.base)}), ${c.t} reaches ${c.ipi}. CEO language sits at percentile ${c.dp}, board structure at ${ampPct(c.amp)}.`,
-      `เริ่มจากบริษัทสมมติที่ทุกตัวแปรเท่าค่ากลางตลาด (OI ${fmt(w.base)}) ${c.t} ขึ้นมาที่ ${c.ipi} · ภาษาผู้บริหารอยู่ที่เปอร์เซ็นไทล์ ${c.dp} โครงสร้างบอร์ดอยู่ที่ ${ampPct(c.amp)}`),
+    p: T(`Starting from a firm at the market median on every variable (OIS ${fmt(w.base)}), ${c.t} reaches ${c.ipi}. CEO language sits at percentile ${c.dp}, board structure at ${ampPct(c.amp)}.`,
+      `เริ่มจากบริษัทสมมติที่ทุกตัวแปรเท่าค่ากลางฐานอ้างอิง (OIS ${fmt(w.base)}) ${c.t} ขึ้นมาที่ ${c.ipi} · ภาษาผู้บริหารอยู่ที่เปอร์เซ็นไทล์ ${c.dp} โครงสร้างบอร์ดอยู่ที่ ${ampPct(c.amp)}`),
     ev: [[T("Driver", "ตัวขับ"), vL(best.k)], [T("Coefficient β", "สัมประสิทธิ์ β"), fmt(BETA[VARS[best.k].beta], 4)],
       [T("This firm", "บริษัทนี้"), val(best.k)], [T("Industry average", "ค่าเฉลี่ยอุตสาหกรรม"), iref(best.k)]] });
   out.push({ kind: "constraint", tag: T("Constraint", "ข้อจำกัด"), impact: Math.min(0, worst.d),
@@ -1196,7 +1197,7 @@ function insightCards(c) {
   const list = insightList(c).slice().sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
   const ist = DATA.indstats[c.ind], pool = indComps(c.ind), med = k => qAt(pool.map(x => x[k]), .5);
   const cells = [
-    { k: "OI Score", v: c.ipi, ref: fmt(med("ipi")), d: c.ipi - med("ipi") },
+    { k: "OpenInnoScore", v: c.ipi, ref: fmt(med("ipi")), d: c.ipi - med("ipi") },
     { k: "CEO Focus", v: c.dp, ref: fmt(med("dp")), d: c.dp - med("dp") },
     { k: T("Board Amplification", "โครงสร้างบอร์ด"), v: ampPct(c.amp), ref: fmt(med("ap")), d: ampPct(c.amp) - med("ap") },
     { k: T("Female directors", "กรรมการหญิง"), v: pct1(c.fem), ref: pct1(ist.fem), d: (c.fem - ist.fem) * 100 },
@@ -1235,7 +1236,7 @@ function insightCards(c) {
 /* ---------------------------------------------------------------- Zone C · Board Refresh Engine */
 const HORIZON = [{ k: "agm", en: "Next AGM", th: "AGM ถัดไป", maxHard: 1 },
   { k: "12m", en: "12 months", th: "12 เดือน", maxHard: 2 }, { k: "24m", en: "24 months", th: "24 เดือน", maxHard: 3 }];
-const PRIORITY = [{ k: "max", en: "Max OI Score", th: "คะแนนสูงสุด" }, { k: "bal", en: "Balanced", th: "สมดุล" },
+const PRIORITY = [{ k: "max", en: "Max OpenInnoScore", th: "คะแนนสูงสุด" }, { k: "bal", en: "Balanced", th: "สมดุล" },
   { k: "low", en: "Lowest disruption", th: "กระทบน้อยที่สุด" }];
 const HARD = { 1: { en: "Easy", th: "ทำได้เร็ว", k: "ok" }, 2: { en: "Moderate", th: "ปานกลาง", k: "warn" }, 3: { en: "Difficult", th: "ต้องใช้เวลา", k: "crit" } };
 const ACT = { add: { en: "Add", th: "เพิ่ม", k: "ok" }, replace: { en: "Replace", th: "เปลี่ยน", k: "blue" }, reduce: { en: "Reduce", th: "ลด", k: "warn" } };
@@ -1432,7 +1433,7 @@ function briefHtml(c) {
       <div class="mmt">${esc(c.t)} · ${esc(c.n)}</div>
       <div class="mmn">${esc(IND[c.ind])} · กลุ่มอ้างอิง ${pool.length} บริษัท · ข้อมูลปี 2566 · กรอบเวลา ${esc(sc.hz.th)}</div></div></div>
       <div><div class="mmipi">${c.ipi}</div>
-        <div style="font-size:9px;color:var(--ink-3);text-align:right">OI Score วันนี้<br>ฉากทัศน์ที่แนะนำ ${fmt(sc.after)}</div></div></div>
+        <div style="font-size:9px;color:var(--ink-3);text-align:right">OpenInnoScore วันนี้<br>ฉากทัศน์ที่แนะนำ ${fmt(sc.after)}</div></div></div>
     <div class="mmb"><h4>โจทย์ของการสรรหารอบนี้</h4>
       <p>${sc.after > sc.now
       ? `ช่องว่างเชิงโครงสร้างที่โมเดลชี้คือ ${fmt(sc.after - sc.now)} จุดคะแนน ภายใน${sc.hz.th} การสรรหารอบนี้จึงควรตั้งเป้าปิดช่องว่างนี้ ไม่ใช่การหากรรมการตามสเปกทั่วไป`
@@ -1755,7 +1756,7 @@ render = function () {
     $("#sPlan").textContent = `${S.plan === "pro" ? "Pro Plan" : "Free User"} · ${S.credits} token · บริษัทของคุณ ${S.freeCo || "—"}`;
     if ($("#segLang")) $$("#segLang button").forEach(b => b.setAttribute("aria-selected", b.dataset.lang === S.lang));
     const z = ZONES[zoneOf(c.promo, c.amp)];
-    $("#chipZone").innerHTML = `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${esc(z.l)} · OI <b>${c.ipi}</b>`
+    $("#chipZone").innerHTML = `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${esc(z.l)} · OIS <b>${c.ipi}</b>`
       + (isEdited() ? ` · <b style="color:var(--brand)">แก้ค่าเอง</b>` : "");
   };
   buildNav();
