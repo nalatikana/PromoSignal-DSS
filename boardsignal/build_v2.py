@@ -27,6 +27,7 @@ parts = {
     "/*__INVEST__*/": rd(ROOT / "src" / "v2_invest.js"),
     "/*__STRATEGY__*/": rd(ROOT / "src" / "v2_strategy.js"),
     "/*__PILOT__*/": rd(ROOT / "src" / "v2_pilot.js"),
+    "/*__REPORTS__*/": rd(ROOT / "src" / "v2_reports.js"),
 }
 for k, v in parts.items():
     assert k in html, f"ไม่พบ placeholder {k}"

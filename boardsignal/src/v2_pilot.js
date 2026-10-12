@@ -335,16 +335,103 @@ const COMP_Q = [
   { q: "ระบบให้คะแนนกรรมการรายบุคคลหรือไม่", o: ["ให้ — เพื่อใช้ประกอบการสรรหา", "ไม่ — ประเมินโครงสร้างคณะกรรมการระดับองค์กรเท่านั้น (PDPA ม.26)"], c: 1 },
   { q: "ตัวเลขของระบบเป็นความสัมพันธ์เชิงสาเหตุ (การปรับบอร์ดจะทำให้นวัตกรรมเพิ่ม) หรือไม่", o: ["ใช่", "ไม่ — เป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง"], c: 1 },
 ];
-const SV_STEPS = ["เอกสารชี้แจงและความยินยอม", "ส่วนที่ 1 ข้อมูลทั่วไป", "ส่วนที่ 2 งานตามสถานการณ์", "ส่วนที่ 3 SUS", "ส่วนที่ 4 TAM", "ส่วนที่ 5 ความเข้าใจ", "ส่วนที่ 6 ปลายเปิด"];
-const svNew = () => ({ id: plId(), p1: {}, task: {}, sus: {}, tam: {}, comp: {}, open: {} });
-const svDemo = () => { const c = cur(), v = verdictOf(c); return { c, v, tier: v.tier, quad: v.quad, reg: v.regime || "ยังไม่ validate" }; };
+/* ส่วนที่ 4ข แทรกหลัง TAM — คงโครงสร้าง 6 ส่วนตามเอกสาร REC (ส่วนที่ 4 มีสองช่วงย่อย) */
+const SV_STEPS = ["เอกสารชี้แจงและความยินยอม", "ส่วนที่ 1 ข้อมูลทั่วไป", "ส่วนที่ 2 งานตามสถานการณ์", "ส่วนที่ 3 SUS", "ส่วนที่ 4 TAM", "ส่วนที่ 4ข คุณค่าเชิงพาณิชย์", "ส่วนที่ 5 ความเข้าใจ", "ส่วนที่ 6 ปลายเปิด"];
+const SV_DONE = SV_STEPS.length;
+const svShuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+/** การทดสอบที่ 1 (A/B) — สุ่มกลุ่มตอนให้ความยินยอม: grid = มี 2×2 · table = ข้อมูลชุดเดียวกันเป็นตาราง/ข้อความ */
+const svNew = () => {
+  let lens = null; try { lens = typeof ucLens === "function" ? (ucLens() || {}).id ?? null : null; } catch (e) { lens = null; }
+  return { id: plId(), arm: Math.random() < .5 ? "grid" : "table", lens, demoT: (cur() || {}).t || null,
+    perm: { q4: svShuffle(["ok", "causal", "indiv", "other"]), q5: svShuffle(["ok", "zone", "cp", "tier"]) },
+    p1: {}, task: {}, tasks: {}, ti: 0, sus: {}, tam: {}, wtp: {}, comp: {}, open: {} };
+};
+const svDemo = r => { const c = (r && r.demoT && byT[r.demoT]) ? coOf(r.demoT) : cur(), v = verdictOf(c);
+  return { c, v, tier: v.tier, quad: v.quad, reg: v.regime || "ยังไม่ validate", cP: c.cP !== undefined ? c.cP : cpOf(c.promo),
+    sx: "AB".includes(v.quad) ? 1 : -1, sy: "AD".includes(v.quad) ? 1 : -1 }; };
+/** คำถามสำหรับที่ประชุมบอร์ดที่เหมาะกับแต่ละโซน (ตัวเลือกที่ถูกของงาน 4) */
+const SV_ZQ = {
+  A: "จะกำหนดตัวชี้วัดและรอบติดตามอย่างไร ให้แผนนวัตกรรมแบบเปิดที่ทั้ง CEO และบอร์ดหนุนอยู่แล้วเปลี่ยนเป็นผลลัพธ์ที่ตรวจสอบได้",
+  B: "เกณฑ์อนุมัติ ทบทวน และหยุดโครงการนวัตกรรมที่ CEO ผลักดัน ชัดเจนเพียงพอหรือไม่ และบอร์ดมีทักษะที่จะกำกับโครงการเหล่านี้หรือยัง",
+  C: "tier ที่สูงมาจากความระมัดระวังที่เข้ากัน — บริษัทมีฐานความพร้อม (ทักษะบอร์ด ทรัพยากร พันธมิตร) เพียงพอหรือยังหากจะเริ่มนวัตกรรมแบบเปิด",
+  D: "บอร์ดอยู่ในรูปแบบที่พร้อมหนุน แต่ฝ่ายจัดการยังไม่สื่อสารโอกาส — มีโอกาสจากพันธมิตรภายนอกใดที่ยังไม่ถูกนำเสนอต่อบอร์ด",
+};
+const SV_OPP = { A: "C", C: "A", B: "D", D: "B" };
+/** คำถามที่ถูกของงาน 4 = คำถามข้อแรกของช่องนั้นในเอกสารแนวทาง 2×2 ของลูกค้า (COMPASS) — ใช้ SV_ZQ เป็นค่าสำรอง */
+const svZQ = q => (typeof COMPASS === "object" && COMPASS[q] && COMPASS[q].qs && COMPASS[q].qs[0]) || SV_ZQ[q] || "—";
+const SV_TL = ["tier", "quad", "reg", "q4", "q5"];
+/** งาน 1–5 ของส่วนที่ 2 — คำถามและหลักฐานเหมือนกันทั้งสองกลุ่ม ต่างกันเฉพาะรูปแบบการแสดงหลักฐาน */
+function svTasks(r, d) {
+  const z = ZONES[d.quad] || { l: "—" };
+  const q4 = { ok: svZQ(d.quad), other: svZQ(SV_OPP[d.quad]),
+    causal: "บอร์ดต้องเพิ่มกรรมการหญิงเพื่อเพิ่มนวัตกรรมของบริษัท",
+    indiv: "ควรให้คะแนนกรรมการรายบุคคลเพื่อหาว่าใครทำให้ผลประเมินต่ำ" };
+  const bd = d.v.band || [0, 0];
+  const q5 = { ok: "การปรับองค์ประกอบคณะกรรมการจะทำให้ระดับนวัตกรรมแบบเปิดของบริษัทนี้เปลี่ยนไป",
+    zone: `ตำแหน่งของบริษัทเทียบฐานอ้างอิง REF-928 อยู่ในโซน ${z.l}`,
+    cp: `ภาษาของ CEO ${d.sx > 0 ? "เน้นโอกาสสูงกว่า" : "ต่ำกว่า"}ค่าเฉลี่ยฐานอ้างอิง`,
+    tier: `tier ที่แสดงคือ Tier ${d.tier} และช่วง 90% ${tierOf(bd[0]) !== tierOf(bd[1]) ? "คร่อมมากกว่าหนึ่ง tier" : "อยู่ใน tier เดียว"}` };
+  return [
+    { k: "tier", q: "งาน 1 — จากหลักฐานในกรอบ บริษัทสาธิตอยู่ tier ใด", o: [1, 2, 3, 4].map(v => ({ v, l: "Tier " + v })), ok: v => v === d.tier },
+    { k: "quad", q: "งาน 2 — บริษัทสาธิตอยู่ quadrant ใด", o: ["D", "A", "C", "B"].map(v => ({ v, l: `${ZONES[v].l} (${v})` })), ok: v => v === d.quad },
+    { k: "reg", q: "งาน 3 — ป้าย regime ของปีบัญชีที่แสดงคือข้อใด", o: ["PASS", "CAUTION", "FAIL", "ยังไม่ validate"].map(v => ({ v, l: v })), ok: v => v === d.reg },
+    { k: "q4", q: "งาน 4 — จากข้อมูลนี้ ข้อใดเป็นคำถามที่เหมาะสมที่สุดสำหรับนำเข้าที่ประชุมบอร์ด", o: (r.perm?.q4 || Object.keys(q4)).map(v => ({ v, l: q4[v] })), ok: v => v === "ok" },
+    { k: "q5", q: "งาน 5 — ข้อใดเป็นสิ่งที่ยังสรุปไม่ได้จากข้อมูลนี้", o: (r.perm?.q5 || Object.keys(q5)).map(v => ({ v, l: q5[v] })), ok: v => v === "ok" },
+  ];
+}
+/** ข้อความแถบสถานะ — ใช้เหมือนกันทั้งสองกลุ่ม */
+function svStatus(d) {
+  const v = d.v, bd = v.band || [NaN, NaN];
+  return `<div class="sbar ${esc(v.st.c)} pl-ev-sb"><div class="sbtop"><b>Tier ${v.tier}</b><span>ช่วง 90% ${fmt(bd[0], 1)}–${fmt(bd[1], 1)}</span>
+      <span class="pill mute">regime ปีบัญชี ${esc(v.fy)}: ${esc(d.reg)}</span></div>
+    <div class="sbmsg">${esc(v.st.s)}</div>
+    ${v.chips.length ? `<div class="sbchips">${v.chips.map(x => `<span class="chip">${esc(x.k)}</span>`).join("")}</div>` : ""}</div>`;
+}
+/** กลุ่ม grid — 2×2 ขนาดเล็ก ตำแหน่งจุดตามเครื่องหมายและขนาดของ cP / amp เทียบช่วงของ REF-928 */
+let _svSc = null;
+function svGrid(d) {
+  const c = d.c;
+  if (!_svSc) _svSc = { x: Math.max(...REF_PTS.map(p => Math.abs(p[0] - OM.P))) || 1, y: Math.max(...REF_PTS.map(p => Math.abs(p[1]))) || 1 };
+  const W = 340, H = 236, L = 30, R = 8, T = 8, B = 30, cx = (L + W - R) / 2, cy = (T + H - B) / 2, hw = (W - R - L) / 2 - 12, hh = (H - B - T) / 2 - 12;
+  /* ตำแหน่งตามเครื่องหมายของ quadrant ที่ระบบคำนวณ (ให้ภาพตรงกับตาราง) · ระยะจากเส้นแบ่งตามขนาด |cP|, |amp| */
+  const x = cx + d.sx * (6 + clamp(Math.abs(d.cP) / _svSc.x, 0, 1) * (hw - 6)), y = cy - d.sy * (6 + clamp(Math.abs(c.amp || 0) / _svSc.y, 0, 1) * (hh - 6));
+  const cell = (x0, y0, k) => `<rect x="${x0}" y="${y0}" width="${cx - L}" height="${cy - T}" fill="${ZONES[k].c}" fill-opacity=".07" stroke="var(--line)"/>
+    <text x="${x0 + (cx - L) / 2}" y="${y0 + 16}" font-size="11.5" font-weight="600" text-anchor="middle" fill="${ZONES[k].c}">${ZONES[k].l} (${k})</text>`;
+  return `<svg class="pl-mini" viewBox="0 0 ${W} ${H}" role="img" aria-label="Strategy Grid 2×2 ของบริษัทสาธิต">
+    ${cell(L, T, "D")}${cell(cx, T, "A")}${cell(L, cy, "C")}${cell(cx, cy, "B")}
+    <line x1="${cx}" x2="${cx}" y1="${T}" y2="${H - B}" stroke="var(--ink-3)" stroke-dasharray="4 3"/>
+    <line x1="${L}" x2="${W - R}" y1="${cy}" y2="${cy}" stroke="var(--ink-3)" stroke-dasharray="4 3"/>
+    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--ink)" stroke="var(--panel)" stroke-width="2.5"/>
+    <text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" font-size="9" font-weight="700" text-anchor="middle" fill="var(--panel)">1</text>
+    <text x="${(L + W - R) / 2}" y="${H - 9}" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">CEO Promotion Focus →</text>
+    <text transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">สัญญาณบทบาทของโครงสร้างบอร์ด →</text></svg>
+    <div class="pl-mcap">จุด 1 = บริษัทสาธิต · CEO Promotion Focus เปอร์เซ็นไทล์ ${fmt(c.dp, 0)} · สัญญาณบทบาทของโครงสร้างบอร์ด เปอร์เซ็นไทล์ ${fmt(c.ap, 0)} · เส้นประ = ค่าเฉลี่ยฐานอ้างอิง / amp = 0</div>`;
+}
+/** กลุ่ม table — ข้อมูลชุดเดียวกับ grid ในรูปตาราง ไม่มีภาพ */
+function svTable(d) {
+  const c = d.c, z = ZONES[d.quad] || { l: "—" };
+  return `<div class="tw"><table class="pl-evt"><tbody>
+    <tr><th>Quadrant</th><td><b>${esc(z.l)} (${esc(d.quad)})</b></td></tr>
+    <tr><th>CEO Promotion Focus</th><td>${d.sx > 0 ? "สูงกว่า" : "ต่ำกว่า"}ค่าเฉลี่ยฐานอ้างอิง (เปอร์เซ็นไทล์ ${fmt(c.dp, 0)})</td></tr>
+    <tr><th>สัญญาณบทบาทของโครงสร้างบอร์ด</th><td>${d.sy > 0 ? "อยู่ในรูปแบบที่สัมพันธ์กับการหนุน (≥ 0)" : "ไม่อยู่ในรูปแบบที่สัมพันธ์กับการหนุน (< 0)"} (เปอร์เซ็นไทล์ ${fmt(c.ap, 0)})</td></tr>
+  </tbody></table></div>`;
+}
+const SV_WTP_SETS = [[40000, 180000], [60000, 250000], [90000, 330000]];
+const SV_WTP_OPT = { a: "ก", b: "ข", c: "ค", d: "ง" };
+const SV_ROLE = ["ผู้ใช้ผล", "ผู้เสนอซื้อ", "ผู้อนุมัติงบ", "ไม่เกี่ยว"];
+const SV_YN = ["ใช่", "ไม่แน่ใจ", "ไม่"];
+const SV_PAY = ["OpenInnoScore เป็นหลัก", "ที่ปรึกษาเป็นหลัก", "ทั้งสอง", "ไม่จ่ายเพิ่ม"];
+let _svT0 = {};
+const svPct = v => isNaN(v) ? "—" : fmt(v, 0) + "%";
+const svMedian = a => { const b = a.filter(v => typeof v === "number" && !isNaN(v)).sort((x, y) => x - y); if (!b.length) return NaN;
+  const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
 function susScore(s) { if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].some(i => !s[i])) return NaN;
   let t = 0; for (let i = 1; i <= 10; i++) t += i % 2 ? s[i] - 1 : 5 - s[i]; return t * 2.5; }
 const tamMean = (t, a, b) => plMean([...Array(b - a + 1)].map((_, i) => t[a + i]).filter(Boolean));
 const compPct = c => 100 * COMP_Q.filter((q, i) => c[i] === q.c).length / COMP_Q.length;
 function viewSurvey() {
-  const sv = PL.survey, st = sv.step, r = sv.cur, d = svDemo();
-  const prog = `<div class="pl-prog" aria-label="ความคืบหน้า"><span style="width:${Math.round(st / 7 * 100)}%"></span></div>
+  const sv = PL.survey, st = sv.step, r = sv.cur, d = svDemo(r);
+  const prog = `<div class="pl-prog" aria-label="ความคืบหน้า"><span style="width:${Math.round(st / SV_DONE * 100)}%"></span></div>
     <div class="pl-steps">${SV_STEPS.map((s, i) => `<span class="${i === st ? "on" : i < st ? "done" : ""}">${i}. ${esc(s)}</span>`).join("")}</div>`;
   const navBtn = (back, next, nextLab) => `<div class="pl-tools" style="margin-top:14px">${back ? `<button class="btn g" data-svstep="${st - 1}">← ย้อนกลับ</button>` : ""}<span class="spacer"></span>
     <button class="btn p" data-svstep="${st + 1}">${nextLab || "ถัดไป →"}</button></div>`;
@@ -354,7 +441,8 @@ function viewSurvey() {
   if (st === 0) body = `<div class="card"><h3>เอกสารชี้แจงผู้เข้าร่วมการทดสอบ</h3>
       <div class="pl-info">
         <p><b>วัตถุประสงค์</b> — ทดสอบความสามารถในการใช้งานและการยอมรับต้นแบบ OpenInnoScore™ (Dashboard Simulation) เพื่อปรับปรุงระบบก่อนขยายผล</p>
-        <p><b>ใช้เวลา</b> ประมาณ 15–20 นาที · 6 ส่วน: ข้อมูลทั่วไป (ช่วงกว้าง) · งานตามสถานการณ์ 3 งาน · SUS 10 ข้อ · TAM 17 ข้อ · แบบทดสอบความเข้าใจ 5 ข้อ · คำถามปลายเปิด 2 ข้อ</p>
+        <p><b>ใช้เวลา</b> ประมาณ 15–20 นาที · 6 ส่วน: ข้อมูลทั่วไป (ช่วงกว้าง) · งานตามสถานการณ์ 5 งาน (จับเวลา) · SUS 10 ข้อ · TAM 17 ข้อ และส่วนที่ 4ข ทางเลือกการซื้อ 3 ชุด · แบบทดสอบความเข้าใจ 5 ข้อ · คำถามปลายเปิด 2 ข้อ</p>
+        <p><b>การจัดกลุ่ม</b> — ระบบสุ่มรูปแบบการแสดงหลักฐานในส่วนที่ 2 (ภาพ 2×2 หรือตาราง) ให้แต่ละท่าน เพื่อเปรียบเทียบความเข้าใจและเวลาที่ใช้ระหว่างสองรูปแบบ · ผลไม่ได้ใช้ประเมินตัวท่าน</p>
         <p><b>ความเป็นส่วนตัว</b> — ไม่เก็บชื่อ อีเมล IP หรือรหัสพนักงาน · คำตอบเก็บในเครื่องนี้ด้วยรหัสสุ่ม · รายงานผลเป็นกลุ่มเมื่อมีผู้ตอบ ≥ 5 คนเท่านั้น</p>
         <p><b>สิทธิ์ของท่าน</b> — เข้าร่วมโดยสมัครใจ ถอนตัวได้ทุกขั้นตอนโดยปิดหน้านี้ ไม่มีผลต่อหน้าที่การงาน</p>
         <p><b>ผู้วิจัย</b> — โครงการ OpenInnoScore™ (ติดต่อผ่านช่องทางของโครงการ)</p>
@@ -362,29 +450,57 @@ function viewSurvey() {
       <div class="note" style="margin-top:8px">บริษัทสาธิตที่ใช้ในงานตามสถานการณ์คือบริษัทที่เลือกอยู่ด้านบนขณะนี้: <b>${esc(d.c.t)} · ${esc(d.c.n)}</b> — เปลี่ยนได้จากตัวเลือกบริษัทก่อนเริ่ม</div>
       <div class="pl-tools" style="margin-top:14px"><button class="btn p" id="plSvConsent">ยินยอมและเริ่มตอบ</button>
         ${sv.resp.length ? `<span class="chip">บันทึกในเครื่องแล้ว <b>${sv.resp.length}</b> ชุด</span>` : ""}</div></div>`;
-  else if (st === 7) body = `<div class="card" style="text-align:center;padding:36px"><div style="font-size:30px">✓</div><h3 style="justify-content:center">ขอบคุณที่ร่วมทดสอบ</h3>
+  else if (st === SV_DONE) body = `<div class="card" style="text-align:center;padding:36px"><div style="font-size:30px">✓</div><h3 style="justify-content:center">ขอบคุณที่ร่วมทดสอบ</h3>
       <p class="desc">คำตอบของท่านถูกบันทึกในเครื่องนี้ด้วยรหัสสุ่ม (ไม่มีข้อมูลระบุตัวตน) · ผลจะรายงานเป็นกลุ่มเมื่อ n ≥ 5</p>
       <button class="btn s" data-svstep="0">กลับหน้าแรกของแบบสอบถาม</button></div>`;
   else if (!r) body = `<div class="note">ยังไม่ได้ให้ความยินยอม</div>`;
   else if (st === 1) body = `<div class="card"><h3>ส่วนที่ 1 · ข้อมูลทั่วไป (ช่วงกว้าง)</h3>
       <p class="pl-qt">1. สายงานของท่าน</p>${radio("p1", "role", ["กลยุทธ์", "เลขานุการบริษัท / กำกับดูแล", "อื่น ๆ"], r.p1.role)}
       <p class="pl-qt">2. ประสบการณ์ทำงานที่เกี่ยวข้อง</p>${radio("p1", "exp", ["< 5 ปี", "5–10 ปี", "> 10 ปี"], r.p1.exp)}${navBtn(true)}</div>`;
-  else if (st === 2) body = `<div class="card"><h3>ส่วนที่ 2 · งานตามสถานการณ์ (บริษัทสาธิต: ${esc(d.c.t)})</h3>
-      <p class="desc">เปิดหน้าที่ระบุในแท็บหรือหน้าต่างเดียวกัน อ่านค่าแล้วกลับมาตอบ — ระบบจะตรวจคำตอบเทียบค่าจริงหลังส่งแบบสอบถาม</p>
-      <p class="pl-qt">งาน 1 — เปิดหน้า <button class="lnk" data-goto="profile">Company Profile</button> ของบริษัทสาธิต แล้วอ่าน tier ที่แสดง</p>${radio("task", "tier", [{ v: 1, l: "Tier 1" }, { v: 2, l: "Tier 2" }, { v: 3, l: "Tier 3" }, { v: 4, l: "Tier 4" }], r.task.tier)}
-      <p class="pl-qt">งาน 2 — เปิดหน้า <button class="lnk" data-goto="matrix">เมทริกซ์ 2×2</button> แล้วอ่านว่าบริษัทสาธิตอยู่ quadrant ใด</p>${radio("task", "quad", [{ v: "A", l: "Deliver (A)" }, { v: "B", l: "Discipline (B)" }, { v: "C", l: "Develop (C)" }, { v: "D", l: "Discover (D)" }], r.task.quad)}
-      <p class="pl-qt">งาน 3 — ดูป้าย regime ของปีบัญชีที่แสดง (PASS / CAUTION / FAIL) ในแถบสถานะหรือหน้า <button class="lnk" data-goto="valid">หลักฐานความแม่น</button></p>${radio("task", "reg", ["PASS", "CAUTION", "FAIL", "ไม่พบป้าย"], r.task.reg)}
-      ${navBtn(true)}</div>`;
+  else if (st === 2) {
+    const T = svTasks(r, d), ti = clamp(r.ti || 0, 0, T.length - 1), t = T[ti], a = (r.tasks || {})[t.k];
+    if (!_svT0[ti]) _svT0[ti] = performance.now();
+    body = `<div class="card"><h3>ส่วนที่ 2 · งานตามสถานการณ์ (บริษัทสาธิต: ${esc(d.c.t)}) <span class="pill mute" style="margin-left:auto">งาน ${ti + 1} / ${T.length}</span></h3>
+      <p class="desc">ตอบจาก<b>หลักฐานในกรอบด้านล่างเท่านั้น</b> (ไม่ต้องเปิดหน้าอื่น) · ระบบบันทึกเวลาที่ใช้ตอบแต่ละงาน — ไม่ได้ใช้ประเมินตัวท่าน</p>
+      <div class="pl-ev" data-arm="${esc(r.arm)}"><div class="pl-ev-h">หลักฐานของบริษัทสาธิต · ${esc(d.c.t)} · ${esc(d.c.n)} · ปีบัญชี ${esc(d.v.fy)}</div>
+        <div class="pl-ev-b">${r.arm === "grid" ? svGrid(d) : svTable(d)}${svStatus(d)}</div></div>
+      <p class="pl-qt">${esc(t.q)}</p>
+      <div class="pl-opts ${ti >= 3 ? "pl-col" : ""}">${t.o.map(o => `<label class="${a && a.ans === o.v ? "on" : ""}"><input type="radio" name="svt-${t.k}" data-svtask="${ti}" value="${esc(o.v)}"${a && a.ans === o.v ? " checked" : ""}> ${esc(o.l)}</label>`).join("")}</div>
+      <div class="pl-tools" style="margin-top:14px">${ti ? `<button class="btn g" data-svti="${ti - 1}">← งานก่อนหน้า</button>` : `<button class="btn g" data-svstep="1">← ย้อนกลับ</button>`}<span class="spacer"></span>
+        ${ti < T.length - 1 ? `<button class="btn p" data-svti="${ti + 1}" id="plSvTiNext" ${a ? "" : "disabled"}>งานถัดไป →</button>`
+          : `<button class="btn p" data-svstep="3" id="plSvTiNext" ${a ? "" : "disabled"}>ถัดไป →</button>`}</div></div>`;
+  }
   else if (st === 3) body = `<div class="card"><h3>ส่วนที่ 3 · System Usability Scale (10 ข้อ)</h3><p class="desc">1 = ไม่เห็นด้วยอย่างยิ่ง … 5 = เห็นด้วยอย่างยิ่ง</p>${likert("sus", SUS_ITEMS, 1)}${navBtn(true)}</div>`;
   else if (st === 4) body = `<div class="card"><h3>ส่วนที่ 4 · การยอมรับเทคโนโลยี (TAM · 17 ข้อ)</h3><p class="desc">5 = เห็นด้วยอย่างยิ่ง … 1 = ไม่เห็นด้วยอย่างยิ่ง</p>
       ${TAM_GRP.map(([k, l, a, b]) => `<div class="pl-grp">${k} · ${esc(l)}</div>${likert("tam", TAM_ITEMS.slice(a - 1, b), a)}`).join("")}${navBtn(true)}</div>`;
-  else if (st === 5) body = `<div class="card"><h3>ส่วนที่ 5 · แบบทดสอบความเข้าใจ (5 ข้อ)</h3>
+  else if (st === 5) {
+    const w = r.wtp || {};
+    body = `<div class="card"><h3>ส่วนที่ 4ข · คุณค่าเชิงพาณิชย์ (ทางเลือกการซื้อ 3 ชุด)</h3>
+      <div class="note warn pl-wtpnote">ราคาเป็นสมมติฐานสำหรับการทดสอบ ไม่ใช่ใบเสนอราคา · ความเห็นว่ามีประโยชน์ ≠ ความเต็มใจจ่าย ≠ การอนุมัติซื้อจริง (Schmidt &amp; Bijmolt, 2020)</div>
+      <p class="desc">สมมติว่าองค์กรของท่านต้องเลือกวิธีประเมินคณะกรรมการรอบปีหน้า — ในแต่ละชุด เลือก<b>หนึ่ง</b>ทางเลือกที่องค์กรน่าจะเลือกจริง (ราคาต่อปี ไม่รวม VAT)</p>
+      ${SV_WTP_SETS.map(([pb, pc], i) => { const k = "s" + (i + 1), v = w[k];
+        const opt = [["a", "วิธีเดิม", "แบบประเมินบอร์ดฟรี + สรุปใน Excel", 0], ["b", "เครื่องมือ + รายงาน", "เครื่องมือ OpenInnoScore + รายงาน", pb],
+          ["c", "เครื่องมือ + ที่ปรึกษา", "เครื่องมือ + ที่ปรึกษาตีความ/ประชุมหารือ", pc], ["d", "ไม่ซื้อ", "ไม่ซื้อ / ไม่เปลี่ยนวิธี", null]];
+        return `<div class="pl-cset"><div class="pl-grp">ชุดที่ ${i + 1}</div><div class="pl-cbox">${opt.map(([o, h, sc, pr]) => `<label class="${v === o ? "on" : ""}">
+          <input type="radio" name="wtp-${k}" data-sv="wtp" data-k="${k}" value="${o}"${v === o ? " checked" : ""}>
+          <span class="pl-ck">(${SV_WTP_OPT[o]}) ${esc(h)}</span><span class="pl-cs">${esc(sc)}</span>
+          <span class="pl-cp">${pr === null ? "—" : pr === 0 ? "0 บาท" : fmt(pr) + " บาท/ปี"}</span></label>`).join("")}</div></div>`; }).join("")}
+      <p class="pl-qt">บทบาทของท่านในการตัดสินใจซื้อเครื่องมือลักษณะนี้</p>${radio("wtp", "role", SV_ROLE, w.role)}
+      <p class="pl-qt">หากมีการทดลองใช้แบบเสียเงิน 3 เดือน ท่านจะเสนอให้องค์กรทดลองหรือไม่</p>${radio("wtp", "trial", SV_YN, w.trial)}
+      <p class="pl-qt">(ก) ท่านคาดว่าเครื่องมือนี้ลดเวลางานของเลขานุการบริษัท/ฝ่าย CG ได้ประมาณกี่ชั่วโมงต่อรอบการประเมิน</p>
+      <label class="pl-lab pl-hrs"><input class="inp" type="number" min="0" max="1000" step="1" data-svwtp="hrs" value="${w.hrs ?? ""}"> ชั่วโมง / รอบ</label>
+      <p class="pl-qt">(ข) เครื่องมือทำให้พบประเด็นพัฒนาที่วิธีเดิมไม่พบหรือไม่</p>${radio("wtp", "newIss", SV_YN, w.newIss)}
+      <label class="pl-lab">ประเด็นอะไร (ถ้ามี — ไม่ระบุชื่อบุคคล)<textarea class="inp pl-ta" rows="2" data-svwtp="newIssTxt">${esc(w.newIssTxt || "")}</textarea></label>
+      <p class="pl-qt">(ค) หากซื้อ ท่านจะจ่ายเพิ่มเพื่อ OpenInnoScore โดยเฉพาะ หรือจ่ายเฉพาะบริการที่ปรึกษา</p>${radio("wtp", "pay", SV_PAY, w.pay)}
+      ${navBtn(true)}</div>`;
+  }
+  else if (st === 6) body = `<div class="card"><h3>ส่วนที่ 5 · แบบทดสอบความเข้าใจ (5 ข้อ)</h3>
       ${COMP_Q.map((q, i) => `<p class="pl-qt">${i + 1}. ${esc(q.q)}</p>${radio("comp", String(i), q.o.map((o, j) => ({ v: j, l: o })), r.comp[i])}`).join("")}${navBtn(true)}</div>`;
-  else if (st === 6) body = `<div class="card"><h3>ส่วนที่ 6 · คำถามปลายเปิด</h3>
+  else if (st === 7) body = `<div class="card"><h3>ส่วนที่ 6 · คำถามปลายเปิด</h3>
       <label class="pl-lab">1. ฟังก์ชันที่อยากให้เพิ่มใน Dashboard Simulation<textarea class="inp pl-ta" rows="3" data-svopen="f1">${esc(r.open.f1 || "")}</textarea></label>
       <label class="pl-lab">2. ข้อเสนอแนะอื่น<textarea class="inp pl-ta" rows="3" data-svopen="f2">${esc(r.open.f2 || "")}</textarea></label>
       <div class="note" style="margin-top:8px">กรุณาไม่ระบุชื่อบุคคลหรือข้อมูลที่ระบุตัวตนในคำตอบ</div>
-      <div class="pl-tools" style="margin-top:14px"><button class="btn g" data-svstep="5">← ย้อนกลับ</button><span class="spacer"></span><button class="btn p" id="plSvSubmit">ส่งแบบสอบถาม</button></div></div>`;
+      <div class="pl-tools" style="margin-top:14px"><button class="btn g" data-svstep="${st - 1}">← ย้อนกลับ</button><span class="spacer"></span><button class="btn p" id="plSvSubmit">ส่งแบบสอบถาม</button></div></div>`;
   return pageHead("Pilot · การทดสอบการยอมรับ", "แบบสอบถามทดสอบการยอมรับ (consent + anonymous)",
     `ตามแนวทางยกเว้นการพิจารณาจริยธรรม (REC exemption): ไม่เก็บข้อมูลระบุตัวตน · ผลรายงานเป็นกลุ่ม · ถอนตัวได้ทุกเมื่อ`)
     + prog + body + svAdmin();
@@ -395,7 +511,7 @@ function svAdmin() {
   const sus = R.map(x => susScore(x.sus)).filter(v => !isNaN(v)), susM = plMean(sus);
   const tam = TAM_GRP.map(([k, l, a, b]) => [k, plMean(R.map(x => tamMean(x.tam, a, b)).filter(v => !isNaN(v)))]);
   const comp = plMean(R.map(x => compPct(x.comp)));
-  const task = ["tier", "quad", "reg"].map(k => [k, n ? 100 * R.filter(x => x.taskOk && x.taskOk[k]).length / n : NaN]);
+  const task = ["tier", "quad", "reg", "q4", "q5"].map(k => [k, n ? 100 * R.filter(x => x.taskOk && x.taskOk[k]).length / n : NaN]);
   const sub = (lab, key) => { const g = {}; R.forEach(x => { const v = x.p1[key] || "ไม่ระบุ"; (g[v] = g[v] || []).push(x); });
     return `<tr><th colspan="3">${lab}</th></tr>` + Object.entries(g).map(([v, xs]) => `<tr><td>${esc(v)}</td><td class="n">${xs.length}</td>
       <td class="n">${xs.length >= 5 ? fmt(plMean(xs.map(x => susScore(x.sus)).filter(q => !isNaN(q))), 1) : `<span class="pill mute">n < 5 ไม่แสดง</span>`}</td></tr>`).join(""); };
@@ -404,32 +520,89 @@ function svAdmin() {
     <div class="grid g4 tight">
       <div class="stat"><div class="k">SUS เฉลี่ย</div><div class="v" style="color:${susM >= 68 ? "var(--ok)" : "inherit"}">${fmt(susM, 1)}</div><div class="u">เป้าหมาย ≥ 68 (n=${sus.length})</div></div>
       ${tam.map(([k, m]) => `<div class="stat"><div class="k">TAM · ${k}</div><div class="v">${fmt(m, 2)}</div><div class="u">จาก 5</div></div>`).join("")}
-      <div class="stat"><div class="k">ความเข้าใจถูกต้อง</div><div class="v">${fmt(comp, 0)}%</div><div class="u">5 ข้อ</div></div>
-      ${task.map(([k, p]) => `<div class="stat"><div class="k">งาน ${k} ตรงกับระบบ</div><div class="v">${fmt(p, 0)}%</div></div>`).join("")}</div>
+      <div class="stat"><div class="k">ความเข้าใจถูกต้อง</div><div class="v">${svPct(comp)}</div><div class="u">5 ข้อ</div></div>
+      ${task.map(([k, p], i) => `<div class="stat"><div class="k">งาน ${i + 1} (${k}) ถูกต้อง</div><div class="v">${svPct(p)}</div></div>`).join("")}</div>
     <div class="tw" style="margin-top:12px"><table><thead><tr><th>กลุ่มย่อย</th><th class="n">n</th><th class="n">SUS เฉลี่ย</th></tr></thead><tbody>${sub("สายงาน", "role")}${sub("ประสบการณ์", "exp")}</tbody></table></div>
+    ${svAdminAB(R)}${svAdminWtp(R)}
     <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="plSvCsv">Export CSV</button><button class="btn g" id="plSvJson">Export JSON</button><button class="btn g" id="plSvClear">ล้างคำตอบทั้งหมด</button></div></div>`;
+}
+/** การทดสอบที่ 1 · Grid vs ตาราง — แสดงตัวเลขเมื่อแต่ละกลุ่ม n ≥ 5 */
+function svAdminAB(R) {
+  const arms = [["grid", "Grid 2×2"], ["table", "ตาราง/ข้อความ"]].map(([k, l]) => {
+    const xs = R.filter(x => x.arm === k && x.tasks), ok = xs.length >= 5;
+    const acc = plMean(xs.map(x => 100 * SV_TL.filter(t => x.tasks[t] && x.tasks[t].correct).length / SV_TL.length));
+    return { k, l, n: xs.length, ok, acc, med: SV_TL.map(t => svMedian(xs.map(x => x.tasks[t] && x.tasks[t].ms))), tot: svMedian(xs.map(x => x.task_ms)) };
+  });
+  const cell = (a, v) => a.ok ? v : `<span class="pill mute">n < 5</span>`, sec = ms => fmt(ms / 1000, 1);
+  return `<h3 style="margin-top:16px">การทดสอบที่ 1 · Grid vs ตาราง (A/B) <span class="pill mute">แสดงผลเมื่อแต่ละกลุ่ม n ≥ 5</span></h3>
+    <p class="desc">สุ่มกลุ่มตอนให้ความยินยอม · หลักฐานและคำถามชุดเดียวกัน ต่างกันเฉพาะรูปแบบการแสดง · เวลา = มัธยฐาน (วินาที) จากแสดงงานถึงตอบ</p>
+    <div class="tw"><table class="pl-abt"><thead><tr><th>กลุ่ม</th><th class="n">n</th><th class="n">ความถูกต้อง งาน 1–5</th>
+      ${SV_TL.map((_, i) => `<th class="n">งาน ${i + 1}</th>`).join("")}<th class="n">รวม</th></tr></thead><tbody>
+      ${arms.map(a => `<tr><td>${a.l}</td><td class="n">${a.n}</td><td class="n">${cell(a, fmt(a.acc, 0) + "%")}</td>
+        ${a.med.map(m => `<td class="n">${cell(a, sec(m))}</td>`).join("")}<td class="n">${cell(a, sec(a.tot))}</td></tr>`).join("")}</tbody></table></div>`;
+}
+/** การทดสอบที่ 2 · คุณค่าเชิงพาณิชย์ */
+function svAdminWtp(R) {
+  const W = R.map(x => x.wtp).filter(w => w && (w.s1 || w.s2 || w.s3 || w.role)), n = W.length;
+  const pc = (xs, f) => xs.length ? 100 * xs.filter(f).length / xs.length : NaN;
+  const dist = (k, labs) => labs.map(l => `<span class="chip">${esc(l)} <b>${svPct(pc(W, w => w[k] === l))}</b></span>`).join(" ");
+  const sets = SV_WTP_SETS.map(([pb, pc2], i) => { const k = "s" + (i + 1), xs = W.filter(w => w[k]);
+    return `<tr><td>ชุดที่ ${i + 1} <span style="color:var(--ink-3)">· ข ${fmt(pb)} / ค ${fmt(pc2)}</span></td><td class="n">${xs.length}</td>
+      ${Object.keys(SV_WTP_OPT).map(o => `<td class="n">${svPct(pc(xs, w => w[k] === o))}</td>`).join("")}</tr>`; }).join("");
+  const allNo = pc(W.filter(w => w.s1 && w.s2 && w.s3), w => w.s1 === "d" && w.s2 === "d" && w.s3 === "d");
+  const hrs = W.map(w => w.hrs).filter(v => typeof v === "number");
+  const byRole = SV_ROLE.map(l => { const xs = W.filter(w => w.role === l);
+    return `<tr><td>${esc(l)}</td><td class="n">${xs.length}</td><td class="n">${xs.length >= 5 ? fmt(pc(xs.flatMap(w => ["s1", "s2", "s3"].map(k => w[k]).filter(Boolean)), v => v === "b" || v === "c"), 0) + "%" : `<span class="pill mute">n < 5</span>`}</td></tr>`; }).join("");
+  return `<h3 style="margin-top:16px">การทดสอบที่ 2 · คุณค่าเชิงพาณิชย์ (n = ${n})</h3>
+    <p class="desc">ราคาเป็นสมมติฐานสำหรับการทดสอบ ไม่ใช่ใบเสนอราคา · ความเห็นว่ามีประโยชน์ ≠ ความเต็มใจจ่าย ≠ การอนุมัติซื้อจริง (Schmidt &amp; Bijmolt, 2020) — ต้องติดตามการทดลองแบบเสียเงินหรือการอนุมัติซื้อจริงต่อ</p>
+    <div class="tw"><table class="pl-abt"><thead><tr><th>ชุดราคา</th><th class="n">n</th><th class="n">(ก) วิธีเดิม</th><th class="n">(ข) เครื่องมือ+รายงาน</th><th class="n">(ค) +ที่ปรึกษา</th><th class="n">(ง) ไม่ซื้อ</th></tr></thead><tbody>${sets}</tbody></table></div>
+    <div class="grid g4 tight" style="margin-top:10px">
+      <div class="stat"><div class="k">ไม่ซื้อทั้ง 3 ชุด</div><div class="v">${svPct(allNo)}</div><div class="u">เลือก (ง) ทุกชุด</div></div>
+      <div class="stat"><div class="k">จะเสนอทดลองแบบเสียเงิน 3 เดือน</div><div class="v">${svPct(pc(W, w => w.trial === "ใช่"))}</div><div class="u">ตอบ "ใช่"</div></div>
+      <div class="stat"><div class="k">ชั่วโมงที่ลดได้ / รอบ (เฉลี่ย)</div><div class="v">${fmt(plMean(hrs), 1)}</div><div class="u">n = ${hrs.length} · มัธยฐาน ${fmt(svMedian(hrs), 1)}</div></div>
+      <div class="stat"><div class="k">พบประเด็นพัฒนาใหม่</div><div class="v">${svPct(pc(W, w => w.newIss === "ใช่"))}</div><div class="u">ตอบ "ใช่"</div></div></div>
+    <div class="pl-dist"><span class="pl-dl">บทบาทในการซื้อ</span> ${dist("role", SV_ROLE)}</div>
+    <div class="pl-dist"><span class="pl-dl">จ่ายเพิ่มเพื่ออะไร</span> ${dist("pay", SV_PAY)}</div>
+    <div class="tw" style="margin-top:8px"><table><thead><tr><th>บทบาทในการซื้อ</th><th class="n">n</th><th class="n">เลือก (ข) หรือ (ค) · ทุกชุดรวม</th></tr></thead><tbody>${byRole}</tbody></table></div>`;
 }
 function wireSurvey(h) {
   const sv = PL.survey;
-  const c = h.querySelector("#plSvConsent"); if (c) c.onclick = () => { sv.cur = svNew(); sv.step = 1; plSave(); render(); };
+  const c = h.querySelector("#plSvConsent"); if (c) c.onclick = () => { sv.cur = svNew(); _svT0 = {}; sv.step = 1; plSave(); render(); };
+  h.querySelectorAll("[data-svti]").forEach(b => b.onclick = () => { if (!sv.cur) return; sv.cur.ti = +b.dataset.svti; plSave(); render(); });
+  h.querySelectorAll("input[data-svtask]").forEach(i => i.onchange = () => { const r = sv.cur; if (!r) return;
+    const ti = +i.dataset.svtask, t = svTasks(r, svDemo(r))[ti]; let v = i.value; if (t.k === "tier") v = +v;
+    const ms = Math.round(performance.now() - (_svT0[ti] || performance.now()));
+    r.tasks = r.tasks || {}; r.tasks[t.k] = { ans: v, correct: !!t.ok(v), ms }; r.task[t.k] = v; plSave();
+    i.closest(".pl-opts").querySelectorAll("label").forEach(l => l.classList.toggle("on", l.contains(i)));
+    const nx = h.querySelector("#plSvTiNext"); if (nx) nx.disabled = false; });
+  h.querySelectorAll("[data-svwtp]").forEach(el => el.onchange = () => { const r = sv.cur; if (!r) return; r.wtp = r.wtp || {};
+    const k = el.dataset.svwtp; r.wtp[k] = k === "hrs" ? (el.value === "" ? null : clamp(+el.value || 0, 0, 1000)) : el.value.trim().slice(0, 500); plSave(); });
   h.querySelectorAll("[data-svstep]").forEach(b => b.onclick = () => { sv.step = +b.dataset.svstep; plSave(); render(); });
   h.querySelectorAll("input[data-sv]").forEach(i => i.onchange = () => { if (!sv.cur) return;
     const g = i.dataset.sv, k = i.dataset.k; let v = i.value; if (g === "task" && k === "tier") v = +v; if (g === "comp") v = +v;
-    sv.cur[g][k] = v; plSave(); i.closest(".pl-opts").querySelectorAll("label").forEach(l => l.classList.toggle("on", l.contains(i))); });
+    sv.cur[g] = sv.cur[g] || {}; sv.cur[g][k] = v; plSave(); i.closest(".pl-opts, .pl-cbox").querySelectorAll("label").forEach(l => l.classList.toggle("on", l.contains(i))); });
   plWireScale(h, (k, v) => { if (!sv.cur) return; const [g, i] = k.split(":"); sv.cur[g][+i] = v; plSave();
     const sc = h.querySelector(`.pl-scale[data-scale="${k}"]`); sc.querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.v === v)); });
   h.querySelectorAll("[data-svopen]").forEach(t => t.onchange = () => { if (sv.cur) { sv.cur.open[t.dataset.svopen] = t.value.trim().slice(0, 1000); plSave(); } });
   const sb = h.querySelector("#plSvSubmit"); if (sb) sb.onclick = () => {
-    if (!sv.cur) return; const d = svDemo(), r = sv.cur;
-    r.taskOk = { tier: r.task.tier === d.tier, quad: r.task.quad === d.quad, reg: r.task.reg === d.reg };
+    if (!sv.cur) return; const r = sv.cur, d = svDemo(r), tk = r.tasks || {};
+    r.taskOk = Object.fromEntries(SV_TL.map(k => [k, !!(tk[k] && tk[k].correct)]));
+    r.task_ms = SV_TL.every(k => tk[k]) ? SV_TL.reduce((s, k) => s + tk[k].ms, 0) : null;
     r.demo = d.c.t; r.day = new Date().toISOString().slice(0, 10); r.sus_score = susScore(r.sus);
-    sv.resp.push(r); sv.cur = null; sv.step = 7; plSave(); toast("บันทึกแบบสอบถามแล้ว (ไม่มีข้อมูลระบุตัวตน)"); render();
+    sv.resp.push(r); sv.cur = null; sv.step = SV_DONE; plSave(); toast("บันทึกแบบสอบถามแล้ว (ไม่มีข้อมูลระบุตัวตน)"); render();
   };
   const x = h.querySelector("#plSvCsv"); if (x) x.onclick = () => plDl("ois_survey_responses.csv", plCsv([
-    ["id", "day", "demo", "role", "exp", "task_tier", "task_quad", "task_reg", "tier_ok", "quad_ok", "reg_ok", ...SUS_ITEMS.map((_, i) => "sus" + (i + 1)), "sus_score",
-      ...TAM_ITEMS.map((_, i) => "tam" + (i + 1)), ...COMP_Q.map((_, i) => "comp" + (i + 1)), "open1", "open2"],
-    ...sv.resp.map(r => [r.id, r.day, r.demo, r.p1.role, r.p1.exp, r.task.tier, r.task.quad, r.task.reg, r.taskOk?.tier, r.taskOk?.quad, r.taskOk?.reg,
-      ...SUS_ITEMS.map((_, i) => r.sus[i + 1]), r.sus_score, ...TAM_ITEMS.map((_, i) => r.tam[i + 1]), ...COMP_Q.map((q, i) => r.comp[i] === q.c ? 1 : 0), r.open.f1, r.open.f2])]), "text/csv;charset=utf-8");
+    ["id", "day", "demo", "arm", "lens", "role", "exp", "task_tier", "task_quad", "task_reg", "tier_ok", "quad_ok", "reg_ok",
+      ...SV_TL.flatMap((_, i) => [`t${i + 1}_ans`, `t${i + 1}_ok`, `t${i + 1}_ms`]), "task_total_ms", "q4_order", "q5_order",
+      ...SUS_ITEMS.map((_, i) => "sus" + (i + 1)), "sus_score", ...TAM_ITEMS.map((_, i) => "tam" + (i + 1)),
+      "wtp_s1", "wtp_s2", "wtp_s3", "wtp_buy_role", "wtp_trial3m", "wtp_hrs_saved", "wtp_new_issue", "wtp_new_issue_txt", "wtp_pay_for",
+      ...COMP_Q.map((_, i) => "comp" + (i + 1)), "open1", "open2"],
+    ...sv.resp.map(r => { const tk = r.tasks || {}, w = r.wtp || {};
+      return [r.id, r.day, r.demo, r.arm ?? "", r.lens ?? "", r.p1.role, r.p1.exp, r.task.tier, r.task.quad, r.task.reg, r.taskOk?.tier, r.taskOk?.quad, r.taskOk?.reg,
+      ...SV_TL.flatMap(k => tk[k] ? [tk[k].ans, tk[k].correct ? 1 : 0, tk[k].ms] : ["", "", ""]), r.task_ms ?? "", (r.perm?.q4 || []).join("|"), (r.perm?.q5 || []).join("|"),
+      ...SUS_ITEMS.map((_, i) => r.sus[i + 1]), r.sus_score, ...TAM_ITEMS.map((_, i) => r.tam[i + 1]),
+      ...["s1", "s2", "s3"].map(k => w[k] ? SV_WTP_OPT[w[k]] : ""), w.role, w.trial, w.hrs ?? "", w.newIss, w.newIssTxt, w.pay,
+      ...COMP_Q.map((q, i) => r.comp[i] === q.c ? 1 : 0), r.open.f1, r.open.f2]; })]), "text/csv;charset=utf-8");
   const j = h.querySelector("#plSvJson"); if (j) j.onclick = () => plDl("ois_survey_responses.json", JSON.stringify(sv.resp, null, 2));
   const cl = h.querySelector("#plSvClear"); if (cl) cl.onclick = () => { if (!confirm(`ลบคำตอบทั้งหมด ${sv.resp.length} ชุด?`)) return; sv.resp = []; plSave(); render(); };
 }
