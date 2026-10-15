@@ -165,15 +165,15 @@ function viewDatasets() {
     <div class="card"><div class="mv-dsh"><b>③</b> ชุดข้อมูลผู้ใช้ / Pilot <span class="pill ${srv ? "ok" : "mute"}">${srv ? "ฐานข้อมูลเซิร์ฟเวอร์" : "เก็บในเบราว์เซอร์นี้"}</span></div>
       <div class="mv-big">${edited.length} <span>บริษัทที่แก้ค่าใน Zone A</span></div>
       <ul class="mv-ul"><li>ค่าป้อน Zone A (บอร์ด · ภาษา CEO · LIWC-22) · เอกสารที่วิเคราะห์ ${(S.docs || []).length} ไฟล์ (บริษัทที่เลือก)</li>
-        <li>นำเข้า JSON ${IMP.length} ครั้ง · ฟิลด์ที่ผู้ใช้เพิ่ม ${UF.length} ฟิลด์</li>
+        <li>ฟิลด์ที่ผู้ใช้เพิ่ม ${UF.length} ฟิลด์</li>
         <li>RFQ: ${rfq ? "มีผลของ " + esc(c.t) : "ยังไม่มีผลของ " + esc(c.t)} · แบบประเมินตนเองของคณะกรรมการ (SET): ${bset ? "มีผล" : "ยังไม่มีผล"} · แบบสอบถาม Pilot ${svN} ชุด</li>
         <li>ไม่ถูกนำไปปรับแบบจำลองหรือชุด ① — ใช้กับการคำนวณของผู้ใช้เท่านั้น</li></ul>
       <button class="btn g" id="mvDsExport" style="margin-top:8px">ส่งออกชุดข้อมูลผู้ใช้ (JSON)</button></div>
   </div>`;
   const imp = `<div class="card" style="margin-bottom:14px"><h3>Import รายงานประจำปี → Dataset (ขอบเขตข้อ 2.1)</h3>
     <div class="tw"><table class="mv-ptbl"><thead><tr><th>กลุ่มตัวแปร</th><th>ที่มาในรายงาน</th><th>สถานะในต้นแบบ</th></tr></thead><tbody>
-      <tr><td><b>IV</b> · ภาษา CEO</td><td>${src("msg")}</td><td><span class="pill ok">ทำได้แล้ว</span> อัปโหลด PDF/TXT ใน Zone A → นับคำในเบราว์เซอร์ · ส่งออก .txt ไป LIWC-22 แล้วกรอกค่ากลับได้</td></tr>
-      <tr><td><b>MV / CV</b> · องค์ประกอบบอร์ด</td><td>${src("p2_7|att1")}</td><td><span class="pill warn">กรอก/นำเข้า</span> กรอกจำนวนคนใน Zone A หรือนำเข้า JSON ด้านล่าง · อ่านตารางกรรมการจาก PDF อัตโนมัติ = Phase II</td></tr>
+      <tr><td><b>IV</b> · ภาษา CEO</td><td>${src("msg")}</td><td><span class="pill ok">ทำได้แล้ว</span> สาร CEO เป็นไฟล์ .txt ≥ 2,000 คำ ใน Zone A → นับคำในเบราว์เซอร์ · ส่งออก .txt ไป LIWC-22 แล้วกรอกค่ากลับได้</td></tr>
+      <tr><td><b>MV / CV</b> · องค์ประกอบบอร์ด</td><td>${src("p2_7|att1")}</td><td><span class="pill warn">คลังข้อมูล</span> ใช้ข้อมูลที่เจ้าหน้าที่ตรวจแล้ว หรือกรอกจำนวนคนใน Zone A · แบบ 56-1 อัปโหลดเป็น .pdf/.txt เพื่ออ้างอิง</td></tr>
       <tr><td><b>CV</b> · การเงิน / ข้อมูลทั่วไป</td><td>${src("p3|p1_4|p1_5")}</td><td><span class="pill mute">Phase II</span> ไม่จำเป็นต่อคะแนน (คะแนนใช้เฉพาะ cP × amp) · เตรียมช่องผ่านฟิลด์ที่ผู้ใช้เพิ่มเอง</td></tr>
       <tr><td><b>DV</b> · open innovation</td><td>${src("p1_1|p1_4")}</td><td><span class="pill mute">งานวิจัย</span> นับด้วยมือตามคู่มือ coding · ใช้ตรวจ validity เท่านั้น</td></tr>
     </tbody></table></div>
@@ -200,24 +200,13 @@ function viewDatasets() {
       ${UF.map(f => `<tr><td><code>${esc(f.name)}</code></td><td>${esc(f.type)}</td><td>${esc(f.role)}</td>
         <td><input class="inp" data-ufval="${esc(f.id)}" value="${esc((f.vals || {})[c.t] ?? "")}" aria-label="ค่าของ ${esc(f.name)}" style="max-width:180px"></td>
         <td><button class="btn g" data-ufdel="${esc(f.id)}">ลบ</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="gx-sm" style="margin-top:8px">ยังไม่มีฟิลด์ที่ผู้ใช้เพิ่ม</p>`}</div>`;
-  const r = _smRes;
-  const json = `<div class="card" style="margin-bottom:14px" id="mvImp"><h3>นำเข้า JSON (รูปแบบ SET Smart Marketplace · One Report Structured Data) <span class="pill warn">${esc(SM_NOTE)}</span></h3>
-    <p class="desc">ยังไม่มี Data Specification ของ SET ต้นแบบจึงมี<b>ชั้นแปลงฟิลด์ (mapping layer)</b> ที่อ่านโครงร่างตัวอย่างด้านล่าง แล้วเติมค่าลง Zone A
-      (จำนวนกรรมการ · กรรมการหญิง/ครอบครัว → สัดส่วน · political ties · สารถึงผู้ถือหุ้น → วิเคราะห์ภาษา CEO) · เมื่อได้ Data Specification จริงจะแก้เฉพาะตาราง mapping</p>
-    <textarea class="inp" id="smTxt" rows="7" spellcheck="false" placeholder='{"symbol": "...", "fiscalYear": 2023, "part2": {...}}'>${esc(_smText)}</textarea>
-    <div class="gx-row" style="margin-top:8px"><button class="btn s" id="smSample">ใส่ JSON ตัวอย่าง (${esc(c.t)})</button>
-      <button class="btn s" id="smFileBtn">เลือกไฟล์ .json</button><input type="file" id="smFile" accept=".json,application/json" style="display:none">
-      <button class="btn p" id="smParse">ตรวจและแปลงฟิลด์</button></div>
-    ${r ? `<div style="margin-top:10px">${r.err ? `<div class="note crit">${esc(r.err)}</div>` : `
-      <div class="tw"><table class="mv-ptbl"><thead><tr><th>ฟิลด์ปลายทาง</th><th>พาธใน JSON</th><th>ค่า</th></tr></thead><tbody>
-        ${r.rows.map(x => `<tr><td>${esc(x.l)}</td><td><code>${esc(x.from || "—")}</code></td>
-          <td>${x.v === undefined ? `<span class="pill mute">ไม่พบ</span>` : x.to === "letter" ? `${fmt(String(x.v).split(/\s+/).filter(Boolean).length)} คำ` : esc(typeof x.v === "number" ? fmt(x.v, Number.isInteger(x.v) ? 0 : 1) : x.v)}</td></tr>`).join("")}</tbody></table></div>
-      ${r.errs.map(e => `<div class="note crit" style="margin-top:6px">${esc(e)}</div>`).join("")}
-      ${r.applied ? `<div class="note ok" style="margin-top:8px"><b>เติมลง Zone A แล้ว</b> · ${esc(r.t)} · ${esc(r.applied.join(" · "))}
-        <button class="btn s" data-goto="docs" style="margin-left:8px">เปิด Zone A</button></div>`
-        : `<div class="gx-row" style="margin-top:8px"><button class="btn p" id="smApply"${r.errs.length ? " disabled" : ""}>เติมลง Zone A ของ ${esc(r.t || "—")}</button>
-          <span class="gx-sm">ค่าที่นำเข้าแทนค่าในฐานข้อมูลต้นแบบเฉพาะในเครื่องนี้ (แก้หรือคืนค่าได้ใน Zone A)</span></div>`}`}</div>` : ""}
-    ${IMP.length ? `<p class="gx-sm" style="margin-top:8px">นำเข้าล่าสุด: ${IMP.slice(0, 3).map(x => `${esc(x.t)} (${esc(x.at)})`).join(" · ")}</p>` : ""}</div>`;
+  /* แก้ไขครั้งที่ 2.4 (ประชุม 15 ต.ค.) — ยกเลิกการนำเข้า JSON / การดึงอัตโนมัติจาก SET Smart Marketplace
+     เพราะไฟล์จากตลาดหลักทรัพย์ฯ ดึงอัตโนมัติแล้วถูกต้องไม่ครบ ต้องให้เจ้าหน้าที่ตรวจและบันทึกเข้าคลังข้อมูลก่อน */
+  const json = `<div class="card b4-setoff" style="margin-bottom:14px" id="mvImp"><h3>การนำเข้าข้อมูลจาก SET</h3>
+    <div class="note warn"><b>การดึงข้อมูลอัตโนมัติจาก SET / Smart Marketplace ยกเลิก — ใช้ข้อมูลที่เจ้าหน้าที่ตรวจและบันทึกเข้าคลังข้อมูลแล้ว</b></div>
+    <p class="desc" style="margin-top:8px">ข้อมูลใหม่ที่ผู้ใช้อัปโหลดจะเห็นเฉพาะผู้ใช้คนนั้น จนกว่าผู้มีสิทธิ์ตรวจและอนุมัติให้เข้าคลังข้อมูลหลัก</p>
+    <div class="gx-row"><button class="btn p" data-b4go="dataupload">เปิดหน้าอัปโหลดและอนุมัติข้อมูล →</button>
+      <button class="btn s" data-goto="docs">Zone A · สาร CEO (.txt) และแบบ 56-1 (.pdf/.txt)</button></div></div>`;
   const lic = `<div class="card" style="margin-bottom:14px"><h3>เงื่อนไขบริการข้อมูล One Report ของ SET (SET Smart Marketplace)</h3>
     <div class="grid g2" style="gap:14px">
       <ul class="mv-ul"><li>ข้อมูลรายงานประจำปี (One Report) แบบมีโครงสร้าง: การประกอบธุรกิจและผลการดำเนินงาน · การกำกับดูแลกิจการ · งบการเงิน</li>
@@ -228,15 +217,19 @@ function viewDatasets() {
         <tr><td>เผยแพร่ต่อ (redistribution)</td><td>To be announced · ต้องทำสัญญาเผยแพร่ข้อมูลกับ SET แยกต่างหาก</td></tr></tbody></table></div>
     </div>
     <div class="note warn" style="margin-top:10px"><b>ข้อควรระวังเชิงสิทธิ์</b> — ระบบ SaaS ที่แสดงข้อมูลของ SET ให้ผู้ใช้หลายรายเข้าข่าย “เผยแพร่ต่อ” ซึ่งต้องมีสัญญากับ SET ก่อน ·
-      ต้นแบบนี้ไม่เชื่อม API ของ SET และไม่ส่งข้อมูลใดให้ SET — การนำเข้า JSON ด้านบนเป็นไฟล์ที่ผู้ใช้ได้มาเองตามสิทธิ์ของผู้ใช้</div></div>`;
+      ต้นแบบนี้ไม่เชื่อม API ของ SET และไม่ส่งข้อมูลใดให้ SET</div></div>`;
   return pageHead("ระบบและหลักฐาน", "ชุดข้อมูลและ Data Dictionary",
-    "3 ชุดข้อมูลของระบบ · นิยามตัวแปรตามงานวิจัยพร้อมหัวข้อที่มาในแบบ 56-1 One Report · การนำเข้ารายงานประจำปีและ JSON · ออกแบบการเพิ่มฟิลด์เองสำหรับ Phase II")
+    "3 ชุดข้อมูลของระบบ · นิยามตัวแปรตามงานวิจัยพร้อมหัวข้อที่มาในแบบ 56-1 One Report · การนำเข้ารายงานประจำปี · ออกแบบการเพิ่มฟิลด์เองสำหรับ Phase II")
     + (typeof algoStrip === "function" ? algoStrip(0) : "") + ds + imp + dd + json + uf + lic;
 }
 function wireDatasets(h) {
   if (typeof wireAlgo === "function") wireAlgo(h);
   const c = cur();
   const ta = h.querySelector("#smTxt"); if (ta) ta.oninput = () => { _smText = ta.value; };
+  h.querySelectorAll("[data-b4go]").forEach(b => b.onclick = () => {
+    const v = b.dataset.b4go;
+    if (typeof VIEWS[v] === "function" && $("#v-" + v)) go(v); else toast("หน้าอัปโหลดและอนุมัติข้อมูลยังไม่พร้อมในไฟล์ฉบับนี้");
+  });
   const parse = () => { _smText = ta ? ta.value : _smText; if (!_smText.trim()) { _smRes = { err: "ยังไม่มีข้อความ JSON" }; return render(); } _smRes = smParse(_smText); render();
     setTimeout(() => { const e = $("#mvImp"); if (e) e.scrollIntoView({ block: "start" }); }, 30); };
   const sb = h.querySelector("#smSample"); if (sb) sb.onclick = () => { _smText = JSON.stringify(smSample(c), null, 2); _smRes = null; render(); };
@@ -283,13 +276,15 @@ const RULES8 = [
 function evData(c) {
   const v = verdictOf(c), L = typeof ucLens === "function" ? ucLens() : { lab: "—", audience: "—" };
   const fy = c.fy || FY_SHOWN, oi = c.oisInd ?? oisIndOf(signalB(c.promo, c.amp), c.ind), bs = c.bsize;
-  const ceo = S.ceo && isEdited(c.t) && S.ceo.r ? { src: "วิเคราะห์จากเอกสารที่ผู้ใช้อัปโหลด" + (S.ceo.name ? ` (${S.ceo.name})` : ""), words: S.ceo.r.wc,
+  /* แก้ไขรอบสุดท้าย: ป้าย "เอกสารที่ผู้ใช้อัปโหลด" เฉพาะเมื่อค่า CEO ที่ใช้อยู่มาจากไฟล์นั้นจริง (dp ตรงกับผลของไฟล์) — การแก้ค่าบอร์ดช่องอื่นไม่ทำให้ป้ายนี้ขึ้น */
+  const ceoFromDoc = !!(S.ceo && S.ceo.r && isEdited(c.t) && isFinite(S.ceo.r.dp) && Math.abs(+S.ceo.r.dp - +c.dp) < 0.5);
+  const ceo = ceoFromDoc ? { src: "วิเคราะห์จากเอกสารที่ผู้ใช้อัปโหลด" + (S.ceo.name ? ` (${S.ceo.name})` : ""), words: S.ceo.r.wc,
       pro: S.ceo.r.pro && S.ceo.r.pro.n, pre: S.ceo.r.pre && S.ceo.r.pre.n }
     : { src: c.pRaw !== undefined ? "ค่า LIWC-22 ที่ผู้ใช้กรอกใน Zone A" : "แผงข้อมูลวิจัย (LIWC-22 · สารถึงผู้ถือหุ้นภาษาอังกฤษ ปีบัญชีล่าสุด)" };
   return {
     meta: { generated_at: new Date().toISOString(), prepared_by: S.user || "", plan: PLAN_LAB ? PLAN_LAB[S.plan] : S.plan },
     case: { ticker: c.t, name: c.n, industry: IND[c.ind] || "", fiscal_year: fy, fiscal_year_be: fy + 543, use_case: L.lab, audience: L.audience, edited_inputs: isEdited(c.t) },
-    ceo_text: Object.assign({ promotion_focus_percentile: c.dp, promotion_focus_raw: Math.round(c.promo * 100) / 100 }, ceo),
+    ceo_text: Object.assign({ promotion_focus_percentile: c.dp }, ceo),
     board_context: { board_size: bs || null, board_size_assumed: !bs, female_ratio: c.fem, female_count: bs ? Math.round(c.fem * bs) : null,
       family_ratio: c.fam, political_ties: c.pol ? 1 : 0, avg_tenure_years: Math.round(c.ten * 10) / 10, note: "อ่านอย่างเดียว · ครอบครัว/political ties เป็นบริบท (R6) · อายุงานไม่เข้าสูตร" },
     score: { openinnoscore: Math.round((c.ois ?? c.ipi) * 10) / 10, band90: v.band, tier: v.tier, tier_uncertain: tierOf(v.band[0]) !== tierOf(v.band[1]),
@@ -299,7 +294,7 @@ function evData(c) {
     chips: v.chips.map(x => ({ label: x.k, why: x.t })), oi_flag: v.flag,
     rules: RULES8.map(([k, d, f]) => ({ rule: k, text: d, triggered: !!f(v, c) })),
     provenance: { reference: "REF-928 · 928 บริษัท-ปี · 209 บริษัท", reference_version: OIS.version, parameter_record: OIS.version,
-      data_dictionary: "REF-928 Data Dictionary (JSM Model 3, edit6)", build_date: document.lastModified || "", mode: typeof OIS_SRV !== "undefined" && OIS_SRV ? "เซิร์ฟเวอร์ (สูตรอยู่ฝั่งเซิร์ฟเวอร์)" : "ไฟล์ออฟไลน์" },
+      data_dictionary: "REF-928 Data Dictionary (JSM Model 3, edit6)", build_date: null, build_note: "ต้นแบบไม่ได้ฝังเวลาสร้างไฟล์ — อ้างรุ่นด้วย reference_version", mode: typeof OIS_SRV !== "undefined" && OIS_SRV ? "เซิร์ฟเวอร์ (สูตรอยู่ฝั่งเซิร์ฟเวอร์)" : "ไฟล์ออฟไลน์" },
     rfq: mvSum("rfqSummary", c.t) || null, bod_set: mvSum("bodSetSummary", c.t, fy) || null,
   };
 }
@@ -315,14 +310,14 @@ function evHtml(d) {
       ${row("ปีบัญชี", `${d.case.fiscal_year} (พ.ศ. ${d.case.fiscal_year_be})`)}${row("มุมมองการใช้งาน (Use case)", `${esc(d.case.use_case)} · ผู้อ่าน ${esc(d.case.audience)}`)}
       ${row("ค่าป้อน", d.case.edited_inputs ? `<span class="pill warn">ผู้ใช้แก้ค่าใน Zone A</span>` : "ค่าจากฐานข้อมูลต้นแบบ")}</table></section>
     <section><h4>2 · หลักฐานภาษา CEO</h4><table class="mv-evt">
-      ${row("CEO Promotion Focus", `เปอร์เซ็นไทล์ ${fmt(d.ceo_text.promotion_focus_percentile, 0)} ของ REF-928 · ค่าดิบ ${fmt(d.ceo_text.promotion_focus_raw, 2)}% ของคำ`)}
+      ${row("CEO Promotion Focus", `เปอร์เซ็นไทล์ ${fmt(d.ceo_text.promotion_focus_percentile, 0)} ของ REF-928`)}
       ${row("ที่มา", esc(d.ceo_text.src))}
       ${d.ceo_text.words ? row("คำที่นับได้", `${fmt(d.ceo_text.words)} คำ · คำเชิงรุก (ไฮไลต์) ${fmt(d.ceo_text.pro || 0)} · คำเชิงป้องกัน ${fmt(d.ceo_text.pre || 0)}`) : ""}</table></section>
     <section><h4>3 · บริบทบอร์ดและบริษัท (อ่านอย่างเดียว)</h4><table class="mv-evt">
       ${row("จำนวนกรรมการ", d.board_context.board_size ? `${d.board_context.board_size} คน` : "ไม่มีในฐานข้อมูล")}
       ${row("กรรมการหญิง", `${pct1(d.board_context.female_ratio)}${d.board_context.female_count !== null ? ` (≈ ${d.board_context.female_count} คน${d.board_context.female_count < CRIT_N ? " · ต่ำกว่า critical mass" : ""})` : ""}`)}
       ${row("กรรมการครอบครัว (บริบท R6)", pct1(d.board_context.family_ratio))}${row("political ties (บริบท R6)", d.board_context.political_ties ? "1 · มี" : "0 · ไม่มี")}
-      ${row("อายุงานเฉลี่ยของบอร์ด", `${fmt(d.board_context.avg_tenure_years, 1)} ปี · ไม่มีผลต่อคะแนน (δT = 0)`)}</table></section>
+      ${row("อายุงานเฉลี่ยของบอร์ด", `${fmt(d.board_context.avg_tenure_years, 1)} ปี · ไม่มีผลต่อคะแนนหลัก (δT = 0)`)}</table></section>
     <section><h4>4 · คะแนน ช่วง 90% Tier และ quadrant</h4><table class="mv-evt">
       ${row("OpenInnoScore", `<b>${fmt(d.score.openinnoscore, 1)}</b> · ช่วง 90% ${fmt(d.score.band90[0], 1)}–${fmt(d.score.band90[1], 1)} · สูตรที่แสดง ${esc(d.score.formula_shown)}`)}
       ${row("Tier (ทั้งฐาน)", `Tier ${d.score.tier}${d.score.tier_uncertain ? ` <span class="pill warn">tier ไม่แน่นอน (R8)</span>` : ""}`)}
@@ -339,22 +334,24 @@ function evHtml(d) {
     <section><h4>${d.rfq || d.bod_set ? 7 : 6} · ที่มาของข้อมูล (provenance)</h4><table class="mv-evt">
       ${row("ฐานอ้างอิง", esc(d.provenance.reference))}${row("รุ่นฐานอ้างอิง", `<code>${esc(d.provenance.reference_version)}</code>`)}
       ${row("parameter record", `<code>${esc(d.provenance.parameter_record)}</code> · ค่าสัมประสิทธิ์ไม่แสดง (DP6)`)}${row("Data Dictionary", esc(d.provenance.data_dictionary))}
-      ${row("วันที่ไฟล์ระบบ (build)", esc(d.provenance.build_date))}${row("โหมด", esc(d.provenance.mode))}</table></section>
+      ${row("วันที่ไฟล์ระบบ (build)", esc(d.provenance.build_date || (typeof b5T === "function" ? b5T("Not recorded — see reference_version", "ไม่ระบุ — อ้างรุ่นด้วย reference_version") : "ไม่ระบุ — อ้างรุ่นด้วย reference_version")))}${row("โหมด", esc(d.provenance.mode))}</table></section>
     <footer class="mv-evf">เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช่ความน่าจะเป็น · ไม่ใช้ประเมินหรือคัดเลือกกรรมการรายบุคคล (PDPA ม.26) · ไม่ใช่คำแนะนำการลงทุนหรือการพิจารณาสินเชื่อ</footer>
   </article>`;
 }
 function evMd(d) {
-  const L = [`# Evidence Pack · ${d.case.name} (${d.case.ticker})`, "", `- ปีบัญชี: ${d.case.fiscal_year} (พ.ศ. ${d.case.fiscal_year_be}) · ${d.case.industry}`,
-    `- Use case: ${d.case.use_case} · ผู้อ่าน ${d.case.audience}`, `- จัดทำ: ${d.meta.generated_at} · ${d.meta.prepared_by}`, "",
-    "## หลักฐานภาษา CEO", `- CEO Promotion Focus: เปอร์เซ็นไทล์ ${d.ceo_text.promotion_focus_percentile} · ค่าดิบ ${d.ceo_text.promotion_focus_raw}% · ที่มา ${d.ceo_text.src}`,
-    ...(d.ceo_text.words ? [`- คำที่นับได้ ${d.ceo_text.words} · เชิงรุก ${d.ceo_text.pro || 0} · เชิงป้องกัน ${d.ceo_text.pre || 0}`] : []), "",
-    "## บริบทบอร์ด (อ่านอย่างเดียว)", `- กรรมการ ${d.board_context.board_size ?? "—"} คน · หญิง ${pct1(d.board_context.female_ratio)} · ครอบครัว ${pct1(d.board_context.family_ratio)} (บริบท R6) · political ties ${d.board_context.political_ties} (บริบท R6) · อายุงาน ${d.board_context.avg_tenure_years} ปี (ไม่เข้าสูตร)`, "",
-    "## คะแนน", `- OpenInnoScore ${d.score.openinnoscore} · ช่วง 90% ${d.score.band90.join("–")} · Tier ${d.score.tier}${d.score.tier_uncertain ? " (ไม่แน่นอน R8)" : ""} · Quartile ในอุตสาหกรรม ${d.score.industry_quartile}`,
-    `- quadrant ${d.quadrant.code} ${d.quadrant.name} · ${d.quadrant.status_message}`, `- Validity FY${d.regime.fiscal_year}: ${d.regime.verdict} · ธงสัญญาณ OI: ${d.oi_flag ? "มี" : "ไม่มี"}`,
-    `- ป้าย: ${d.chips.map(x => x.label).join(" · ") || "—"}`, "", "## กติกา R1–R8", ...d.rules.map(r => `- ${r.rule} ${r.text} — ${r.triggered ? "เกิดขึ้น/ใช้แล้ว" : "ไม่เข้าเงื่อนไข"}`), "",
-    ...(d.rfq ? ["## RFQ (ไม่เข้าคะแนน)", d.rfq, ""] : []), ...(d.bod_set ? ["## แบบประเมินตนเองของคณะกรรมการ (SET)", d.bod_set, ""] : []),
-    "## ที่มาของข้อมูล", `- ${d.provenance.reference} · รุ่น ${d.provenance.reference_version} · parameter record ${d.provenance.parameter_record}`, `- build ${d.provenance.build_date} · ${d.provenance.mode}`, "",
-    "_เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช้ประเมินกรรมการรายบุคคล_"];
+  /* หัวข้อ/ป้ายแปลเมื่อ S.lang === "EN" (b5H → I18N.t) · ค่าข้อมูล (ชื่อบริษัท ตัวเลข ข้อความจากแบบประเมิน) คงเดิม */
+  const H = typeof b5H === "function" ? b5H : (x => x);
+  const L = [`# Evidence Pack · ${d.case.name} (${d.case.ticker})`, "", `- ${H("ปีบัญชี")}: ${d.case.fiscal_year} (${H("พ.ศ.")} ${d.case.fiscal_year_be}) · ${d.case.industry}`,
+    `- Use case: ${d.case.use_case} · ${H("ผู้อ่าน")} ${d.case.audience}`, `- ${H("จัดทำ")}: ${d.meta.generated_at} · ${d.meta.prepared_by}`, "",
+    "## " + H("หลักฐานภาษา CEO"), `- CEO Promotion Focus: ${H("เปอร์เซ็นไทล์")} ${d.ceo_text.promotion_focus_percentile} · ${H("ที่มา")} ${d.ceo_text.src}`,
+    ...(d.ceo_text.words ? [`- ${H("คำที่นับได้")} ${d.ceo_text.words} · ${H("เชิงรุก")} ${d.ceo_text.pro || 0} · ${H("เชิงป้องกัน")} ${d.ceo_text.pre || 0}`] : []), "",
+    "## " + H("บริบทบอร์ด (อ่านอย่างเดียว)"), `- ${H("กรรมการ")} ${d.board_context.board_size ?? "—"} ${H("คน")}${d.board_context.board_size_assumed ? ` (${H("ยังไม่มีจำนวนกรรมการ · What-if ใช้ขนาดบอร์ดสมมติ")} ${typeof BS_DEFAULT !== "undefined" ? BS_DEFAULT : 11} ${H("คน")})` : ""} · ${H("หญิง")} ${pct1(d.board_context.female_ratio)} · ${H("ครอบครัว")} ${pct1(d.board_context.family_ratio)} (${H("บริบท R6")}) · political ties ${d.board_context.political_ties} (${H("บริบท R6")}) · ${H("อายุงาน")} ${d.board_context.avg_tenure_years} ${H("ปี")} (${H("ไม่เข้าสูตร")})`, "",
+    "## " + H("คะแนน"), `- OpenInnoScore ${d.score.openinnoscore} · ${H("ช่วง 90%")} ${d.score.band90.join("–")} · Tier ${d.score.tier}${d.score.tier_uncertain ? ` (${H("ไม่แน่นอน")} R8)` : ""} · ${H("Quartile ในอุตสาหกรรม")} ${d.score.industry_quartile}`,
+    `- quadrant ${d.quadrant.code} ${d.quadrant.name} · ${d.quadrant.status_message}`, `- Validity FY${d.regime.fiscal_year}: ${d.regime.verdict} · ${H("ธงสัญญาณ OI")}: ${d.oi_flag ? H("มี") : H("ไม่มี")}`,
+    `- ${H("ป้าย")}: ${d.chips.map(x => x.label).join(" · ") || "—"}`, "", "## " + H("กติกา R1–R8"), ...d.rules.map(r => `- ${r.rule} ${r.text} — ${r.triggered ? H("เกิดขึ้น/ใช้แล้ว") : H("ไม่เข้าเงื่อนไข")}`), "",
+    ...(d.rfq ? ["## " + H("RFQ (ไม่เข้าคะแนน)"), d.rfq, ""] : []), ...(d.bod_set ? ["## " + H("แบบประเมินตนเองของคณะกรรมการ (SET)"), d.bod_set, ""] : []),
+    "## " + H("ที่มาของข้อมูล"), `- ${d.provenance.reference} · ${H("รุ่น")} ${d.provenance.reference_version} · parameter record ${d.provenance.parameter_record}`, `- build ${d.provenance.build_date || H("ไม่ระบุ (อ้างรุ่นด้วย reference_version)")} · ${d.provenance.mode}`, "",
+    "_" + H("เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช้ประเมินกรรมการรายบุคคล") + "_"];
   return L.join("\n");
 }
 function viewEvidence() {
@@ -362,8 +359,9 @@ function viewEvidence() {
   const head = pageHead("รายงาน", "Evidence Pack · แฟ้มหลักฐานประกอบการตัดสินใจ",
     "รวมทุกอย่างที่ระบบแสดงของบริษัทหนึ่งไว้ในหน้าเดียวสำหรับแฟ้มการตัดสินใจ (งานวิจัย §4.7): ข้อมูลกรณี · ภาษา CEO · บริบทบอร์ด · คะแนนพร้อมช่วง 90% · Tier/quadrant · สถานะ validity · ป้าย · กติกา R1–R8 · ที่มาของข้อมูล");
   if (!mvCanSee(c.t)) return typeof trCoGate === "function" ? trCoGate() : head;
+  /* ระดับ Basic: ไม่สร้างแฟ้มหลักฐานใน DOM เลย (ภาคผนวก ง ข้อ 10) */
+  if (r < 1) return head + (typeof trWall === "function" ? trWall("", "Evidence Pack", "ระดับ Pro ขึ้นไปประกอบแฟ้มหลักฐานรายบริษัท พิมพ์ และส่งออก .md / JSON ได้", "pro") : "");
   const d = evData(c), doc = evHtml(d);
-  if (r < 1) return head + (typeof trWall === "function" ? trWall(doc, "Evidence Pack", "ระดับ Pro ขึ้นไปประกอบแฟ้มหลักฐานรายบริษัท พิมพ์ และส่งออก .md / JSON ได้ · ระดับ Free เห็นตัวอย่างแบบล็อก", "pro") : doc);
   return head + `<div class="gx-row mv-evtools rp-noprint"><button class="btn p" id="evPrint">พิมพ์ / บันทึก PDF</button><button class="btn s" id="evMd">ดาวน์โหลด .md</button>
       <button class="btn s" id="evJson">ดาวน์โหลด JSON</button><span class="gx-sm">ไม่มีค่าสัมประสิทธิ์ในแฟ้ม · ข้อความเชิงความสัมพันธ์ทั้งหมด</span></div>` + doc;
 }

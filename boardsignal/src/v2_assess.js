@@ -144,6 +144,14 @@ function rfqAdmin() {
         <td class="n">${fmt(r.scores.prom, 2)}</td><td class="n">${fmt(r.scores.prev, 2)}</td><td>${RFQ_FOCUS[r.scores.focus]}</td></tr>`).join("")}</tbody></table></div>` : ""}
     <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="rfqCsv" ${R.length ? "" : "disabled"}>Export CSV</button><button class="btn g" id="rfqClear" ${R.length ? "" : "disabled"}>ลบคำตอบทั้งหมด</button></div></div>`;
 }
+/** ตารางสรุปสำหรับผู้ดูแล (รวม α และคำตอบทุกชุดในเครื่อง) — แสดงเฉพาะผู้ดูแลระบบบนเซิร์ฟเวอร์ หรือ Pro Max (ภาคผนวก ง ข้อ 21)
+ *  ระดับอื่นไม่สร้างเนื้อหาของตารางใน DOM */
+const rfqCanAdmin = () => !!S.srvAdmin || (typeof tierRank === "function" && tierRank() >= 2);
+function rfqAdminGate() {
+  if (rfqCanAdmin()) return rfqAdmin();
+  return `<div class="card" style="margin-top:16px" id="rfqAdminLocked"><h3>สรุปผลรวม (ผู้ดูแลงานวิจัย) <span class="pill blue">ผู้ดูแล / Pro Max</span></h3>
+    <p class="desc" style="margin:0">ตารางสรุปคำตอบทุกชุดและค่าความเที่ยง (α) แสดงเฉพาะผู้ดูแลระบบ หรือระดับ Pro Max · ผลของคุณเองแสดงหลังส่งแบบประเมิน</p></div>`;
+}
 function viewRfq() {
   const d = rfqDraft(), done = RFQ_ITEMS.filter(i => d.a[i.n]).length, c = cur();
   const radios = it => `<div class="as-lik" role="radiogroup" aria-label="ข้อ ${it.n}">${[1, 2, 3, 4, 5].map(v => {
@@ -176,8 +184,8 @@ function viewRfq() {
           <div class="card"><h3>วิธีคิดคะแนน</h3>
             <ul class="pl-ul as-ul"><li><b>Promotion</b> = ค่าเฉลี่ยของข้อ 1R, 3, 7, 9R, 10, 11R</li><li><b>Prevention</b> = ค่าเฉลี่ยของข้อ 2R, 4R, 5, 6R, 8R</li>
               <li>R = กลับคะแนน (6 − คำตอบ) · ช่วงคะแนน 1–5</li><li><b>Predominant focus</b> = Promotion − Prevention · บวก = เน้น Promotion</li>
-              <li>สิทธิ์: ทุกระดับ (Free / Pro / Pro Max)</li></ul></div></div></div>`
-    + rfqAdmin();
+              <li>สิทธิ์: ทุกระดับ (Basic / Pro / Pro Max) · ตารางสรุปคำตอบทุกชุดเฉพาะผู้ดูแลระบบหรือ Pro Max</li></ul></div></div></div>`
+    + rfqAdminGate();
 }
 function rfqProg(h) {
   const d = rfqDraft(), n = RFQ_ITEMS.filter(i => d.a[i.n]).length;
@@ -220,10 +228,15 @@ function wireRfq(h) {
   const cl = h.querySelector("#rfqClear"); if (cl) cl.onclick = () => plAsk(cl, `ลบคำตอบ RFQ ทั้งหมด ${RFQ.length} ชุดออกจากเครื่องนี้?`, () => { RFQ = []; rfqSave(); _rfqLast = null; render(); toast("ลบคำตอบ RFQ แล้ว"); });
 }
 /** สรุปสั้นสำหรับหน้าอื่น (เช่น Zone A / รายงาน) — null เมื่อยังไม่มีคำตอบของบริษัทนั้น */
-window.rfqSummary = function (ticker) {
+window.rfqSummary = function (ticker, lang) {
   const R = RFQ.filter(r => r.ticker === ticker && r.scores); if (!R.length) return null;
   const self = R.filter(r => r.role === "self"), base = self.length ? self : R;
   const p = plMean(base.map(r => r.scores.prom)), v = plMean(base.map(r => r.scores.prev)), d = p - v;
+  if ((lang || S.lang) === "EN") {   // ข้อความที่ระบบสร้าง — ภาษาอังกฤษเมื่อหน้าจอ/รายงานเป็น EN
+    const le = d > RFQ_BAND ? "promotion-focused" : d < -RFQ_BAND ? "prevention-focused" : "balanced";
+    return `RFQ assessment for ${ticker}: ${R.length} response${R.length === 1 ? "" : "s"} (CEO self-report ${self.length} · proxy ${R.length - self.length}) · ` +
+      `${self.length ? "from the CEO's own answers" : "from proxy answers"} Promotion ${fmt(p, 2)} · Prevention ${fmt(v, 2)} · difference ${d >= 0 ? "+" : ""}${fmt(d, 2)} (${le}) · not used to compute OpenInnoScore`;
+  }
   const lab = d > RFQ_BAND ? "เน้น Promotion" : d < -RFQ_BAND ? "เน้น Prevention" : "สมดุล";
   return `แบบประเมิน RFQ ของ ${ticker}: ${R.length} ชุด (CEO ตอบเอง ${self.length} · ผู้ประเมินตอบแทน ${R.length - self.length}) · ` +
     `${self.length ? "จากคำตอบของ CEO" : "จากคำตอบแทน (proxy)"} Promotion ${fmt(p, 2)} · Prevention ${fmt(v, 2)} · ผลต่าง ${d >= 0 ? "+" : ""}${fmt(d, 2)} (${lab}) · ไม่ได้ใช้คำนวณ OpenInnoScore`;
@@ -295,8 +308,11 @@ function dictMatch(toks, terms) {
 }
 function dictRun(text, ed) {
   const P = dictParse(ed.prom), V = dictParse(ed.prev), toks = dictTok(text);
-  const mp = dictMatch(toks, P.terms), mv = dictMatch(toks, V.terms), wc = toks.length;
-  return { wc, prom: mp, prev: mv, pf: wc ? (mp.n - mv.n) / wc * 100 : NaN, nP: P.terms.length, nV: V.terms.length, seg: !!SEG };
+  /* ตัวหาร (จำนวนคำทั้งหมด) ใช้ตัวนับคำกลาง window.countWords เมื่อมี — ตรงกับ Zone A และหน้านำเข้าข้อมูลปีใหม่ · การจับคู่คำยังใช้โทเคนจากตัวตัดคำ */
+  const cw = typeof window.countWords === "function" && String(text || "").trim() ? +window.countWords(text) : NaN;
+  const shared = isFinite(cw) && cw > 0, wc = shared ? cw : toks.length;
+  const mp = dictMatch(toks, P.terms), mv = dictMatch(toks, V.terms);
+  return { wc, wcTok: toks.length, wcShared: shared, prom: mp, prev: mv, pf: wc ? (mp.n - mv.n) / wc * 100 : NaN, nP: P.terms.length, nV: V.terms.length, seg: !!SEG };
 }
 function dictHighlight(text, r) {
   const marks = r.prom.hits.map(h => [h.i, h.e, "p"]).concat(r.prev.hits.map(h => [h.i, h.e, "v"])).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
@@ -340,7 +356,7 @@ function viewDict() {
   const top = (per, cls) => Object.entries(per).sort((a, b) => b[1] - a[1]);
   const res = !r ? "" : `<div class="card" id="dictRes"><h3>3 · ผลจาก Dictionary ของผู้ใช้ <span class="pill mute">${esc(r.name || "ไม่มีชื่อ")}</span></h3>
       <div class="grid g4 tight">
-        <div class="stat"><div class="k">จำนวนคำทั้งหมด</div><div class="v" id="dictWc">${fmt(r.wc)}</div><div class="u">${r.seg ? "ตัดคำด้วย Intl.Segmenter (th)" : "ตัดคำแบบสำรอง"}</div></div>
+        <div class="stat"><div class="k">จำนวนคำทั้งหมด</div><div class="v" id="dictWc">${fmt(r.wc)}</div><div class="u" id="dictWcSrc">${r.wcShared ? (typeof b5T === "function" ? b5T("Same word counter as Zone A and data upload", "ตัวนับคำเดียวกับ Zone A และหน้านำเข้าข้อมูล") : "ตัวนับคำเดียวกับ Zone A และหน้านำเข้าข้อมูล") : r.seg ? "ตัดคำด้วย Intl.Segmenter (th)" : "ตัดคำแบบสำรอง"}</div></div>
         <div class="stat"><div class="k">คำ Promotion</div><div class="v" id="dictHp" style="color:var(--s3)">${fmt(r.prom.n)}</div><div class="u">จาก ${r.nP} คำในพจนานุกรม</div></div>
         <div class="stat"><div class="k">คำ Prevention</div><div class="v" id="dictHv" style="color:var(--warn)">${fmt(r.prev.n)}</div><div class="u">จาก ${r.nV} คำในพจนานุกรม</div></div>
         <div class="stat"><div class="k">Promotion Focus</div><div class="v" id="dictPf">${isNaN(r.pf) ? "—" : (r.pf >= 0 ? "+" : "") + fmt(r.pf, 3)}</div><div class="u">ต่อ 100 คำ</div></div></div>
@@ -484,6 +500,50 @@ function bsCalc(ev) {
   const top = ord.slice(0, 2), low = ord.slice(-2).reverse().filter(d => !top.includes(d));
   return { dims, mean: m, pct: (m - sc.lo) / span * 100, n: all.length, top, low, sc };
 }
+/** รวมผลหลายแบบประเมินของบริษัท/ปีเดียวกัน (แก้ไขรอบสุดท้าย · ง-23)
+ *  · แยกตามผู้ประเมิน: ทั้งคณะ (board) · รายบุคคล (indiv) · ชุดย่อย (cmte) — ไม่ผสมกัน
+ *  · ค่ารวม = ค่าเฉลี่ยของผู้ประเมิน (แต่ละแบบมีน้ำหนักเท่ากัน) บนสเกล "ร้อยละของคะแนนเต็ม" จึงรวมแบบที่ใช้มาตราส่วนต่างกันได้ถูกต้อง
+ *  · ค่าเฉลี่ยบนมาตราส่วนเดิมแสดงเฉพาะเมื่อทุกแบบใช้มาตราส่วนเดียวกัน */
+function bsAgg(E) {
+  if (!E || !E.length) return null;
+  const R = E.map(e => ({ e, r: bsCalc(e) }));
+  const scales = [...new Set(E.map(e => e.scale))], same = scales.length === 1, sc = BS_SCALES[scales[0]] || BS_SCALES["0-4"];
+  const by = {};
+  R.forEach(({ r }) => r.dims.forEach(d => { if (!isNaN(d.pct)) (by[d.name] = by[d.name] || []).push(d); }));
+  const dims = Object.entries(by).map(([name, ds]) => ({ name, n: ds.length, pct: plMean(ds.map(d => d.pct)), mean: same ? plMean(ds.map(d => d.mean)) : NaN }));
+  const pct = plMean(R.map(x => x.r.pct)), mean = same ? plMean(R.map(x => x.r.mean)) : NaN;
+  const ord = dims.slice().sort((a, b) => b.pct - a.pct), top = ord.slice(0, 2), low = ord.slice(-2).reverse().filter(d => !top.includes(d));
+  return { n: E.length, per: R.map((x, i) => ({ i: i + 1, at: x.e.at, scale: x.e.scale, mean: x.r.mean, pct: x.r.pct, id: x.e.id })), dims, pct, mean, same, sc, scales, top, low };
+}
+window.bsAgg = bsAgg;
+/** กลุ่มของผลการประเมินบริษัท/ปี → { board, indiv, cmte } (แต่ละกลุ่มเป็นอาร์เรย์) */
+function bsGroups(ticker, fy) {
+  const E = BSE.evals.filter(e => e.ticker === ticker && (!fy || e.fy === fy));
+  return { board: E.filter(e => e.role === "board"), indiv: E.filter(e => e.role === "indiv"), cmte: E.filter(e => e.role === "cmte") };
+}
+/** การ์ดรวมผลรายปี — ทั้งคณะแยกจากรายบุคคล · รายบุคคลแสดงรายผู้ประเมิน (ไม่มีชื่อ) และค่ารวม = ค่าเฉลี่ยของผู้ประเมิน */
+function bsAggCard(ticker) {
+  const L = (en, th) => typeof b5T === "function" ? b5T(en, th) : th;
+  const years = [...new Set(BSE.evals.filter(e => e.ticker === ticker).map(e => e.fy))].sort().reverse();
+  if (!years.length) return "";
+  const blk = years.map(fy => {
+    const g = bsGroups(ticker, fy), out = [];
+    if (g.board.length) { const a = bsAgg([g.board[g.board.length - 1]]);
+      out.push(`<div class="b5-bsg" data-role="board"><b>${esc(BS_ROLES.board)}</b> · ${L(`latest result ${fmt(a.pct, 1)}% of the full score${g.board.length > 1 ? ` (${g.board.length} evaluations, latest used)` : ""}`, `ผลล่าสุด ร้อยละ ${fmt(a.pct, 1)} ของคะแนนเต็ม${g.board.length > 1 ? ` (มี ${g.board.length} ครั้ง ใช้ครั้งล่าสุด)` : ""}`)}</div>`); }
+    if (g.indiv.length) { const a = bsAgg(g.indiv);
+      out.push(`<div class="b5-bsg" data-role="indiv"><b>${esc(BS_ROLES.indiv)}</b> · ${L(`${a.n} evaluations (anonymous)`, `${a.n} แบบประเมิน (ไม่ระบุชื่อ)`)}
+        <div class="tw"><table class="as-tbl b5-bsagg" id="bsAgg-${esc(fy)}"><thead><tr><th>${L("Evaluator", "ผู้ประเมิน")}</th><th>${L("Scale", "มาตราส่วน")}</th><th class="n">${L("Mean", "ค่าเฉลี่ย")}</th><th class="n">${L("% of full score", "% ของเต็ม")}</th></tr></thead><tbody>
+        ${a.per.map(p => `<tr><td>${L("Individual", "รายบุคคล")} #${p.i}</td><td>${esc(p.scale)}</td><td class="n">${fmt(p.mean, 2)}</td><td class="n">${fmt(p.pct, 1)}%</td></tr>`).join("")}
+        <tr class="as-cur b5-bsagg-tot"><td colspan="2">${L(`<b>Aggregate = mean of ${a.n} evaluators</b> (equal weight per evaluation · computed on % of full score)`, `<b>ค่ารวม = ค่าเฉลี่ยของผู้ประเมิน ${a.n} คน</b> (น้ำหนักเท่ากันต่อแบบ · คิดบนร้อยละของคะแนนเต็ม)`)}</td>
+          <td class="n">${a.same ? fmt(a.mean, 2) : "—"}</td><td class="n"><b>${fmt(a.pct, 1)}%</b></td></tr></tbody></table></div>
+        ${a.same ? "" : `<div class="as-sm">${L(`The evaluations use different scales (${a.scales.map(esc).join(", ")}) — combined on % of full score only`, `แบบประเมินใช้มาตราส่วนต่างกัน (${a.scales.map(esc).join(", ")}) — รวมด้วยร้อยละของคะแนนเต็มเท่านั้น`)}</div>`}</div>`); }
+    if (g.cmte.length) out.push(`<div class="b5-bsg" data-role="cmte"><b>${esc(BS_ROLES.cmte)}</b> · ${L(`${g.cmte.length} evaluation(s) (${[...new Set(g.cmte.map(e => e.cmte))].map(esc).join(", ")}) — reported separately, not combined with the whole board`, `${g.cmte.length} แบบ (${[...new Set(g.cmte.map(e => e.cmte))].map(esc).join(", ")}) — รายงานแยก ไม่รวมกับทั้งคณะ`)}</div>`);
+    return `<div class="b5-bsy"><div class="pl-grp">${L("Year", "ปี")} ${esc(fy)}</div>${out.join("")}</div>`;
+  }).join("");
+  return `<div class="card b5-bsaggcard" id="bsAggCard" style="margin-top:14px"><h3>${L("Summary by year", "สรุปรวมรายปี")} · ${esc(asCoName(ticker))}</h3>
+    <p class="desc">${L("Whole-board, individual and committee results are shown separately and never averaged together · several individual evaluations are combined as the “mean of evaluators” · individual results are confidential and anonymous",
+      "ผลทั้งคณะ รายบุคคล และชุดย่อยแสดงแยกกัน ไม่นำมาเฉลี่ยรวมกัน · รายบุคคลหลายแบบรวมเป็น “ค่าเฉลี่ยของผู้ประเมิน” · ผลรายบุคคลเป็นความลับ ไม่มีชื่อ")}</p>${blk}</div>`;
+}
 /** แผนภูมิเรดาร์ (SVG) — ใช้ตัวแปรสีของธีม จึงอ่านได้ทั้งโหมดสว่างและมืด · น้อยกว่า 3 ด้านแสดงเป็นแท่ง */
 function bsRadar(dims) {
   if (dims.length < 3) return `<div class="as-bars">${dims.map((d, i) => `<div class="as-bar"><span>ด้าน ${i + 1}</span><div class="as-track"><i style="width:${clamp(d.pct, 0, 100)}%;background:var(--brand)"></i></div><b>${fmt(d.pct, 0)}%</b></div>`).join("")}</div>`;
@@ -581,7 +641,7 @@ function bsHistory() {
         <td class="n">${fmt(r.mean, 2)} / ${r.sc.hi}</td><td class="n">${fmt(r.pct, 1)}%</td><td>${esc(asThDT(e.at))}</td>
         <td class="as-nw"><button class="lnk" data-bsview="${esc(e.id)}">ดูผล</button> · <button class="lnk" data-bsdel="${esc(e.id)}">ลบ</button></td></tr>`; }).join("")}</tbody></table></div>`
       : `<div class="note">ยังไม่มีผลการประเมินของบริษัทนี้</div>`}
-    <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="bsCsv" ${BSE.evals.length ? "" : "disabled"}>Export CSV (ทุกบริษัท)</button></div></div>`;
+    <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="bsCsv" ${BSE.evals.length ? "" : "disabled"}>Export CSV (ทุกบริษัท)</button></div></div>` + bsAggCard(t);
 }
 function viewBodset() {
   const tab = _bs.tab;
@@ -702,8 +762,9 @@ function wireBodset(h) {
   };
 }
 /** ข้อความสำหรับตัวแทน {{ผลประเมิน BOD}} ในร่าง 56-1 — กระบวนการ + ผลรายด้าน (ระดับคณะ ไม่มีชื่อบุคคล) · null เมื่อไม่มีผล */
-window.bodSetSummary = function (ticker, fy) {
+window.bodSetSummary = function (ticker, fy, lang) {
   ticker = ticker || S.t;
+  const en = (lang || S.lang) === "EN";
   let E = BSE.evals.filter(e => e.ticker === ticker);
   /* ปีที่ขอไม่มีผล (เช่น ร่าง 56-1 ส่งปีบัญชีของข้อมูลมา แต่ประเมินในปีถัดไป) → ใช้ปีล่าสุดที่มี — ข้อความระบุปีที่ประเมินไว้ชัดเจน */
   const f = fy ? bsFY(fy) : "";
@@ -711,24 +772,46 @@ window.bodSetSummary = function (ticker, fy) {
   else if (E.length) { const last = E.map(e => e.fy).sort().pop(); E = E.filter(e => e.fy === last); }
   if (!E.length) return null;
   const pick = r => E.filter(e => e.role === r);
-  let base, how;
-  if (pick("board").length) { base = [pick("board").pop()]; how = "คณะกรรมการประเมินตนเองแบบทั้งคณะ (board self-assessment)"; }
-  else if (pick("indiv").length) { base = pick("indiv"); how = `กรรมการแต่ละท่านประเมินตนเอง แล้วเลขานุการบริษัทรวบรวมเป็นภาพรวม (${base.length} แบบประเมิน) โดยผลรายบุคคลเป็นความลับ`; }
+  /* แก้ไขรอบสุดท้าย (ง-23): ทั้งคณะและรายบุคคลไม่ผสมกัน · รายบุคคลหลายแบบ = ค่าเฉลี่ยของผู้ประเมินบนร้อยละของคะแนนเต็ม (ไม่ใช้มาตราส่วนของแบบล่าสุดกับทุกแบบ) */
+  let base, how, extra = "";
+  if (pick("board").length) {
+    base = [pick("board").pop()]; how = "คณะกรรมการประเมินตนเองแบบทั้งคณะ (board self-assessment)";
+    if (pick("indiv").length) { const ai = bsAgg(pick("indiv"));
+      extra = `\nนอกจากนี้ กรรมการ ${ai.n} ท่านประเมินตนเองรายบุคคล ผลรวมเป็นค่าเฉลี่ยของผู้ประเมิน ร้อยละ ${fmt(ai.pct, 1)} ของคะแนนเต็ม (รายงานแยกจากผลทั้งคณะ ผลรายบุคคลเป็นความลับ)`; }
+  }
+  else if (pick("indiv").length) { base = pick("indiv"); how = `กรรมการแต่ละท่านประเมินตนเอง แล้วเลขานุการบริษัทรวบรวมเป็นภาพรวม (${base.length} แบบประเมิน · ค่ารวมเป็นค่าเฉลี่ยของผู้ประเมิน) โดยผลรายบุคคลเป็นความลับ`; }
   else { base = [pick("cmte").pop()]; how = `${base[0].cmte || "คณะกรรมการชุดย่อย"}ประเมินตนเองทั้งคณะ`; }
-  const ev0 = base[base.length - 1], sc = BS_SCALES[ev0.scale] || BS_SCALES["0-4"];
-  /* รวมรายด้านตามชื่อด้าน (กรณีรายบุคคลหลายแบบ) */
-  const agg = {};
-  base.forEach(e => bsCalc(e).dims.forEach(d => { (agg[d.name] = agg[d.name] || []).push(d.mean); }));
-  const dims = Object.entries(agg).map(([name, ms]) => { const m = plMean(ms); return { name, mean: m, pct: (m - sc.lo) / (sc.hi - sc.lo) * 100 }; });
-  const all = plMean(base.map(e => bsCalc(e).mean)), allPct = (all - sc.lo) / (sc.hi - sc.lo) * 100;
-  const ord = dims.slice().sort((a, b) => b.pct - a.pct), top = ord.slice(0, 2), low = ord.slice(-2).reverse().filter(d => !top.includes(d));
-  const scaleTxt = `มาตราส่วน ${sc.lo}–${sc.hi} (${sc.lo} = ${sc.labs[0]} ถึง ${sc.hi} = ${sc.labs[sc.labs.length - 1]})`;
+  const ev0 = base[base.length - 1], A = bsAgg(base), sc = A.sc;
+  const dims = A.dims, top = A.top, low = A.low;
+  if (en) {
+    /* แบบภาษาอังกฤษ: ชื่อด้าน/ป้ายมาตราส่วนของแบบมาตรฐานแปลด้วยพจนานุกรม · ชื่อด้านหรือชื่อคณะกรรมการชุดย่อยที่ผู้ใช้พิมพ์เองคงตามที่พิมพ์ */
+    const tr = x => window.I18N && typeof window.I18N.raw === "function" ? window.I18N.raw(String(x)) : String(x);
+    const nm = d => tr(d.name), yr = String(+ev0.fy > 2400 ? +ev0.fy - 543 : ev0.fy);
+    let howE, extraE = "";
+    if (pick("board").length) {
+      howE = "the board carried out a whole-board self-assessment";
+      if (pick("indiv").length) { const ai = bsAgg(pick("indiv"));
+        extraE = `\nIn addition, ${ai.n} director${ai.n === 1 ? "" : "s"} completed individual self-assessments; the aggregate is the mean across assessors, ${fmt(ai.pct, 1)}% of the maximum score (reported separately from the whole-board result; individual results are confidential).`; }
+    } else if (pick("indiv").length) howE = `each director assessed themselves and the company secretary compiled an overall picture (${base.length} assessment form${base.length === 1 ? "" : "s"} · the aggregate is the mean across assessors), with individual results kept confidential`;
+    else howE = `the ${tr(base[0].cmte || "คณะกรรมการชุดย่อย")} carried out a whole-committee self-assessment`;
+    const scaleE = A.same ? `a ${sc.lo}–${sc.hi} scale (${sc.lo} = ${tr(sc.labs[0])} to ${sc.hi} = ${tr(sc.labs[sc.labs.length - 1])})`
+      : `different scales across forms (${A.scales.join(", ")}), so results are summarised as a percentage of the maximum score`;
+    const overallE = A.same ? `The overall average was ${fmt(A.mean, 2)} out of ${sc.hi} (${fmt(A.pct, 1)}%)` : `The overall result was ${fmt(A.pct, 1)}% of the maximum score`;
+    return `In ${yr}, ${howE}, using a form adapted from the Stock Exchange of Thailand's board self-assessment guideline and covering ${dims.length} dimension${dims.length === 1 ? "" : "s"}: ` +
+      dims.map((d, i) => `(${i + 1}) ${nm(d)}`).join(" ") + `, on ${scaleE}. The company secretary compiled and summarised the results for the board's joint consideration.` +
+      `\n${overallE}. Results by dimension: ` + dims.map(d => `${nm(d)} ${fmt(d.pct, 1)}%`).join(" · ") +
+      `\nHigher-scoring dimensions: ${top.map(nm).join(" and ") || "—"}; dimensions the board set for development: ${low.map(nm).join(" and ") || "—"}.` +
+      ` The results are a board-level overview; no individual director's results are disclosed or scored.` + extraE;
+  }
+  const scaleTxt = A.same ? `มาตราส่วน ${sc.lo}–${sc.hi} (${sc.lo} = ${sc.labs[0]} ถึง ${sc.hi} = ${sc.labs[sc.labs.length - 1]})`
+    : `มาตราส่วนต่างกันตามแบบ (${A.scales.join(", ")}) จึงสรุปเป็นร้อยละของคะแนนเต็ม`;
+  const overall = A.same ? `ผลการประเมินโดยรวมเฉลี่ย ${fmt(A.mean, 2)} จาก ${sc.hi} คะแนน (ร้อยละ ${fmt(A.pct, 1)})` : `ผลการประเมินโดยรวมร้อยละ ${fmt(A.pct, 1)} ของคะแนนเต็ม`;
   return `ในปี ${ev0.fy} ${how} โดยใช้แบบประเมินที่ปรับจากแนวทางแบบประเมินตนเองของคณะกรรมการของตลาดหลักทรัพย์แห่งประเทศไทย ครอบคลุม ${dims.length} ด้าน ได้แก่ ` +
     dims.map((d, i) => `(${i + 1}) ${d.name}`).join(" ") + ` ใช้${scaleTxt} เลขานุการบริษัทเป็นผู้รวบรวมและสรุปผลเสนอต่อคณะกรรมการเพื่อพิจารณาร่วมกัน` +
-    `\nผลการประเมินโดยรวมเฉลี่ย ${fmt(all, 2)} จาก ${sc.hi} คะแนน (ร้อยละ ${fmt(allPct, 1)}) ผลรายด้าน: ` +
+    `\n${overall} ผลรายด้าน: ` +
     dims.map(d => `${d.name} ร้อยละ ${fmt(d.pct, 1)}`).join(" · ") +
     `\nด้านที่ได้ผลสูง ได้แก่ ${top.map(d => d.name).join(" และ ") || "—"} ส่วนด้านที่คณะกรรมการกำหนดเป็นแนวทางพัฒนา ได้แก่ ${low.map(d => d.name).join(" และ ") || "—"}` +
-    ` ทั้งนี้ ผลการประเมินเป็นภาพรวมระดับคณะ ไม่มีการเปิดเผยหรือให้คะแนนกรรมการรายบุคคล`;
+    ` ทั้งนี้ ผลการประเมินเป็นภาพรวมระดับคณะ ไม่มีการเปิดเผยหรือให้คะแนนกรรมการรายบุคคล` + extra;
 };
 
 /* ============================================================================
@@ -748,7 +831,8 @@ if (typeof WIRES2 === "object" && WIRES2) Object.assign(WIRES2, { rfq: wireRfq, 
   const bi = NAV.findIndex(n => n.id === "bod"), it = { id: "bodset", g: 4, ico: "☷", lab: "แบบประเมินตนเองของคณะกรรมการ (SET)" };
   if (!NAV.some(n => n.id === "bodset")) { if (bi >= 0) NAV.splice(bi, 0, it); else NAV.push(it); }
 })();
-if (typeof MAN_HELP === "object" && MAN_HELP) Object.assign(MAN_HELP, { rfq: "man-pilot", dict: "man-pilot", bodset: "man-pilot" });
+/* แก้ไขรอบสุดท้าย: เดิมเขียนทับ MAN_HELP ให้ rfq/dict/bodset ไปส่วน 9 (man-pilot) — ที่ถูกคือส่วน 10 (man-assess) ตาม v2_tiers.js จึงไม่เขียนทับแล้ว */
+if (typeof MAN_HELP === "object" && MAN_HELP) Object.assign(MAN_HELP, { rfq: "man-assess", dict: "man-assess", bodset: "man-assess" });
 buildNav();
 if (S.user) syncNavLocks();
 /* คืนหน้าที่เปิดค้างไว้ (ไฟล์ก่อนหน้าตรวจ VIEWS ก่อนที่หน้านี้จะลงทะเบียน) */

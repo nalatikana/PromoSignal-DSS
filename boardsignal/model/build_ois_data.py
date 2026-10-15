@@ -17,7 +17,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ois_core import (VERSION, B1, DF, DG, DW, DT, G_T, M, CUT, VF, TIER_CUTS, VTH, ZONE, QUAD_NAME,
-                      WEAK_EVIDENCE_IND, CRITICAL_MASS_N, chol, draws, centred, amp_of, amp_t1, amp_fe,
+                      WEAK_EVIDENCE_IND, CRITICAL_MASS_N, chol, draws, centred, amp_of, amp_t1, amp_fe, amp_full,
                       signal_b, ois_of, tier_of, quad_of, wins, q8)
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -39,6 +39,7 @@ with (REF_DIR / "REF928_scored_20261005.csv").open(encoding="utf-8-sig") as f:
             W=float(r["bod_female"]), T=float(r["bod_tenure"]),
             cP=float(r["c_ceo_promotion"]), cF=float(r["c_bod_family"]), cG=float(r["c_bod_politicalties"]),
             cW=float(r["c_bod_female"]), amp=float(r["amp_EG"]), B=float(r["B_EG"]), B_T1=float(r["B_T1"]),
+            B_FULL=float(r["B_FULL"]),
             B_FE=float(r["B_FE"]), OIS=float(r["OIS"]), OIS_ind=float(r["OIS_ind"]), tier=int(r["tier"]),
             quad="ABCD"[int(r["quadrant"]) - 1], regime=r["regime"]))
 assert len(ref_rows) == 928, len(ref_rows)
@@ -55,13 +56,16 @@ REF_IND = {k: sorted(q8(r["B"]) for r in ref_rows if r["ind"] == k) for k in ran
 REF_T1 = sorted(q8(r["B_T1"]) for r in ref_rows)
 REF_P = sorted(q8(wins(r["P"], "P")) for r in ref_rows)
 REF_AMP = sorted(q8(r["amp"]) for r in ref_rows)
+# B_FULL (คืนเทอมอายุงาน) — ใช้เฉพาะการวิเคราะห์ความไว (What-if อายุงาน) เทียบฐาน B_FULL ของ REF-928 เอง
+REF_FULL = sorted(q8(r["B_FULL"]) for r in ref_rows)
 bad = 0
 for r in ref_rows:
     z = centred(r["P"], r["F"], r["G"], r["W"], r["T"])
     b = signal_b(z)
     o = ois_of(b, REF_B)
     if abs(b - r["B"]) > 1e-5 or abs(o - r["OIS"]) > 1e-6 or tier_of(o) != r["tier"] or quad_of(z["P"], amp_of(z)) != r["quad"] \
-            or abs(ois_of(b, REF_IND[r["ind"]]) - r["OIS_ind"]) > 1e-6 or abs(z["P"] * amp_t1(z) - r["B_T1"]) > 1e-5:
+            or abs(ois_of(b, REF_IND[r["ind"]]) - r["OIS_ind"]) > 1e-6 or abs(z["P"] * amp_t1(z) - r["B_T1"]) > 1e-5 \
+            or abs(z["P"] * amp_full(z) - r["B_FULL"]) > 1e-9:
         bad += 1
 print("parity กับ REF928_scored: ผิด", bad, "/ 928 แถว")
 assert bad == 0
@@ -96,6 +100,16 @@ assert REGIME == {"2019": "PASS", "2020": "CAUTION", "2021": "PASS", "2022": "FA
 PTS = [[round(wins(r["P"], "P"), 4), round(r["amp"], 6), r["quad"], r["tier"], r["ind"], r["year"],
         round(r["cF"], 6), round(r["cG"], 6), round(r["cW"], 6)] for r in ref_rows]
 
+# ฮิสโตแกรมหยาบของค่าดิบ (ก่อน winsorise) สัดส่วนกรรมการหญิง / ครอบครัว — ใช้วาดพื้นหลังโหมดนอกกลุ่มอ้างอิงและ rug ของ marginal plot
+# ช่องละ 5 จุดเปอร์เซ็นต์ 0–100% · ไม่มีค่ารายแถว จึงไม่เผยค่าเฉลี่ย/จุดตัดในบันทึกพารามิเตอร์
+HIST_W = 0.05
+def _hist(vals):
+    h = [0] * 20
+    for v in vals:
+        h[min(19, max(0, int(v / HIST_W + 1e-9)))] += 1
+    return h
+HIST = dict(w=HIST_W, W=_hist(r["W"] for r in ref_rows), F=_hist(r["F"] for r in ref_rows))
+
 # ---- 5. ให้คะแนน 196 บริษัทในภาพปี 2566 เทียบฐาน REF-928 และเขียนกลับ prof_data.json -----------
 ref23 = {(r["t"], r["year"]): r for r in ref_rows}
 out_c, mism = {}, []
@@ -112,6 +126,7 @@ for c in COMPS:
     z = centred(c["promo"], c["fam"], c["pol"], c["fem"], c["ten"])
     a = amp_of(z); b = signal_b(z); o = ois_of(b, REF_B)
     bt1 = z["P"] * amp_t1(z); ot1 = ois_of(bt1, REF_T1)
+    bfull = z["P"] * amp_full(z); ofull = ois_of(bfull, REF_FULL)
     band = bands.get((t, 2023))
     if rr is None or band is None:
         mism.append(t); continue
@@ -122,6 +137,7 @@ for c in COMPS:
         amp=round(a, 12), B=round(b, 12), ois=round(o, 4), oisInd=round(ois_of(b, REF_IND[c["ind"]]), 4),
         tier=tier_of(o), quad=quad_of(z["P"], a), band=band,
         t1=dict(B=round(bt1, 12), ois=round(ot1, 4), tier=tier_of(ot1), quad=quad_of(z["P"], amp_t1(z))),
+        full=dict(ois=round(ofull, 4), tier=tier_of(ofull)),
         fy=2023, regime=REGIME["2023"])
     # ค่าที่หน้า UI ใช้ตรง ๆ (คำนวณใหม่จากฐาน REF-928 ด้วยนิยาม mid-rank)
     c["amp"] = round(a, 4)
@@ -153,7 +169,7 @@ data = dict(
     refB=REF_B,
     refInd={str(k): v for k, v in REF_IND.items()},
     refT1=REF_T1,
-    refP=REF_P, refAmp=REF_AMP,
+    refP=REF_P, refAmp=REF_AMP, refFull=REF_FULL, hist=HIST,
     pts=PTS,
     co=out_c,
 )

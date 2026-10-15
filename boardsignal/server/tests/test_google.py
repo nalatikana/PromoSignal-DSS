@@ -84,14 +84,17 @@ def run():
         c = Client(srv.base)
         st, _, b = c.req("GET", "/login")
         html = b.decode()
-        assert st == 200 and 'href="/auth/google"' in html and "เข้าสู่ระบบด้วย Google" in html and 'name="password"' not in html
+        assert st == 200 and 'href="/auth/google"' in html and "Sign in with Google" in html and 'name="password"' not in html
+        st, _, b = Client(srv.base).req("GET", "/login?lang=th")                 # ภาษาไทยผ่าน ?lang=th
+        assert st == 200 and "เข้าสู่ระบบด้วย Google" in b.decode()
         st, _, _ = c.req("POST", "/login", form={"username": "x", "password": "y"})
         assert st == 403
         # 1) อีเมลในโดเมนที่อนุญาต → เข้าได้ role=user
         st, h, b = c.req("GET", "/auth/google")
         assert st == 200 and b"OIS_SERVER" in b, (st, b[:300])
         st, me = c.json("GET", "/api/me")
-        assert me == {"email": "tester@pilot.example", "name": "ผู้ทดสอบ", "role": "user", "provider": "google"}, me
+        assert {k: me[k] for k in ("email", "name", "role", "provider", "plan")} == {
+            "email": "tester@pilot.example", "name": "ผู้ทดสอบ", "role": "user", "provider": "google", "plan": "free"}, me
         assert STATE["token_calls"][-1]["redirect_uri"] == srv.base + "/auth/google/callback"
         st, r = c.json("POST", "/api/responses", data={"kind": "feedback", "payload": {"text": "ok"}})
         assert st == 200
@@ -107,14 +110,14 @@ def run():
         STATE["email"] = "stranger@gmail.com"
         x = Client(srv.base)
         st, _, b = x.req("GET", "/auth/google")
-        assert st == 403 and "ยังไม่ได้รับเชิญ" in b.decode(), (st, b[:200])
+        assert st == 403 and "has not been invited" in b.decode(), (st, b[:200])
         st, _ = x.json("GET", "/api/me")
         assert st == 401
         # 4) อีเมลยังไม่ยืนยัน → 403
         STATE.update(email="solo@other.example", verified=False)
         y = Client(srv.base)
         st, _, b = y.req("GET", "/auth/google")
-        assert st == 403 and "ยืนยันอีเมล" in b.decode()
+        assert st == 403 and "no verified email" in b.decode()
         STATE["verified"] = True
         # 5) state ปลอม / ไม่มีคุกกี้ state → ปฏิเสธ
         z = Client(srv.base, follow=False)

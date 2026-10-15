@@ -78,6 +78,13 @@ def amp_t1(c):
     return B1 + DW * c["W"]
 
 
+def amp_full(c):
+    """สูตรทางเลือก B_FULL — คืนเทอมอายุงาน (δT·cT) ที่ evidence gate ปิดไว้ใน headline
+    ใช้เฉพาะการวิเคราะห์ความไว (What-if อายุงาน) — คะแนนหลัก B_EG ไม่เปลี่ยน · ตรงกับคอลัมน์ B_FULL ของ REF928_scored
+    (ตรวจแล้วทุกแถว |Δ| < 1e-15)"""
+    return B1 + DF * c["F"] + DG * c["G"] + DW * c["W"] + DT * c["T"]
+
+
 def amp_fe(c):
     """สูตรทางเลือก B_FE — สัมประสิทธิ์ FE-Poisson (robustness)"""
     return FE_B1 + FE_DF * c["F"] + FE_DG * c["G"] + FE_DW * c["W"]

@@ -34,14 +34,12 @@
       <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:500">เข้าสู่ระบบ</div>
       <h2 style="font-size:20px;margin:5px 0 4px">เลือกประเภทผู้ใช้สำหรับการสาธิต</h2>
       <p style="font-size:12px;color:var(--ink-2);margin:0 0 14px">
-        ต้นแบบยังไม่เชื่อมระบบชำระเงิน — เติม token ด้วยมือได้ตลอด</p>
+        ต้นแบบยังไม่เชื่อมระบบชำระเงิน — เติมเครดิตด้วยมือได้ตลอด</p>
       <div id="planPick" style="display:grid;gap:8px;margin-bottom:14px">
         <label class="planopt on" data-plan="free"><input type="radio" name="plan" value="free" checked>
-          <div><b>Free User · 3 token</b><span>ดูรายงานบริษัทของตัวเองฟรี · เทียบคู่แข่งและรายงานอุตสาหกรรมใช้ token ·
-            Validity แสดงเป็น remark สองระดับ</span></div></label>
+          <div><b>Basic · 3 เครดิต</b><span>ดูรายงาน การวิเคราะห์ และทางเลือกของบริษัทตนเองบริษัทเดียว</span></div></label>
         <label class="planopt" data-plan="pro"><input type="radio" name="plan" value="pro">
-          <div><b>Pro Plan (Token based) · 20 token</b><span>เปิด What-if Studio และตาราง Validity ฉบับเต็มรายปี ·
-            ใช้ token กับรายงานเทียบเหมือนกัน</span></div></label>
+          <div><b>Pro (Pay-Per-Use) · 20 เครดิต</b><span>เทียบตัวต่อตัวกับ 3 บริษัทในอุตสาหกรรมเดียวกัน · What-if Studio · AI Report Studio</span></div></label>
       </div>
       <label style="font-size:11.5px;color:var(--ink-3)">บริษัทของคุณ (ดูรายงานได้ฟรีตลอด)</label>
       <select class="sel" id="gCo" style="width:100%;max-width:none;margin:5px 0 12px"></select>
@@ -61,7 +59,7 @@
           ข้อมูลที่ประมวลผลเป็นข้อมูลระดับบริษัท ไม่ใช่ข้อมูลรายบุคคล</span></label>
       <div class="note" style="margin-top:14px;font-size:10.8px">
         ระบบจริงจะยืนยันตัวตนผ่าน Google OAuth 2.0 และเก็บเฉพาะอีเมลกับรหัสผู้ใช้ ไม่เก็บรหัสผ่าน ·
-        การซื้อ token ขั้นต่ำ 3 token ต่อครั้ง · ระบบชำระเงินอยู่ใน Phase II</div>
+        ซื้อเครดิตเป็นแพ็กเกจ 5 / 15 / 40 เครดิต · ระบบชำระเงินอยู่ใน Phase II</div>
     </div>
   </div>
 </div>
@@ -134,6 +132,9 @@
       <section class="view" id="v-dict"></section>
       <section class="view" id="v-datasets"></section>
       <section class="view" id="v-evidence"></section>
+      <section class="view" id="v-aireport"></section>
+      <section class="view" id="v-dataupload"></section>
+      <section class="view" id="v-dataadmin"></section>
       <div style="margin-top:26px;font-size:10.6px;color:var(--ink-3);line-height:1.65;border-top:1px solid var(--line);padding-top:14px">
         <b style="color:var(--ink-2)" id="fBrand">OpenInnoScore</b> · เครื่องมือ <b style="color:var(--ink-2)">ประเมิน</b> (diagnostic) ไม่ใช่การพยากรณ์ ·
         <b style="color:var(--ink-2)" id="fRemark"></b> ·
@@ -164,3 +165,6 @@ const logoChip = (px, cls) => '<span class="logochip '+(cls||"")+'" style="width
 <script>/*__TIERS__*/</script>
 <script>/*__ASSESS__*/</script>
 <script>/*__MVP__*/</script>
+<script>/*__AI__*/</script>
+<script>/*__DATAMOD__*/</script>
+<script>/*__I18N__*/</script>

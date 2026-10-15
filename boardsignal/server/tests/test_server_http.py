@@ -15,7 +15,7 @@ TOKEN = "tok_test_0123456789abcdef"
 
 
 def env_for(db):
-    return {"APP_USERS": "admin:adminpw,alice:alicepw", "APP_PASSWORD": "test", "ADMIN_USER": "admin",
+    return {"APP_USERS": "alice:alicepw", "APP_PASSWORD": "test", "ADMIN_USER": "admin", "ADMIN_PASSWORD": "adminpw",
             "SECRET_KEY": "test-secret", "DB_PATH": db, "API_TOKENS": TOKEN + ",short"}
 
 
@@ -137,6 +137,85 @@ def test_all():
     print("test_server_http: ALL PASS")
 
 
+def test_admin_password():
+    """ภาคผนวก ง: ผู้รู้ APP_PASSWORD (รหัสร่วม) ต้องเข้าเป็นผู้ดูแลไม่ได้ · ADMIN_USER เข้าได้ด้วย ADMIN_PASSWORD เท่านั้น ·
+    ไม่ตั้ง ADMIN_PASSWORD = ADMIN_USER เข้าด้วยรหัสผ่านไม่ได้เลย (แม้อยู่ใน APP_USERS) · APP_PASSWORD สวมชื่อใน APP_USERS ไม่ได้ ·
+    โควตารายวันนับต่อ IP ด้วย (สร้างชื่อใหม่ด้วยรหัสร่วมไม่ได้โควตาเพิ่ม)"""
+    tmp = Path(tempfile.mkdtemp())
+    srv = Server({"APP_USERS": "alice:alicepw", "APP_PASSWORD": "shared", "ADMIN_USER": "admin", "ADMIN_PASSWORD": "adm-secret",
+                  "SECRET_KEY": "k", "DB_PATH": str(tmp / "a.db"), "API_ITEMS_PER_DAY": "40"}, log_path=tmp / "a.log")
+    try:
+        c = Client(srv.base)
+        st, _, _ = c.login("admin", "shared")
+        assert st == 401, st                                   # รหัสร่วม + ชื่อผู้ดูแล → ปฏิเสธ
+        st, _, _ = c.login("alice", "shared")
+        assert st == 401, st                                   # รหัสร่วมสวมชื่อบัญชีที่มีรหัสเฉพาะไม่ได้
+        st, _ = c.json("GET", "/api/admin/trace/PTG")
+        assert st == 401
+        c.login("zz1", "shared")
+        st, me = c.json("GET", "/api/me")
+        assert st == 200 and me["role"] == "user", me
+        st, _ = c.json("GET", "/api/admin/trace/PTG")
+        assert st == 403
+        st, r = c.json("POST", "/api/score", data={"items": [{"ticker": "PTG"}] * 30})
+        assert st == 200, r
+        c2 = Client(srv.base)
+        c2.login("zz2", "shared")                               # ชื่อใหม่ IP เดิม → โควตารายวันต่อ IP ยังนับต่อ
+        st, r = c2.json("POST", "/api/score", data={"items": [{"ticker": "PTG"}] * 30})
+        assert st == 429, (st, r)
+        a = Client(srv.base)
+        st, _, _ = a.login("admin", "adm-secret")
+        assert st == 200
+        st, me = a.json("GET", "/api/me")
+        assert me["role"] == "admin", me
+    finally:
+        srv.stop()
+    srv = Server({"APP_USERS": "admin:x1,alice:alicepw", "APP_PASSWORD": "shared", "ADMIN_USER": "admin",
+                  "SECRET_KEY": "k", "DB_PATH": str(tmp / "b.db")}, log_path=tmp / "b.log")
+    try:
+        for pw in ("x1", "shared", ""):
+            st, _, _ = Client(srv.base).login("admin", pw)
+            assert st == 401, (pw, st)                         # ไม่มี ADMIN_PASSWORD → บัญชีผู้ดูแลแบบรหัสผ่านปิด
+        st, _, _ = Client(srv.base).login("", "shared")
+        assert st == 200                                       # รหัสร่วม ชื่อว่าง = owner (ผู้ใช้ทั่วไป)
+    finally:
+        srv.stop()
+    print("test_admin_password: PASS")
+
+
+def test_login_bilingual():
+    """หน้าเข้าสู่ระบบ: ภาษาอังกฤษเป็นค่าเริ่มต้น · ?lang=th สลับเป็นไทยและจำในคุกกี้ · ข้อความผิดพลาดตามภาษา · ค่า lang อื่นไม่ถูกรับ
+    · การตรวจรหัสผ่านไม่เปลี่ยน (ภาษาไม่มีผลต่อผลการเข้าสู่ระบบ)"""
+    import re
+    th = re.compile("[\u0E00-\u0E7F]")
+    tmp = Path(tempfile.mkdtemp())
+    srv = Server({"APP_USERS": "alice:alicepw", "ADMIN_USER": "admin", "ADMIN_PASSWORD": "adminpw",
+                  "SECRET_KEY": "k", "DB_PATH": str(tmp / "l.db")}, log_path=tmp / "l.log")
+    try:
+        c = Client(srv.base)
+        st, _, b = c.req("GET", "/login")
+        html = b.decode()
+        assert st == 200 and '<html lang="en">' in html and "Sign in" in html and "Password" in html and not th.search(html), html[:300]
+        assert 'href="/login?lang=th"' in html and "statistical associations" in html
+        st, _, b = c.login("alice", "wrong")
+        assert st == 401 and "Wrong username or password" in b.decode() and not th.search(b.decode())
+        st, _, b = c.req("GET", "/login?lang=th")
+        assert st == 200 and '<html lang="th">' in b.decode() and "รหัสผ่าน" in b.decode()
+        st, _, b = c.req("GET", "/login")                           # จำภาษาในคุกกี้
+        assert "เข้าสู่ระบบ" in b.decode() and '<html lang="th">' in b.decode()
+        st, _, b = c.login("alice", "wrong")
+        assert st == 401 and "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" in b.decode()
+        st, _, b = c.req("GET", "/login?lang=xx%22%3E")              # ค่าอื่นไม่ถูกรับ/ไม่สะท้อนกลับ
+        assert st == 200 and "xx" not in b.decode()
+        st, _, b = Client(srv.base).req("POST", "/login", form={"username": "alice", "password": "wrong", "lang": "th"})
+        assert st == 401 and "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" in b.decode()
+        st, _, _ = Client(srv.base).req("POST", "/login", form={"username": "alice", "password": "alicepw", "lang": "th"})
+        assert st == 200
+    finally:
+        srv.stop()
+    print("test_login_bilingual: PASS")
+
+
 def test_startup_requires_auth():
     import subprocess
     from server.tests._util import ROOT
@@ -151,4 +230,6 @@ def test_startup_requires_auth():
 
 if __name__ == "__main__":
     test_startup_requires_auth()
+    test_login_bilingual()
+    test_admin_password()
     test_all()

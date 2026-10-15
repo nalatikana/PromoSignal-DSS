@@ -7,7 +7,9 @@
   APP_PASSWORD        รหัสผ่านหลัก (ไม่บังคับเมื่อเปิด Google Sign-in; ถ้าไม่มีวิธีเข้าสู่ระบบเลย เซิร์ฟเวอร์ไม่ยอมเริ่ม
                       ยกเว้น ALLOW_NO_PASSWORD=1 สำหรับทดสอบในเครื่อง)
   APP_USERS           บัญชีเพิ่ม "ชื่อ1:รหัส1,ชื่อ2:รหัส2" (ไม่บังคับ)
-  ADMIN_USER          ชื่อบัญชีรหัสผ่านที่เป็นผู้ดูแล (เช่น owner = เข้าด้วย APP_PASSWORD แล้วเว้นชื่อว่าง)
+  ADMIN_USER          ชื่อบัญชีรหัสผ่านที่เป็นผู้ดูแล — เข้าสู่ระบบได้ด้วย ADMIN_PASSWORD เท่านั้น
+  ADMIN_PASSWORD      รหัสผ่านของ ADMIN_USER (บังคับ — ถ้าไม่ตั้ง ADMIN_USER เข้าสู่ระบบด้วยรหัสผ่านไม่ได้เลย) ·
+                      APP_PASSWORD และรหัสใน APP_USERS ใช้กับชื่อ ADMIN_USER ไม่ได้ (ภาคผนวก ง: รหัสร่วมต้องไม่ให้สิทธิ์ผู้ดูแล)
   ADMIN_EMAILS        อีเมล Google ของผู้ดูแล คั่นด้วย ,
   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET   เปิด "เข้าสู่ระบบด้วย Google" (OAuth 2.0 Authorization Code)
   ALLOWED_EMAILS      อีเมล/โดเมนที่อนุญาต เช่น "a@x.com,@company.co.th" · ALLOW_ANY_GOOGLE=1 = อนุญาตทุกบัญชีที่ยืนยันอีเมลแล้ว
@@ -16,8 +18,12 @@
   DB_PATH             ไฟล์ SQLite (ค่าเริ่มต้น ./data/ois.db · Render: /var/data/ois.db) · DATABASE_URL = PostgreSQL (ทางเลือก)
   SECRET_KEY          กุญแจเซ็นคุกกี้ (Render สร้างให้อัตโนมัติจาก render.yaml)
   SESSION_HOURS       อายุการเข้าสู่ระบบ (ค่าเริ่มต้น 12 ชั่วโมง)
-  API_ITEMS_PER_MIN   โควตาจำนวนค่าป้อนที่คำนวณได้ต่อผู้ใช้ต่อนาที (ค่าเริ่มต้น 1200)
-  AMP_DECIMALS        จำนวนทศนิยมของ amp ที่ส่งกลับ (ค่าเริ่มต้น 6)
+  API_ITEMS_PER_MIN   โควตาจำนวนค่าป้อนที่ /api/score คำนวณได้ต่อ session ต่อนาที (ค่าเริ่มต้น 3000)
+  API_ITEMS_PER_DAY   โควตาจำนวนค่าป้อนต่อบัญชีต่อวัน (ค่าเริ่มต้น 30000) — ลดโอกาสถอดสูตรด้วยการยิงคำขอจำนวนมาก
+                      โควตาต่อนาทีและต่อวันนับทั้งต่อบัญชีและต่อ IP (สร้างชื่อใหม่ด้วย APP_PASSWORD ไม่ได้โควตาเพิ่ม)
+  PLAN_SOURCE         server (ค่าเริ่มต้น — ระดับสิทธิ์จากบัญชีบนเซิร์ฟเวอร์) | client (ช่วงทดสอบ — ใช้ระดับที่เบราว์เซอร์ประกาศ
+                      ใน header X-OIS-Plan และบันทึก log) · DEFAULT_PLAN = แผนเริ่มต้นของบัญชีที่ยังไม่ถูกตั้ง (free/pro/max)
+  OIS_MODEL_PATH      ไฟล์บันทึกพารามิเตอร์ (ois_model.json ฉบับเต็ม) ถ้าไม่ตั้ง = src/ois_model.json (ดู README_DEPLOY.md)
   ANTHROPIC_API_KEY / ANTHROPIC_MODEL   เปิด /api/llm ด้วย Claude
   OPENAI_API_KEY / OPENAI_MODEL         เปิด /api/llm ด้วย OpenAI (ใช้เมื่อไม่มี key ของ Anthropic หรือ LLM_PROVIDER=openai
                                         หรือคำขอระบุ provider="openai")
@@ -75,6 +81,9 @@ if not APP_PASSWORD and not USERS and not GOOGLE_ON and not ALLOW_NO_PASSWORD:
 _csv = lambda k: [x.strip() for x in (env(k) or "").split(",") if x.strip()]
 ADMIN_EMAILS = {x.lower() for x in _csv("ADMIN_EMAILS")}
 ADMIN_USER = (env("ADMIN_USER") or "").strip()
+ADMIN_PASSWORD = env("ADMIN_PASSWORD") or ""
+if ADMIN_USER and not ADMIN_PASSWORD:
+    log.warning("ตั้ง ADMIN_USER แต่ไม่ได้ตั้ง ADMIN_PASSWORD — บัญชีผู้ดูแลแบบรหัสผ่านถูกปิด (ใช้ ADMIN_EMAILS + Google แทนได้)")
 API_TOKENS = [x for x in _csv("API_TOKENS") if len(x) >= 16]
 if len(API_TOKENS) < len(_csv("API_TOKENS")):
     log.warning("API_TOKENS บางตัวสั้นกว่า 16 ตัวอักษร — ไม่ถูกใช้")
@@ -83,17 +92,18 @@ if not SECRET_KEY:
     SECRET_KEY = secrets.token_urlsafe(32)
     log.warning("ไม่ได้ตั้ง SECRET_KEY — สุ่มกุญแจชั่วคราว (ทุกคนต้องเข้าสู่ระบบใหม่เมื่อเซิร์ฟเวอร์รีสตาร์ต)")
 SESSION_SEC = int(float(env("SESSION_HOURS") or 12) * 3600)
-ITEMS_PER_MIN = int(env("API_ITEMS_PER_MIN") or 1200)
-AMP_DEC = int(env("AMP_DECIMALS") or 6)
+ITEMS_PER_MIN = int(env("API_ITEMS_PER_MIN") or 3000)
+ITEMS_PER_DAY = int(env("API_ITEMS_PER_DAY") or 30000)
 MAX_ITEMS = 64
 COOKIE = "ois_session"
 signer = URLSafeTimedSerializer(SECRET_KEY, salt="ois-session")
 
 # ------------------------------------------------------------------ โมเดล (โหลดครั้งเดียว)
 MODEL = E.load_model(ROOT)
-KR = E.KR(MODEL["pts"], MODEL["reps"], MODEL["seed"])
+ENGINE = E.Engine(MODEL, E.load_comps(ROOT))
 VERSION = MODEL["version"]
-log.info("model %s loaded · KR draws=%d", VERSION, len(KR.th))
+RECORD_ID = ENGINE.record_id                # รุ่นของบันทึกพารามิเตอร์ (version#sha256) — แสดงใน /api/health และหน้า System log
+log.info("parameter record %s loaded from %s · KR draws=%d", RECORD_ID, MODEL["_path"], len(ENGINE.kr.th))
 OUT = Outputs(ROOT)                       # ผลลัพธ์ที่คำนวณไว้แล้ว (ไม่มีสูตร) สำหรับ /api/v1
 DBX = D.get_db()
 
@@ -161,8 +171,24 @@ class Limiter:
         return True
 
 
+def allow_all(pairs, n=1):
+    """ตรวจหลายตัวจำกัด (limiter, key) พร้อมกัน — นับเพิ่มเฉพาะเมื่อผ่านทุกตัว (บัญชี + IP ไม่นับซ้ำเมื่อถูกปฏิเสธ)"""
+    now = time.monotonic()
+    for lim, key in pairs:
+        q = lim.hits[key]
+        while q and now - q[0] > lim.window:
+            q.popleft()
+        if len(q) + n > lim.limit:
+            return False
+    for lim, key in pairs:
+        lim.hits[key].extend([now] * n)
+    return True
+
+
 login_limiter = Limiter(10, 15 * 60)          # 10 ครั้ง / 15 นาที / IP
-item_limiter = Limiter(ITEMS_PER_MIN, 60)
+item_limiter = Limiter(ITEMS_PER_MIN, 60)         # ต่อ session และต่อ IP
+day_limiter = Limiter(ITEMS_PER_DAY, 24 * 3600)   # ต่อบัญชี (uid) และต่อ IP — ล็อกอินใหม่/ชื่อใหม่ไม่ได้โควตาเพิ่ม
+trace_limiter = Limiter(120, 3600)
 llm_limiter = Limiter(30, 3600)
 ocr_limiter = Limiter(20, 3600)
 
@@ -185,20 +211,69 @@ def require(req: Request):
     return s, None
 
 
-# ------------------------------------------------------------------ หน้าเข้าสู่ระบบ
-def login_page(msg="", user=""):
-    need_user = bool(USERS)
+# ------------------------------------------------------------------ หน้าเข้าสู่ระบบ (สองภาษา · ภาษาอังกฤษเป็นค่าเริ่มต้น)
+# ภาษา: ?lang=th|en (จำในคุกกี้ ois_lang) → คุกกี้ → en · ฟอร์มส่งภาษาไปกับ POST (ช่องซ่อน) · ไม่กระทบการตรวจสิทธิ์ใด ๆ
+LANG_COOKIE = "ois_lang"
+LOGIN_TXT = {
+    "en": {"title": "Sign in · OpenInnoScore", "h1": "OpenInnoScore™ · Private prototype",
+           "sub": "For invited users under a non-disclosure agreement (NDA) only.", "google": "Sign in with Google",
+           "or": "or use a password", "user": "Username", "opt": " (optional)", "pw": "Password", "btn": "Sign in",
+           "foot": "All results are statistical associations, not forecasts of business performance.", "langs": "Language"},
+    "th": {"title": "เข้าสู่ระบบ · OpenInnoScore", "h1": "OpenInnoScore™ · ต้นแบบส่วนตัว",
+           "sub": "สำหรับผู้ได้รับเชิญภายใต้ข้อตกลงรักษาความลับ (NDA) เท่านั้น", "google": "เข้าสู่ระบบด้วย Google",
+           "or": "หรือใช้รหัสผ่าน", "user": "ชื่อผู้ใช้", "opt": " (ไม่บังคับ)", "pw": "รหัสผ่าน", "btn": "เข้าสู่ระบบ",
+           "foot": "ผลลัพธ์ทุกตัวเป็นความสัมพันธ์เชิงสถิติ ไม่ใช่การพยากรณ์ผลการดำเนินงาน", "langs": "ภาษา"},
+}
+LOGIN_MSG = {   # รหัสข้อความ → (อังกฤษ, ไทย) · {email} เติมตอนแสดง
+    "rate": ("Too many attempts — please wait 15 minutes.", "พยายามเข้าสู่ระบบบ่อยเกินไป — โปรดรอ 15 นาที"),
+    "bad_request": ("Invalid request.", "คำขอไม่ถูกต้อง"),
+    "pw_off": ("Password sign-in is disabled — use Google.", "ปิดการเข้าสู่ระบบด้วยรหัสผ่าน — ใช้ Google"),
+    "wrong": ("Wrong username or password.", "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"),
+    "g_expired": ("The request expired or is invalid — click Sign in with Google again.", "หมดเวลาหรือคำขอไม่ถูกต้อง — กดเข้าสู่ระบบด้วย Google อีกครั้ง"),
+    "g_cancel": ("Google sign-in was cancelled.", "ยกเลิกการเข้าสู่ระบบด้วย Google"),
+    "g_state": ("OAuth state mismatch — click Sign in with Google again.", "state ไม่ตรงกัน — กดเข้าสู่ระบบด้วย Google อีกครั้ง"),
+    "g_fail": ("Could not reach Google — please try again.", "ติดต่อ Google ไม่สำเร็จ — ลองใหม่อีกครั้ง"),
+    "g_unverified": ("This Google account has no verified email.", "บัญชี Google นี้ยังไม่ได้ยืนยันอีเมล"),
+    "g_denied": ("The account {email} has not been invited — contact the administrator.", "บัญชี {email} ยังไม่ได้รับเชิญ — ติดต่อผู้ดูแลระบบ"),
+}
+
+
+def login_lang(req: Request, form=None):
+    """→ (ภาษา, ต้องบันทึกคุกกี้หรือไม่) · รับเฉพาะ en/th"""
+    q = str(req.query_params.get("lang") or (form.get("lang") if form is not None else "") or "").strip().lower()
+    if q in LOGIN_TXT:
+        return q, q != req.cookies.get(LANG_COOKIE)
+    c = str(req.cookies.get(LANG_COOKIE) or "").lower()
+    return (c if c in LOGIN_TXT else "en"), False
+
+
+def login_resp(req: Request, msg="", user="", status=200, form=None, **fmt):
+    """หน้าเข้าสู่ระบบในภาษาที่ผู้ใช้เลือก · msg = รหัสใน LOGIN_MSG"""
+    lang, remember = login_lang(req, form)
+    resp = HTMLResponse(login_page(msg, user, lang, **fmt), status_code=status)
+    if remember:
+        resp.set_cookie(LANG_COOKIE, lang, max_age=365 * 86400, httponly=True, samesite="lax", secure=not is_local(req), path="/")
+    return secure(resp)
+
+
+def login_page(msg="", user="", lang="en", **fmt):
+    lang = lang if lang in LOGIN_TXT else "en"
+    L, need_user = LOGIN_TXT[lang], bool(USERS)
+    if msg in LOGIN_MSG:
+        msg = LOGIN_MSG[msg][0 if lang == "en" else 1].format(**{k: str(v) for k, v in fmt.items()})
+    sw = " · ".join(f'<b aria-current="true">{k.upper()}</b>' if k == lang else f'<a href="/login?lang={k}" hreflang="{k}">{k.upper()}</a>'
+                    for k in ("en", "th"))
     google = ('<a class="g" href="/auth/google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">'
               '<path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/>'
               '<path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/>'
               '<path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/>'
               '<path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>'
-              '<span>เข้าสู่ระบบด้วย Google</span></a>') if GOOGLE_ON else ""
-    sep = '<div class="or"><span>หรือใช้รหัสผ่าน</span></div>' if GOOGLE_ON and PASSWORD_ON else ""
+              f'<span>{L["google"]}</span></a>') if GOOGLE_ON else ""
+    sep = f'<div class="or"><span>{L["or"]}</span></div>' if GOOGLE_ON and PASSWORD_ON else ""
     esc = lambda x: str(x).replace("&", "&amp;").replace("<", "&lt;").replace('"', "&quot;")
-    return f"""<!doctype html><html lang="th"><head><meta charset="utf-8">
+    return f"""<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
-<title>เข้าสู่ระบบ · OpenInnoScore</title><link rel="icon" href="/logo.png">
+<title>{L['title']}</title><link rel="icon" href="/logo.png">
 <style>
 :root{{--bg:#f3f6fa;--card:#fff;--ink:#0f2340;--ink2:#51607a;--line:#d5dbe5;--acc:#1f5fbf;--err:#b42318}}
 @media (prefers-color-scheme:dark){{:root{{--bg:#0d1626;--card:#14213a;--ink:#e8eef8;--ink2:#9fb0cc;--line:#2a3a58;--acc:#6aa3ff;--err:#ff8a7a}}}}
@@ -215,25 +290,40 @@ a.g{{display:flex;gap:10px;align-items:center;justify-content:center;width:100%;
 border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600;background:var(--card)}}a.g:hover{{border-color:var(--acc)}}
 .or{{display:flex;align-items:center;gap:8px;margin:18px 0 2px;color:var(--ink2);font-size:12px}}
 .or:before,.or:after{{content:"";flex:1;border-top:1px solid var(--line)}}
+.lg{{display:flex;justify-content:flex-end;gap:6px;font-size:12px;color:var(--ink2);margin:-14px -8px 4px 0}}.lg a{{color:var(--acc)}}
 </style></head><body><form class="c" method="post" action="/login" autocomplete="on">
-<div class="b"><img src="/logo.png" alt=""><h1>OpenInnoScore™ · ต้นแบบส่วนตัว</h1></div>
-<p class="s">สำหรับผู้ได้รับเชิญภายใต้ข้อตกลงรักษาความลับ (NDA) เท่านั้น</p>
-{google}{sep}{f'''<label for="u">ชื่อผู้ใช้{"" if need_user else " (ไม่บังคับ)"}</label>
+<div class="lg" role="group" aria-label="{L['langs']}">{sw}</div><input type="hidden" name="lang" value="{lang}">
+<div class="b"><img src="/logo.png" alt=""><h1>{L['h1']}</h1></div>
+<p class="s">{L['sub']}</p>
+{google}{sep}{f'''<label for="u">{L["user"]}{"" if need_user else L["opt"]}</label>
 <input id="u" name="username" value="{esc(user)}" autocomplete="username"{" required" if need_user else ""}>
-<label for="p">รหัสผ่าน</label><input id="p" name="password" type="password" autocomplete="current-password" required{"" if GOOGLE_ON else " autofocus"}>
-<button type="submit">เข้าสู่ระบบ</button>''' if PASSWORD_ON else ""}{f'<div class="e" role="alert">{esc(msg)}</div>' if msg else ""}
-<div class="f">ผลลัพธ์ทุกตัวเป็นความสัมพันธ์เชิงสถิติ ไม่ใช่การพยากรณ์ผลการดำเนินงาน</div>
+<label for="p">{L["pw"]}</label><input id="p" name="password" type="password" autocomplete="current-password" required{"" if GOOGLE_ON else " autofocus"}>
+<button type="submit">{L["btn"]}</button>''' if PASSWORD_ON else ""}{f'<div class="e" role="alert">{esc(msg)}</div>' if msg else ""}
+<div class="f">{L['foot']}</div>
 </form></body></html>"""
 
 
+def _eq(a, b):
+    return hmac.compare_digest(str(a).encode(), str(b).encode())
+
+
 def check_login(user, pw):
+    """ลำดับการตรวจ (ภาคผนวก ง: ผู้รู้ APP_PASSWORD ต้องไม่ได้สิทธิ์ผู้ดูแล)
+    1) ชื่อ = ADMIN_USER → ต้องตรง ADMIN_PASSWORD เท่านั้น (ไม่ตั้ง ADMIN_PASSWORD = เข้าไม่ได้) · APP_USERS/APP_PASSWORD ใช้ไม่ได้
+    2) ชื่ออยู่ใน APP_USERS → ใช้รหัสของบัญชีนั้นเท่านั้น (APP_PASSWORD สวมชื่อบัญชีที่มีรหัสเฉพาะไม่ได้)
+    3) APP_PASSWORD (รหัสร่วม) → ชื่อที่พิมพ์ (เว้นว่าง = owner)
+    4) ALLOW_NO_PASSWORD (ทดสอบในเครื่อง ไม่มีรหัสใดตั้งไว้) → ชื่อที่พิมพ์ (เว้นว่าง = dev) — ยกเว้นชื่อ ADMIN_USER"""
     user = (user or "").strip()[:64]
-    if user in USERS and hmac.compare_digest(USERS[user].encode(), pw.encode()):
-        return user
-    if APP_PASSWORD and hmac.compare_digest(APP_PASSWORD.encode(), pw.encode()):
+    pw = pw or ""
+    if ADMIN_USER and (user or "owner") == ADMIN_USER:
+        return ADMIN_USER if ADMIN_PASSWORD and _eq(ADMIN_PASSWORD, pw) else None
+    if user in USERS:
+        return user if _eq(USERS[user], pw) else None
+    if APP_PASSWORD and _eq(APP_PASSWORD, pw):
         return user or "owner"
     if ALLOW_NO_PASSWORD and not APP_PASSWORD and not USERS:
-        return user or "dev"
+        name = user or "dev"
+        return None if ADMIN_USER and name == ADMIN_USER else name
     return None
 
 
@@ -241,29 +331,29 @@ async def login(req: Request):
     if req.method == "GET":
         if session_of(req):
             return RedirectResponse("/", 303)
-        return secure(HTMLResponse(login_page()))
+        return login_resp(req)
     ip = client_ip(req)
     if not login_limiter.allow(ip):
         log.warning("login rate-limited")
-        return secure(HTMLResponse(login_page("พยายามเข้าสู่ระบบบ่อยเกินไป — โปรดรอ 15 นาที"), status_code=429))
+        return login_resp(req, "rate", status=429)
     if not same_origin(req):
-        return secure(HTMLResponse(login_page("คำขอไม่ถูกต้อง"), status_code=403))
+        return login_resp(req, "bad_request", status=403)
     if not PASSWORD_ON:
-        return secure(HTMLResponse(login_page("ปิดการเข้าสู่ระบบด้วยรหัสผ่าน — ใช้ Google"), status_code=403))
+        return login_resp(req, "pw_off", status=403)
     form = await req.form()
     user = check_login(str(form.get("username") or ""), str(form.get("password") or ""))
     if not user:
         await asyncio.sleep(0.6)                      # ชะลอการเดารหัส
         log.info("login failed")
         DBX.event(None, "login_failed", {"provider": "password"})
-        return secure(HTMLResponse(login_page("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง", str(form.get("username") or "")), status_code=401))
+        return login_resp(req, "wrong", str(form.get("username") or ""), status=401, form=form)
     return start_session(req, provider="password", user=user)
 
 
 def role_for(provider, user=None, email=None):
     if provider == "google" and email and email.lower() in ADMIN_EMAILS:
         return "admin"
-    if provider == "password" and ADMIN_USER and user == ADMIN_USER:
+    if provider == "password" and ADMIN_USER and ADMIN_PASSWORD and user == ADMIN_USER:
         return "admin"
     return "user"
 
@@ -321,7 +411,7 @@ async def auth_google(req: Request):
     if not GOOGLE_ON:
         return jerr(404, error="ไม่ได้เปิด Google Sign-in")
     if not login_limiter.allow("g:" + client_ip(req)):
-        return secure(HTMLResponse(login_page("พยายามเข้าสู่ระบบบ่อยเกินไป — โปรดรอ 15 นาที"), status_code=429))
+        return login_resp(req, "rate", status=429)
     state, nonce = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
     redirect_uri = public_base(req) + "/auth/google/callback"
     resp = RedirectResponse(G.auth_url(redirect_uri, state, nonce), 303)
@@ -333,17 +423,17 @@ async def auth_google(req: Request):
 async def auth_google_callback(req: Request):
     if not GOOGLE_ON:
         return jerr(404, error="ไม่ได้เปิด Google Sign-in")
-    fail = lambda msg, code=400: secure(HTMLResponse(login_page(msg), status_code=code))
+    fail = lambda msg, code=400, **kw: login_resp(req, msg, status=code, **kw)
     try:
         st = oauth_signer.loads(req.cookies.get(OAUTH_COOKIE) or "", max_age=600)
     except (BadSignature, SignatureExpired):
-        return fail("หมดเวลาหรือคำขอไม่ถูกต้อง — กดเข้าสู่ระบบด้วย Google อีกครั้ง")
+        return fail("g_expired")
     qp = req.query_params
     if qp.get("error"):
-        return fail("ยกเลิกการเข้าสู่ระบบด้วย Google")
+        return fail("g_cancel")
     if not qp.get("code") or not hmac.compare_digest(str(qp.get("state") or ""), st["s"]):
         DBX.event(None, "login_failed", {"provider": "google", "reason": "state"})
-        return fail("state ไม่ตรงกัน — กดเข้าสู่ระบบด้วย Google อีกครั้ง")
+        return fail("g_state")
     try:
         tok = await asyncio.to_thread(G.exchange_code, qp["code"], st["r"])
         claims = G.id_token_claims(tok.get("id_token") or "")
@@ -353,13 +443,13 @@ async def auth_google_callback(req: Request):
     except Exception as e:  # noqa: BLE001
         log.warning("google oauth error %s", type(e).__name__)
         DBX.event(None, "login_failed", {"provider": "google", "reason": type(e).__name__})
-        return fail("ติดต่อ Google ไม่สำเร็จ — ลองใหม่อีกครั้ง", 502)
+        return fail("g_fail", 502)
     email = (info.get("email") or "").strip().lower()
     if not info.get("email_verified") or not email:
-        return fail("บัญชี Google นี้ยังไม่ได้ยืนยันอีเมล", 403)
+        return fail("g_unverified", 403)
     if not G.email_allowed(email, ADMIN_EMAILS):
         DBX.event(None, "login_denied", {"provider": "google", "domain": email.split("@")[-1]})
-        return fail(f"บัญชี {email} ยังไม่ได้รับเชิญ — ติดต่อผู้ดูแลระบบ", 403)
+        return fail("g_denied", 403, email=email)
     return start_session(req, provider="google", email=email, name=info.get("name") or email)
 
 
@@ -382,7 +472,7 @@ async def logo(req: Request):
 
 
 async def health(req: Request):
-    return secure(JSONResponse({"ok": True, "version": VERSION, "framework": FRAMEWORK}))
+    return secure(JSONResponse({"ok": True, "version": VERSION, "record": RECORD_ID, "framework": FRAMEWORK}))
 
 
 # ------------------------------------------------------------------ API ของโมเดล
@@ -397,16 +487,30 @@ async def _items(req: Request, s):
     try:
         body = await req.json()
         items = body.get("items")
-        assert isinstance(items, list) and 0 < len(items) <= MAX_ITEMS
+        assert isinstance(items, list) and 0 < len(items) <= MAX_ITEMS and all(isinstance(x, dict) for x in items)
     except Exception:
         return None, jerr(400, error=f"รูปแบบคำขอไม่ถูกต้อง (items 1–{MAX_ITEMS} รายการ)")
-    if not item_limiter.allow(s["sid"], len(items)):
+    ip = "ip:" + client_ip(req)
+    if not allow_all([(item_limiter, s["sid"]), (item_limiter, ip)], len(items)):
         log.warning("api rate-limited session=%s", sid_hash(s))
         return None, jerr(429, error="เรียกบ่อยเกินไป — รอสักครู่")
+    if not allow_all([(day_limiter, f"u{uid_of(s)}"), (day_limiter, ip)], len(items)):
+        log.warning("api daily quota session=%s", sid_hash(s))
+        DBX.event(uid_of(s), "score_quota", {"n": len(items)})
+        return None, jerr(429, error="ใช้โควตาการคำนวณของวันนี้ครบแล้ว — ติดต่อผู้ดูแลระบบ")
     return items, None
 
 
-async def api_amp(req: Request):
+async def api_score(req: Request):
+    """POST {items:[{ticker, fem_count?, bsize?, ten?, variant?}]} → {record, items:[…]}
+    ภาคผนวก ง ใหม-2 / ง-4 (แก้ไขครั้งที่ 2.5): รับเฉพาะบริษัทที่มีอยู่แล้ว (ticker) และปรับได้สองตัวแปรตาม What-if
+      · กรรมการหญิงเป็นจำนวนคน fem_count กับขนาดบอร์ด bsize (จำนวนเต็ม 5–25 · fem_count 0..bsize) — ส่งคู่กัน หรือไม่ส่งทั้งคู่
+      · อายุงานเฉลี่ย ten (0–40 ทีละ 0.5 · มีผลเฉพาะ variant "full" = การวิเคราะห์ความไว B_FULL)
+      ค่าป้อนอื่น (CEO Promotion Focus · กรรมการครอบครัว · political ties · อุตสาหกรรม) อ่านจากค่าที่เก็บของบริษัทบนเซิร์ฟเวอร์
+      ค่านอกช่วงถูกบีบเข้าช่วง · คีย์อื่นถูกปฏิเสธ (400)
+    ผลลัพธ์ = ค่าที่หน้าจอแสดงเท่านั้น: OIS / OIS ในอุตสาหกรรม / ช่วง 90% (1 ตำแหน่ง) · ipi · tier · quadrant · ap / dp (จำนวนเต็ม) ·
+      B_T1 (ois/tier/quad) · full (เมื่อ variant = full) — ไม่มี amp / cP / B ดิบ ไม่มีเครื่องหมาย csg/asg และไม่มีธง clip
+    การให้คะแนนบริษัท-ปีใหม่ (ค่าป้อนเต็มชุด) ทำภายในเซิร์ฟเวอร์ผ่าน ENGINE.score_record() เท่านั้น (server/data_api.py)"""
     s, err = require(req)
     if err:
         return err
@@ -414,31 +518,42 @@ async def api_amp(req: Request):
     if err:
         return err
     try:
-        amp, t1 = [], []
-        for it in items:
-            fam, fem, pol = _num(it.get("fam", 0)), _num(it["fem"]), 1 if it.get("pol") else 0
-            amp.append(round(E.amp_of(fam, pol, fem), AMP_DEC))
-            t1.append(round(E.amp_t1(fem), AMP_DEC))
+        out = await asyncio.to_thread(lambda: [ENGINE.score_public(it) for it in items])
     except (KeyError, TypeError, ValueError) as e:
         return jerr(400, error=f"ค่าป้อนไม่ถูกต้อง: {e}")
-    log.info("amp n=%d session=%s", len(items), sid_hash(s))
-    return secure(JSONResponse({"amp": amp, "ampT1": t1}))
+    nf = sum(1 for it in items if str(it.get("variant") or "").lower() == "full")
+    nfem = sum(1 for it in items if it.get("fem_count") is not None)
+    DBX.event(uid_of(s), "score", {"n": len(items), "full": nf, "fem": nfem,
+                                   "tickers": sorted({str(it.get("ticker"))[:16] for it in items})[:8]})
+    log.info("score n=%d full=%d session=%s", len(items), nf, sid_hash(s))
+    return secure(JSONResponse({"record": RECORD_ID, "items": out}))
 
 
-async def api_band(req: Request):
+async def api_outdomain(req: Request):
+    """POST {fem_count, fam_count, bsize} → {femP, famP} · โหมดนอกกลุ่มอ้างอิง (ธนาคาร/การเงิน) — เปอร์เซ็นไทล์ของสัดส่วน
+    องค์ประกอบบอร์ดเทียบการกระจายของ REF-928 (ข้อมูลเชิงพรรณนา ไม่ใช่คะแนน · ไม่เกี่ยวกับสัมประสิทธิ์) · นับโควตาเหมือน /api/score"""
     s, err = require(req)
     if err:
         return err
-    items, err = await _items(req, s)
-    if err:
-        return err
     try:
-        vals = [(_num(it["promo"]), _num(it.get("fam", 0)), 1 if it.get("pol") else 0, _num(it["fem"])) for it in items]
-    except (KeyError, TypeError, ValueError) as e:
+        body = await req.json()
+        assert isinstance(body, dict)
+    except Exception:  # noqa: BLE001
+        return jerr(400, error="รูปแบบคำขอไม่ถูกต้อง")
+    ip = "ip:" + client_ip(req)
+    if not allow_all([(item_limiter, s["sid"]), (item_limiter, ip), (day_limiter, f"u{uid_of(s)}"), (day_limiter, ip)]):
+        return jerr(429, error="เรียกบ่อยเกินไป — รอสักครู่")
+    try:
+        r = ENGINE.od({k: body.get(k) for k in ("fem_count", "fam_count", "bsize") if k in body} if "bsize" in body
+                      else {"fem": body.get("fem"), "fam": body.get("fam")})
+    except (TypeError, ValueError) as e:
         return jerr(400, error=f"ค่าป้อนไม่ถูกต้อง: {e}")
-    band = await asyncio.to_thread(lambda: [KR.band90(*v) for v in vals])   # ~1 ms/รายการ
-    log.info("band n=%d session=%s", len(items), sid_hash(s))
-    return secure(JSONResponse({"band": band}))
+    return secure(JSONResponse(r))
+
+
+async def api_gone(req: Request):
+    """/api/amp และ /api/band (รุ่นก่อน) คืน amp ดิบทศนิยม 6 ตำแหน่ง — ปิดแล้ว เพราะถอดสัมประสิทธิ์ได้ (ภาคผนวก ง)"""
+    return jerr(410, error="เลิกใช้แล้ว — ใช้ POST /api/score (ผลลัพธ์ระดับเปอร์เซ็นไทล์)")
 
 
 # ------------------------------------------------------------------ AI (LLM) — เปิดเมื่อมี API key ใน env เท่านั้น
@@ -614,7 +729,8 @@ async def api_integrations(req: Request):
     p, have = llm_provider(), llm_providers()
     return secure(JSONResponse({"llm": bool(p), "anthropic": p == "anthropic", "openai": p == "openai",
                                 "providers": have, "default_provider": p, "ocr": ocr_enabled(),
-                                "google": GOOGLE_ON, "db": True, "admin": is_admin(s)}))
+                                "google": GOOGLE_ON, "db": await asyncio.to_thread(DBX.ping), "admin": is_admin(s),
+                                "record": RECORD_ID}))
 
 
 # ------------------------------------------------------------------ ผู้ใช้ / ผลแบบสอบถาม (ฐานข้อมูลกลาง)
@@ -629,13 +745,73 @@ def _clean_ticker(t):
     return t if t and all(ch.isalnum() or ch in "-._&" for ch in t) else None
 
 
+def _plan_for(u):
+    """ระดับสิทธิ์ที่ส่งให้เบราว์เซอร์ · PLAN_SOURCE=client (ช่วงทดสอบผู้ใช้/สาธิต) → None ให้ผู้ใช้เลือกเองที่หน้าเข้าใช้งาน
+    · ค่าเริ่มต้น server → ใช้ค่าของบัญชี (ผู้ดูแลตั้งได้) ถ้าบัญชียังไม่เคยถูกตั้งค่า ใช้ DEFAULT_PLAN (free/pro/max)"""
+    if (env("PLAN_SOURCE") or "server").lower() == "client":
+        return None
+    p = u.get("plan")
+    if (not p or p == "free") and (env("DEFAULT_PLAN") or "").lower() in ("pro", "max") and not u.get("plan_set"):
+        return env("DEFAULT_PLAN").lower()
+    return p or "free"
+
+
+PLAN_RANK = {"free": 0, "pro": 1, "max": 2}
+PLAN_HEADER = "x-ois-plan"
+
+
+def plan_source():
+    return (env("PLAN_SOURCE") or "server").lower()
+
+
+def effective_plan(req: Request, s):
+    """ระดับสิทธิ์ที่ใช้ตรวจฝั่งเซิร์ฟเวอร์ → (plan, source)
+    PLAN_SOURCE=server (ค่าเริ่มต้น): แผนของบัญชี (_plan_for) · header ของเบราว์เซอร์ถูกละเลย
+    PLAN_SOURCE=client (ช่วงทดสอบ): ใช้แผนที่เบราว์เซอร์ประกาศใน header X-OIS-Plan (ไม่มี/ไม่ถูกต้อง = free) และบันทึก log
+      — ไม่ใช่การบังคับสิทธิ์จริง ใช้เพื่อให้ endpoint ทำงานตามระดับที่ผู้ทดสอบเลือกเท่านั้น"""
+    u = DBX.get_user(uid_of(s)) or {}
+    p = _plan_for(u)
+    if p is not None:
+        return (p if p in PLAN_RANK else "free"), "server"
+    raw = (req.headers.get(PLAN_HEADER) or "").strip().lower()
+    p = raw if raw in PLAN_RANK else "free"
+    log.info("plan declared by client plan=%s raw=%s session=%s path=%s", p, raw[:12] or "-", sid_hash(s), req.url.path)
+    return p, "client"
+
+
+def require_plan(req: Request, min_plan):
+    """ตัวช่วยบังคับระดับสิทธิ์ฝั่งเซิร์ฟเวอร์สำหรับ endpoint ของโมดูลอื่น → (session, error_response)
+        from . import app as A
+        s, err = A.require_plan(req, "pro")
+        if err: return err
+    ผู้ดูแลระบบผ่านทุกระดับ · ไม่ผ่าน → 403 {error, need, plan, plan_source} และบันทึก event plan_denied
+    หมายเหตุ: เครดิต (token) ยังนับฝั่งเบราว์เซอร์ (localStorage) — เซิร์ฟเวอร์ไม่มีบัญชีเครดิต (เฟส 2: Payment API) ·
+    require_plan ตรวจเฉพาะระดับแผน ไม่หักเครดิต"""
+    s, err = require(req)
+    if err:
+        return None, err
+    need = str(min_plan or "free").lower()
+    if need not in PLAN_RANK:
+        raise ValueError(f"min_plan ต้องเป็น {', '.join(PLAN_RANK)}")
+    if is_admin(s):
+        return s, None
+    p, src = effective_plan(req, s)
+    if PLAN_RANK[p] < PLAN_RANK[need]:
+        DBX.event(uid_of(s), "plan_denied", {"path": req.url.path, "need": need, "plan": p, "src": src})
+        return None, jerr(403, error="ระดับสิทธิ์ไม่พอสำหรับฟังก์ชันนี้", need=need, plan=p, plan_source=src)
+    s = dict(s, plan=p, plan_source=src)
+    return s, None
+
+
 async def api_me(req: Request):
     s, err = require(req)
     if err:
         return err
+    u = DBX.get_user(uid_of(s)) or {}
     return secure(JSONResponse({"email": s.get("email"), "name": s.get("name") or s.get("u"),
                                 "role": "admin" if is_admin(s) else "user",
-                                "provider": s.get("provider") or "password"}))
+                                "provider": s.get("provider") or "password",
+                                "plan": _plan_for(u), "record": RECORD_ID}))
 
 
 async def api_responses(req: Request):
@@ -661,6 +837,12 @@ async def api_responses(req: Request):
     uid = uid_of(s)
     if not resp_limiter.allow(f"u{uid}"):
         return jerr(429, error="ส่งข้อมูลบ่อยเกินไป — รอสักครู่")
+    if kind == "survey" and isinstance(payload, dict):
+        # กลุ่ม A/B มาจากเซิร์ฟเวอร์เท่านั้น — ค่าที่เบราว์เซอร์ส่งมาเก็บไว้ใน arm_client เพื่อตรวจสอบย้อนหลัง
+        arm, _ = await asyncio.to_thread(survey_arm_assign, uid)
+        if payload.get("arm") != arm:
+            payload = dict(payload, arm_client=payload.get("arm"))
+        payload = dict(payload, arm=arm, arm_src="server")
     cid = str(body.get("client_id") or "")[:64] or None
     rid = DBX.add_response(uid, kind, payload, _clean_ticker(body.get("ticker")), cid)
     DBX.event(uid, "submit", {"kind": kind, "id": rid})
@@ -675,6 +857,46 @@ async def api_responses_mine(req: Request):
     if kind and kind not in D.KINDS:
         return jerr(400, error="kind ไม่รองรับ", kinds=list(D.KINDS))
     return secure(JSONResponse({"items": DBX.mine(uid_of(s), kind)}))
+
+
+SURVEY_ARMS = ("grid", "table")
+
+
+def survey_arm_counts():
+    """นับจากตารางการจัดกลุ่มที่เซิร์ฟเวอร์ออกให้ (หนึ่งแถวต่อบัญชี) — แถว survey ที่เบราว์เซอร์ส่งมาไม่ถูกนับ จึงเอียงตัวนับไม่ได้"""
+    c = {a: 0 for a in SURVEY_ARMS}
+    for a, n in DBX.survey_arm_counts().items():
+        if a in c:
+            c[a] += n
+    return c
+
+
+def survey_arm_assign(uid):
+    """กลุ่มของผู้ใช้ (ออกครั้งเดียวต่อบัญชีแล้วเก็บถาวร) · จัดแบบสมดุล: กลุ่มที่มีคนน้อยกว่า · เท่ากันแล้วสลับตามลำดับ (คู่ = grid)"""
+    a = DBX.survey_arm_of(uid)
+    if a:
+        return a, False
+    c = survey_arm_counts()
+    g, t = c["grid"], c["table"]
+    arm = ("grid" if g < t else "table") if g != t else ("grid" if (g + t) % 2 == 0 else "table")
+    return DBX.survey_arm_set(uid, arm), True
+
+
+async def survey_arms(req: Request):
+    """GET → {grid, table, arm, assigned} · จำนวนผู้ที่ได้รับการจัดกลุ่ม A/B (grid / table) ต่อกลุ่ม และกลุ่มของผู้ใช้คนนี้
+    ภาคผนวก ง-24: เซิร์ฟเวอร์เป็นผู้จัดกลุ่มและเก็บถาวรต่อบัญชี (ตาราง survey_arms) — ตัวนับมาจากตารางนี้เท่านั้น
+    ?assign=0 = ดูอย่างเดียว ไม่จัดกลุ่มให้"""
+    s, err = require(req)
+    if err:
+        return err
+    uid = uid_of(s)
+    if (req.query_params.get("assign") or "1") == "0":
+        arm, new = DBX.survey_arm_of(uid), False
+    else:
+        arm, new = await asyncio.to_thread(survey_arm_assign, uid)
+        if new:
+            DBX.event(uid, "survey_arm", {"arm": arm})
+    return secure(JSONResponse(dict(survey_arm_counts(), arm=arm, assigned=new)))
 
 
 def require_admin(req: Request):
@@ -715,6 +937,44 @@ async def admin_users(req: Request):
     if err:
         return err
     return secure(JSONResponse({"users": DBX.users()}))
+
+
+async def admin_user_plan(req: Request):
+    """GET → {id, plan} · POST {plan: free|pro|max} → ตั้งแผนของผู้ใช้ (ฝั่งเซิร์ฟเวอร์เป็นแหล่งจริงของสิทธิ์ในโหมดเซิร์ฟเวอร์)"""
+    s, err = require_admin(req)
+    if err:
+        return err
+    try:
+        uid = int(req.path_params["uid"])
+    except (KeyError, ValueError):
+        return jerr(400, error="id ไม่ถูกต้อง")
+    u = DBX.get_user(uid)
+    if not u:
+        return jerr(404, error="ไม่พบผู้ใช้")
+    if req.method == "POST":
+        try:
+            plan = (await req.json()).get("plan")
+            u = DBX.set_plan(uid, plan)
+        except Exception:  # noqa: BLE001
+            return jerr(400, error="plan ต้องเป็น free | pro | max", plans=list(D.PLANS))
+        DBX.event(uid_of(s), "admin_plan", {"user": uid, "plan": plan})
+    return secure(JSONResponse({"id": u["id"], "email": u["email"], "plan": u.get("plan") or "free"}))
+
+
+async def admin_trace(req: Request):
+    """ตรวจการคำนวณรายบริษัท ทีละขั้นพร้อมค่าในบันทึกพารามิเตอร์ — ผู้ดูแล/อาจารย์เท่านั้น และบันทึกทุกครั้ง"""
+    s, err = require_admin(req)
+    if err:
+        return err
+    t = _clean_ticker(req.path_params.get("ticker"))
+    if not trace_limiter.allow(f"u{uid_of(s)}"):
+        return jerr(429, error="เรียกบ่อยเกินไป")
+    tr = ENGINE.trace(t) if t else None
+    DBX.event(uid_of(s), "admin_trace", {"ticker": t, "found": bool(tr), "record": RECORD_ID})
+    log.info("admin trace ticker=%s session=%s", t, sid_hash(s))
+    if not tr:
+        return jerr(404, error="ไม่พบบริษัท")
+    return secure(JSONResponse(tr))
 
 
 async def admin_events(req: Request):
@@ -836,17 +1096,22 @@ ROUTES = [
     Route("/logo.png", logo),
     Route("/api/health", health),
     Route("/favicon.ico", lambda req: Response(status_code=204)),
-    Route("/api/amp", api_amp, methods=["POST"]),
-    Route("/api/band", api_band, methods=["POST"]),
+    Route("/api/score", api_score, methods=["POST"]),
+    Route("/api/outdomain", api_outdomain, methods=["POST"]),
+    Route("/api/amp", api_gone, methods=["GET", "POST"]),
+    Route("/api/band", api_gone, methods=["GET", "POST"]),
     Route("/api/llm", api_llm, methods=["POST"]),
     Route("/api/ocr", api_ocr, methods=["POST"]),
     Route("/api/integrations", api_integrations),
     Route("/api/me", api_me),
     Route("/api/responses", api_responses, methods=["POST"]),
     Route("/api/responses/mine", api_responses_mine),
+    Route("/api/survey/arms", survey_arms),
     Route("/api/admin/responses", admin_responses),
     Route("/api/admin/summary", admin_summary),
     Route("/api/admin/users", admin_users),
+    Route("/api/admin/users/{uid}/plan", admin_user_plan, methods=["GET", "POST"]),
+    Route("/api/admin/trace/{ticker}", admin_trace),
     Route("/api/admin/events", admin_events),
     Route("/api/admin/backup", admin_backup),
     Route("/api/v1/companies", v1_companies),
@@ -854,6 +1119,24 @@ ROUTES = [
     Route("/api/v1/companies/{ticker}/board-questions", v1_questions),
     Route("/api/openapi.json", openapi_json),
 ]
+def _ext_routes():
+    """เส้นทางจากโมดูลเสริม: report_api (รายงานเทมเพลตด้วย Claude API) · data_api (ข้อมูลหลายปี + อนุมัติ + Validity)"""
+    import importlib
+    out = []
+    for name in ("report_api", "data_api"):
+        for qual in ([f"{__package__}.{name}"] if __package__ else []) + [name]:
+            try:
+                m = importlib.import_module(qual)
+            except ModuleNotFoundError as e:
+                if e.name in (qual, name):
+                    continue
+                raise
+            out += list(getattr(m, "ROUTES", []))
+            break
+    return out
+
+
+ROUTES += _ext_routes()
 MIDDLEWARE = [Middleware(GZipMiddleware, minimum_size=1024)]
 HANDLERS = {404: not_found}
 FRAMEWORK = "starlette"

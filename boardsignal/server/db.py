@@ -8,9 +8,11 @@
   (ส่วน PostgreSQL ยังไม่ได้ทดสอบกับฐานข้อมูลจริง — SQL เขียนแบบพื้นฐานที่ใช้ได้ทั้งสองระบบ)
 
 ตาราง
-  users(id, email UNIQUE, name, provider, role, created, last_login)
+  users(id, email UNIQUE, name, provider, role, created, last_login, plan)
+                                                                      plan = free | pro | max (ผู้ดูแลตั้งผ่าน /api/admin/users/{id}/plan)
   responses(id, user_id, kind, ticker, payload, created, client_id)   payload = JSON (TEXT)
   events(id, user_id, kind, detail, created)                          บันทึกการเข้าสู่ระบบ/การเรียก API
+  survey_arms(user_id PK, arm, created)                               กลุ่ม A/B ของแบบสอบถามที่เซิร์ฟเวอร์ออกให้ (หนึ่งแถวต่อบัญชี)
 เวลาเก็บเป็น ISO-8601 UTC (TEXT) เพื่อให้ส่งออก CSV/อ่านใน Excel ได้ตรง ๆ
 """
 import json
@@ -25,6 +27,7 @@ from pathlib import Path
 log = logging.getLogger("ois.db")
 
 KINDS = ("survey", "rfq", "bodset", "bod_oi", "approval", "dict", "feedback")
+PLANS = ("free", "pro", "max")          # ป้ายบนหน้าจอ: Basic · Pro · Pro Max (ค่าภายในยังเป็น free)
 
 SCHEMA = [
     """CREATE TABLE IF NOT EXISTS users (
@@ -38,6 +41,8 @@ SCHEMA = [
     """CREATE TABLE IF NOT EXISTS events (
          id {pk}, user_id INTEGER, kind TEXT NOT NULL, detail TEXT, created TEXT NOT NULL)""",
     "CREATE INDEX IF NOT EXISTS ix_ev_created ON events(created)",
+    """CREATE TABLE IF NOT EXISTS survey_arms (
+         user_id INTEGER PRIMARY KEY, arm TEXT NOT NULL, created TEXT NOT NULL)""",
 ]
 
 
@@ -74,7 +79,27 @@ class DB:
             pk, js = "BIGSERIAL PRIMARY KEY", "JSONB"
         for s in SCHEMA:
             self._exec(s.format(pk=pk, json=js))
+        self._migrate()
         log.info("database: %s", self.kind if self.kind == "postgres" else f"sqlite {self.path}")
+
+    def _migrate(self):
+        """เพิ่มคอลัมน์ที่มาทีหลังให้ฐานข้อมูลเดิม (ไม่ลบข้อมูล)"""
+        if self.kind == "postgres":
+            self._exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free'")
+            self._exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_set INTEGER DEFAULT 0")
+            return
+        cols = {r["name"] for r in self._exec("PRAGMA table_info(users)", fetch="all")}
+        if "plan" not in cols:
+            self._exec("ALTER TABLE users ADD COLUMN plan TEXT DEFAULT 'free'")
+        if "plan_set" not in cols:
+            self._exec("ALTER TABLE users ADD COLUMN plan_set INTEGER DEFAULT 0")
+
+    def ping(self):
+        """ตรวจการเชื่อมต่อจริง (ใช้ใน /api/integrations)"""
+        try:
+            return self._exec("SELECT 1 AS ok", fetch="one") is not None
+        except Exception:  # noqa: BLE001
+            return False
 
     # ---------------------------------------------------------------- ระดับล่าง
     def _pg_connect(self):
@@ -123,8 +148,17 @@ class DB:
                            (email, (name or "")[:120], provider, role, t, t))
         return {"id": uid, "email": email, "name": name, "provider": provider, "role": role, "created": t, "last_login": t}
 
+    def get_user(self, uid):
+        return self._exec("SELECT * FROM users WHERE id = ?", (int(uid),), fetch="one")
+
+    def set_plan(self, uid, plan):
+        if plan not in PLANS:
+            raise ValueError("plan")
+        self._exec("UPDATE users SET plan = ?, plan_set = 1 WHERE id = ?", (plan, int(uid)))
+        return self.get_user(uid)
+
     def users(self):
-        return self._exec("""SELECT u.id, u.email, u.name, u.provider, u.role, u.created, u.last_login,
+        return self._exec("""SELECT u.id, u.email, u.name, u.provider, u.role, COALESCE(u.plan, 'free') AS plan, u.created, u.last_login,
                                     (SELECT COUNT(*) FROM responses r WHERE r.user_id = u.id) AS n_responses
                              FROM users u ORDER BY u.id""", fetch="all")
 
@@ -157,6 +191,20 @@ class DB:
         if kind:
             q += " WHERE r.kind = ?"; a.append(kind)
         return self._decode(self._exec(q + " ORDER BY r.id LIMIT ?", (*a, int(limit)), fetch="all"))
+
+    # ---------------------------------------------------------------- กลุ่ม A/B ของแบบสอบถาม (เซิร์ฟเวอร์ออกให้)
+    def survey_arm_of(self, user_id):
+        r = self._exec("SELECT arm FROM survey_arms WHERE user_id = ?", (int(user_id),), fetch="one")
+        return r["arm"] if r else None
+
+    def survey_arm_set(self, user_id, arm):
+        """บันทึกกลุ่มครั้งแรกเท่านั้น (ON CONFLICT DO NOTHING) แล้วคืนกลุ่มที่เก็บจริง — กันการจัดซ้ำเมื่อเรียกพร้อมกัน"""
+        self._exec("INSERT INTO survey_arms (user_id, arm, created) VALUES (?, ?, ?) ON CONFLICT (user_id) DO NOTHING",
+                   (int(user_id), arm, now_iso()))
+        return self.survey_arm_of(user_id)
+
+    def survey_arm_counts(self):
+        return {r["arm"]: int(r["n"]) for r in self._exec("SELECT arm, COUNT(*) AS n FROM survey_arms GROUP BY arm", fetch="all")}
 
     # ---------------------------------------------------------------- บันทึกการใช้งาน
     def event(self, user_id, kind, detail=None):

@@ -106,21 +106,28 @@ function peerDiff(c, p) {
     dFam: Math.round((p.fam - c.fam) * 1000) / 10, dTen: Math.round(((p.ten || 0) - (c.ten || 0)) * 10) / 10,
     polDiff: !!p.pol !== !!c.pol };
 }
+/** คำถามว่าความต่างเกิดจากอะไร — คืน { t: ข้อความบนหน้าจอ, f: ข้อความสำหรับแผนพัฒนาบอร์ด/Follow-up }
+ *  f ไม่มีคำอ้างคะแนน (เปอร์เซ็นไทล์ · OIS · tier · ชื่อช่อง) เพื่อให้ร่าง 56-1 ส่งออกได้ (ภาคผนวก ง ข้อ 13) */
 function peerQs(c, p, d) {
-  const q = [];
-  if (d.cross) q.push(`ความต่างระหว่าง ${c.t} กับ ${p.t} อาจมาจากบริบทอุตสาหกรรม (${IND[c.ind] || "—"} เทียบ ${IND[p.ind] || "—"}) มากกว่าการกำกับดูแล — ลักษณะธุรกิจ วงจรการลงทุน และแนวปฏิบัติการเขียนรายงานของสองอุตสาหกรรมต่างกันอย่างไร?`);
+  const q = [], Q = (t, f) => q.push({ t, f: f || t });
+  if (d.cross) Q(`ความต่างระหว่าง ${c.t} กับ ${p.t} อาจมาจากบริบทอุตสาหกรรม (${IND[c.ind] || "—"} เทียบ ${IND[p.ind] || "—"}) มากกว่าการกำกับดูแล — ลักษณะธุรกิจ วงจรการลงทุน และแนวปฏิบัติการเขียนรายงานของสองอุตสาหกรรมต่างกันอย่างไร?`);
   if (Math.abs(d.dDp) < 10 && Math.abs(d.dAp) < 10) {
-    q.push(`ความต่างของทั้งสองแกนน้อย (ไม่เกิน 10 เปอร์เซ็นไทล์)${d.overlap ? " และช่วง 90% ของคะแนนซ้อนทับกัน" : ""} — ควรถือว่าสองบริษัทอยู่ในรูปแบบใกล้เคียงกันหรือไม่ ก่อนกำหนดแนวทางพัฒนาจากความต่างนี้?`);
+    Q(`ความต่างของทั้งสองแกนน้อย (ไม่เกิน 10 เปอร์เซ็นไทล์)${d.overlap ? " และช่วง 90% ของคะแนนซ้อนทับกัน" : ""} — จะถือว่าสองบริษัทอยู่ในรูปแบบใกล้เคียงกันหรือไม่ ก่อนกำหนดแนวทางพัฒนาจากความต่างนี้?`,
+      `ตำแหน่งของ ${c.t} กับ ${p.t} ใกล้เคียงกัน — จะถือว่าสองบริษัทอยู่ในรูปแบบใกล้เคียงกันหรือไม่ ก่อนกำหนดแนวทางพัฒนาจากความต่างนี้?`);
   }
-  const qCeo = `ความต่างของภาษา CEO (${p.t} ${d.dDp > 0 ? "สูงกว่า" : "ต่ำกว่า"} ${Math.abs(d.dDp)} เปอร์เซ็นไทล์) สะท้อนกลยุทธ์ที่ต่างกันจริง หรือเป็นเพียงรูปแบบการเขียนรายงาน?`;
-  const qCeo2 = `สารถึงผู้ถือหุ้นของสองบริษัทจัดทำโดยใครและผ่านการเรียบเรียงต่างกันอย่างไร — ทิศทางที่เขียนไว้มีแผนงานหรือโครงการรองรับจริงหรือไม่?`;
-  const qBrd = `องค์ประกอบบอร์ดที่ต่างกัน (สัญญาณโครงสร้างบอร์ดของ ${p.t} ${d.dAp > 0 ? "สูงกว่า" : "ต่ำกว่า"} ${Math.abs(d.dAp)} เปอร์เซ็นไทล์) เกิดจากโครงสร้างผู้ถือหุ้น ช่วงธุรกิจ หรือกระบวนการสรรหา?`;
-  const qFem = Math.abs(d.dFem) >= 5 ? `สัดส่วนกรรมการหญิงที่ต่างกัน (${pct1(c.fem)} เทียบ ${pct1(p.fem)}) มาจากแผนสรรหาและวาระกรรมการที่ต่างกันหรือไม่ และจำนวนคนถึงระดับ critical mass (≥ ${CRIT_N} คน) หรือยัง?` : "";
+  const qCeo = [`ความต่างของภาษา CEO (${p.t} ${d.dDp > 0 ? "สูงกว่า" : "ต่ำกว่า"} ${Math.abs(d.dDp)} เปอร์เซ็นไทล์) สะท้อนกลยุทธ์ที่ต่างกันจริง หรือเป็นเพียงรูปแบบการเขียนรายงาน?`,
+    `ภาษาในสารถึงผู้ถือหุ้นที่ต่างกันระหว่าง ${c.t} กับ ${p.t} สะท้อนกลยุทธ์ที่ต่างกันจริง หรือเป็นเพียงรูปแบบการเขียนรายงาน?`];
+  const qCeo2 = [`สารถึงผู้ถือหุ้นของสองบริษัทจัดทำโดยใครและผ่านการเรียบเรียงต่างกันอย่างไร — ทิศทางที่เขียนไว้มีแผนงานหรือโครงการรองรับจริงหรือไม่?`];
+  const qBrd = [`องค์ประกอบบอร์ดที่ต่างกัน (สัญญาณโครงสร้างบอร์ดของ ${p.t} ${d.dAp > 0 ? "สูงกว่า" : "ต่ำกว่า"} ${Math.abs(d.dAp)} เปอร์เซ็นไทล์) เกิดจากโครงสร้างผู้ถือหุ้น ช่วงธุรกิจ หรือกระบวนการสรรหา?`,
+    `องค์ประกอบบอร์ดที่ต่างกันระหว่าง ${c.t} กับ ${p.t} เกิดจากโครงสร้างผู้ถือหุ้น ช่วงธุรกิจ หรือกระบวนการสรรหา?`];
+  const qFem = Math.abs(d.dFem) >= 5 ? [`สัดส่วนกรรมการหญิงที่ต่างกัน (${pct1(c.fem)} เทียบ ${pct1(p.fem)}) มาจากแผนสรรหาและวาระกรรมการที่ต่างกันหรือไม่ และจำนวนคนถึงเกณฑ์ critical mass (≥ ${CRIT_N} คน) หรือยัง?`] : null;
   // แกนที่ต่างมากที่สุดก่อน · ถ้าแกนรองต่าง ≥ 10 เปอร์เซ็นไทล์ ถามด้วย · คำถามต่อเนื่องของแกนหลักไว้ท้าย
-  if (d.dom === "ceo") { q.push(qCeo); if (Math.abs(d.dAp) >= 10) q.push(qFem || qBrd); q.push(qCeo2); }
-  else { q.push(qBrd); if (Math.abs(d.dDp) >= 10) q.push(qCeo); if (qFem) q.push(qFem); }
-  if (d.qc === d.qp && d.tc !== d.tp) q.push(`ทั้งสองบริษัทอยู่ช่อง ${ZONES[d.qc].l} เดียวกันแต่ต่าง tier (${d.tc} เทียบ ${d.tp}) — ความต่างมาจากความเข้มของสัญญาณด้านใด${d.overlap ? " และเมื่อช่วง 90% ซ้อนทับกัน ควรสรุปว่าต่างกันจริงหรือไม่" : ""}?`);
-  else if (d.qc !== d.qp) q.push(`สองบริษัทอยู่คนละช่อง (${ZONES[d.qc].l} เทียบ ${ZONES[d.qp].l}) — รูปแบบของแต่ละบริษัทเหมาะกับช่วงธุรกิจของตนหรือไม่ แทนการตั้งเป้าย้ายช่องตาม peer?`);
+  if (d.dom === "ceo") { Q(...qCeo); if (Math.abs(d.dAp) >= 10) Q(...(qFem || qBrd)); Q(...qCeo2); }
+  else { Q(...qBrd); if (Math.abs(d.dDp) >= 10) Q(...qCeo); if (qFem) Q(...qFem); }
+  if (d.qc === d.qp && d.tc !== d.tp) Q(`ทั้งสองบริษัทอยู่ช่อง ${ZONES[d.qc].l} เดียวกันแต่ต่าง tier (${d.tc} เทียบ ${d.tp}) — ความต่างมาจากความเข้มของสัญญาณด้านใด${d.overlap ? " และเมื่อช่วง 90% ซ้อนทับกัน จะสรุปว่าต่างกันจริงหรือไม่" : ""}?`,
+    `${c.t} กับ ${p.t} อยู่ในรูปแบบเดียวกันแต่ระดับต่างกัน — ความต่างมาจากด้านภาษาผู้นำหรือองค์ประกอบบอร์ด?`);
+  else if (d.qc !== d.qp) Q(`สองบริษัทอยู่คนละช่อง (${ZONES[d.qc].l} เทียบ ${ZONES[d.qp].l}) — รูปแบบของแต่ละบริษัทเหมาะกับช่วงธุรกิจของตนหรือไม่ แทนการตั้งเป้าย้ายช่องตาม peer?`,
+    `${c.t} กับ ${p.t} อยู่คนละรูปแบบ — รูปแบบของแต่ละบริษัทเหมาะกับช่วงธุรกิจของตนหรือไม่ แทนการตั้งเป้าตามคู่เทียบ?`);
   return q.slice(0, 3);
 }
 function peerQuestions(c, peers) {
@@ -143,8 +150,8 @@ function peerQuestions(c, peers) {
       ["tier", d.tc, d.tp, d.tc === d.tp ? "เหมือน" : "ต่าง"],
       ["สัดส่วนกรรมการหญิง", pct1(c.fem), pct1(p.fem), (d.dFem > 0 ? "+" : "") + fmt(d.dFem, 1) + " จุด"],
     ];
-    const qHtml = qs.map(q => { const i = RP_Q.push({ t: q, p: p.t }) - 1;
-      return `<li><span>${esc(q)}</span><button class="btn g rp-add" data-rpq="${i}">+ เพิ่มเข้าแผนพัฒนาบอร์ด</button></li>`; }).join("");
+    const qHtml = qs.map(q => { const i = RP_Q.push({ t: q.t, f: q.f, p: p.t }) - 1;
+      return `<li><span>${esc(q.t)}</span><button class="btn g rp-add" data-rpq="${i}">+ เพิ่มเข้าแผนพัฒนาบอร์ด</button></li>`; }).join("");
     return `<div class="rp-peer">
       <div class="rp-peer-h"><b>${esc(c.t)} เทียบ ${esc(p.t)}</b><span>${esc(p.n || "")}</span>
         ${d.cross ? `<span class="pill warn">ข้ามอุตสาหกรรม</span>` : ""}
@@ -154,7 +161,7 @@ function peerQuestions(c, peers) {
           <td class="n">${typeof r[3] === "number" ? (r[3] > 0 ? "+" : "") + r[3] : esc(r[3])}</td></tr>`).join("")}</tbody></table></div>
       <div class="rp-k">คำถามว่าความแตกต่างเกิดจากอะไร</div>
       <ol class="rp-qs">${qHtml}</ol>
-      <div class="rp-k">บริบทที่ควรตรวจก่อนสรุป <span class="pill mute">บริบท</span></div>
+      <div class="rp-k">บริบทที่ตรวจก่อนสรุป <span class="pill mute">บริบท</span></div>
       <ul class="rp-ctx">${ctx.map(x => `<li>${x}</li>`).join("")}</ul>
     </div>`;
   }).join("");
@@ -179,50 +186,58 @@ VIEWS.peer = function () {
    3 · What-if Report — ผลภายใต้สมมติฐาน ทางเลือก และหลักฐานที่ต้องมีก่อนดำเนินการ
    ============================================================================ */
 const RP_EV_FEM = ["skills matrix ของบอร์ดปัจจุบันและทักษะที่ยังขาด", "แผนสรรหาและวาระกรรมการ (ใครครบวาระเมื่อใด)",
-  `จำนวนกรรมการหญิงเป็นคน ≥ ${typeof CRIT_N !== "undefined" ? CRIT_N : 3} คนตามหลักฐาน critical mass — ไม่ใช่สัดส่วนอย่างเดียว`];
+  `จำนวนกรรมการหญิงเป็นคน ≥ ${typeof CRIT_N !== "undefined" ? CRIT_N : 3} คนตามเกณฑ์ critical mass ที่ผู้วิจัยกำหนด — ไม่ใช่สัดส่วนอย่างเดียว`];
 const RP_EV_CEO = ["ยุทธศาสตร์ที่เขียนไว้จริงและแผนงานที่รองรับ", "ตัวอย่างโครงการร่วมพัฒนากับภายนอกที่เกิดขึ้นจริง",
   "ผลรัน LIWC-22 ของสารถึงผู้ถือหุ้นฉบับจริง (ไม่ใช่ร่างทดสอบ)"];
+const RP_EV_TEN = ["ตารางวาระกรรมการและแผนสืบทอดตำแหน่ง", "นโยบายวาระการดำรงตำแหน่งของกรรมการอิสระตามหลักการกำกับดูแลกิจการที่ดี"];
+const RP_TEN_NOTE = "อายุงานไม่ขยับคะแนนหลัก (δT = 0 ตามหลักการออกแบบ DP1) — ผลของอายุงานดูที่คอลัมน์ความไว B_FULL";
 const RP_WI_INFO = {
-  opt: { ev: RP_EV_FEM, as: ["สัดส่วนกรรมการหญิงขึ้นไปที่ p90 ของอุตสาหกรรม", "ภาษา CEO คงเปอร์เซ็นไทล์เดิม"] },
-  con: { ev: ["แผนรองรับเมื่อกรรมการหญิงครบวาระ", "รายชื่อตำแหน่งที่จะว่างและเกณฑ์สรรหาทดแทน"], as: ["สัดส่วนกรรมการหญิงลดลงไปที่ p10 ของอุตสาหกรรม (กรณีไม่ได้แทนที่)", "ภาษา CEO คงเปอร์เซ็นไทล์เดิม"] },
-  sq: { ev: ["บันทึกเหตุผลของบอร์ดที่เลือกคงโครงสร้าง", "ผลติดตามปีถัดไปเพื่อตรวจว่าตำแหน่งยังคงที่"], as: ["ไม่ปรับคันโยกใด"] },
-  reg: { ev: [...RP_EV_FEM, "แนวทางของ ตลท. ที่อ้างอิงและปีที่มีผล"], as: ["สัดส่วนกรรมการหญิงอย่างน้อย 30% ตามแนวทางกำกับ", "ภาษา CEO คงเปอร์เซ็นไทล์เดิม"] },
-  new: { ev: [...RP_EV_CEO, ...RP_EV_FEM], as: ["CEO Promotion Focus อยู่ที่เปอร์เซ็นไทล์ 75", "สัดส่วนกรรมการหญิงขึ้นไปที่ p90 ของอุตสาหกรรม"] },
+  opt: { ev: RP_EV_FEM, as: ["สัดส่วนกรรมการหญิงขึ้นไปที่ p90 ของอุตสาหกรรม", "อายุงานและภาษา CEO คงค่าจริง"] },
+  con: { ev: ["แผนรองรับเมื่อกรรมการหญิงครบวาระ", "รายชื่อตำแหน่งที่จะว่างและเกณฑ์สรรหาทดแทน"], as: ["สัดส่วนกรรมการหญิงลดลงไปที่ p10 ของอุตสาหกรรม (กรณีไม่ได้แทนที่)", "อายุงานและภาษา CEO คงค่าจริง"] },
+  sq: { ev: ["บันทึกเหตุผลของบอร์ดที่เลือกคงโครงสร้าง", "ผลติดตามปีถัดไปเพื่อตรวจว่าตำแหน่งยังคงที่"], as: ["ไม่ปรับตัวแปรใด"] },
+  reg: { ev: [...RP_EV_FEM, "แนวทางของ ตลท. ที่อ้างอิงและปีที่มีผล"], as: ["สัดส่วนกรรมการหญิงอย่างน้อย 30% ตามแนวทางกำกับ", "อายุงานและภาษา CEO คงค่าจริง"] },
+  tenmed: { ev: RP_EV_TEN, as: ["อายุงานเฉลี่ยเท่าค่ากลางของอุตสาหกรรม", RP_TEN_NOTE] },
 };
-const RP_AS_COMMON = ["ฉากทัศน์สำเร็จรูปตรึงกรรมการครอบครัวและ political ties ไว้ที่ค่าจริง (ข้อมูลบริบท ไม่ใช่คันโยก) · อายุงานไม่มีผลต่อคะแนน (δT = 0)",
-  "ฐานอ้างอิง REF-928 และสูตรไม่เปลี่ยน", "บริษัทอื่นในฐานอ้างอิงไม่เปลี่ยนตำแหน่ง"];
+const RP_AS_COMMON = ["ตัวแปรที่จำลองมีสองตัว: จำนวนกรรมการหญิง และอายุงานเฉลี่ยของบอร์ด · กรรมการครอบครัวและ political ties ใช้ค่าจริง (ข้อมูลบริบท อ่านอย่างเดียว R6)",
+  RP_TEN_NOTE, "ฐานอ้างอิง REF-928 และสูตรไม่เปลี่ยน", "บริษัทอื่นในฐานอ้างอิงไม่เปลี่ยนตำแหน่ง"];
 const RP_CAVEAT = "ผลตามสูตรเชิงความสัมพันธ์ ไม่ใช่การรับประกันว่าปรับแล้วจะเกิดผล";
-function rpScen(c, fem, dp, fam, pol) {
-  fam = fam ?? c.fam; pol = pol ?? c.pol;
+const rpFull = (promo, c, fem, ten) => typeof b4Full === "function" ? b4Full(promo, c.fam, c.pol, fem, ten) : null;
+function rpScen(c, fem, dp, ten) {
+  /* ใช้ฟังก์ชันประเมินร่วมกับ What-if Studio (wiEval ใน v2_invest.js) — ฉากทัศน์ชื่อเดียวกันจึงได้ค่าเดียวกันทุกบล็อก */
+  if (typeof wiEval === "function") return wiEval(c, { fem, dp, ten });
+  ten = isFinite(ten) ? ten : c.ten;
   const promo = dp === c.dp ? c.promo : promoAtPct(dp);
-  const amp = ampOf(fam, pol, fem, c.ten), B = signalB(promo, amp), ois = oisOf(B);
-  const ctx = Math.abs(fam - c.fam) > 1e-9 || pol !== c.pol;
+  const same = dp === c.dp && Math.abs(fem - c.fem) < 1e-9;
+  const amp = same ? c.amp : ampOf(c.fam, c.pol, fem, c.ten), B = signalB(promo, amp), ois = same ? (c.ois ?? oisOf(B)) : oisOf(B);
   let band = null;
-  if (dp === c.dp && Math.abs(fem - c.fem) < 1e-9 && !ctx && c.band) band = c.band;          // ไม่ขยับคันโยก → ใช้ช่วงเดียวกับทุกหน้า
-  else try { band = band90(promo, fam, pol, fem); } catch (e) { }
-  return { fem, dp, ois, ipi: Math.round(ois), tier: tierOf(ois), quad: quadOf(cpOf(promo), amp), band };
+  if (same && c.band) band = c.band;                         // ไม่ขยับตัวแปรที่เข้าสูตร → ใช้ช่วงจากไฟล์ผลวิเคราะห์เหมือนทุกหน้า
+  else try { band = band90(promo, c.fam, c.pol, fem); } catch (e) { }
+  return { fem, dp, ten, promo, ois, ipi: Math.round(ois), tier: tierOf(ois), quad: quadOf(cpOf(promo), amp), band, full: rpFull(promo, c, fem, ten) };
 }
 let RP_WI = [];
 function whatIfReport(c, w) {
   if (typeof WI_PRESETS === "undefined") return "";
-  const base = { l: "ปัจจุบัน (ค่าจริง)", fem: c.fem, dp: c.dp, ois: c.ois ?? c.ipi, ipi: c.ipi, tier: rpTier(c), quad: rpQuad(c), band: c.band };
-  const sim = rpScen(c, w.fem, w.dp, w.fam, w.pol);
-  const ctxMoved = Math.abs((w.fam ?? c.fam) - c.fam) > 1e-9 || (w.pol ?? c.pol) !== c.pol;
-  const simEv = [...(Math.abs(w.fem - c.fem) > 1e-9 ? RP_EV_FEM : []), ...(w.dp !== c.dp ? RP_EV_CEO : [])];
-  const simAs = [...(w.n !== undefined ? [`องค์ประกอบแบบจำนวนคน: กรรมการ ${w.n} คน · หญิง ${w.nf} คน · ครอบครัว ${w.nfam} คน · political ties ${w.pol ? "เข้าเกณฑ์" : "ไม่เข้าเกณฑ์"}${typeof indQuart === "function" ? ` → Quartile ในอุตสาหกรรม ${indQuart(sim.promo ?? (w.dp === c.dp ? c.promo : promoAtPct(w.dp)), ampOf(w.fam, w.pol, w.fem), c.ind).lab}` : ""}`] : []),
-    Math.abs(w.fem - c.fem) > 1e-9 ? `สัดส่วนกรรมการหญิง ${pct1(w.fem)} (ค่าจริง ${pct1(c.fem)})` : "สัดส่วนกรรมการหญิงคงค่าจริง",
-    w.dp !== c.dp ? `CEO Promotion Focus เปอร์เซ็นไทล์ ${w.dp} (ค่าจริง ${c.dp}) · ที่มา: ${w.src || "ผู้ใช้ปรับ"}` : "ภาษา CEO คงค่าจริง",
-    ...(ctxMoved ? [`ตัวแปรบริบทถูกขยับ: กรรมการครอบครัว ${pct1(w.fam)} (ค่าจริง ${pct1(c.fam)}) · political ties ${w.pol} (ค่าจริง ${c.pol}) — ผลจากตัวแปรบริบท ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย`] : [])];
-  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", d: ctxMoved ? "ค่าที่ตั้งไว้บนหน้านี้ · ผลจากตัวแปรบริบท — ใช้เพื่อเข้าใจโมเดล ไม่ใช่ทางเลือกเชิงนโยบาย" : "ค่าที่ตั้งไว้บนหน้านี้", ctx: ctxMoved, ev: simEv.length ? simEv : ["ไม่มีการปรับคันโยก — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
+  const base = Object.assign(rpScen(c, c.fem, c.dp, c.ten), { l: "ปัจจุบัน (ค่าจริง)" });
+  const sim = rpScen(c, w.fem, w.dp, w.ten);
+  const fb = base.full;
+  const simEv = [...(Math.abs(w.fem - c.fem) > 1e-9 ? RP_EV_FEM : []), ...(Math.abs(w.ten - c.ten) > 1e-9 ? RP_EV_TEN : []), ...(w.dp !== c.dp ? RP_EV_CEO : [])];
+  const simAs = [`กรรมการ ${w.n} คน · หญิง ${w.nf} คน (${pct1(w.fem)} · ค่าจริง ${pct1(c.fem)})${typeof indQuart === "function" ? ` → Quartile ในอุตสาหกรรม ${indQuart(sim.promo, ampOf(c.fam, c.pol, w.fem, c.ten), c.ind).lab}` : ""}`,
+    Math.abs(w.ten - c.ten) > 1e-9 ? `อายุงานเฉลี่ย ${fmt(w.ten, 1)} ปี (ค่าจริง ${fmt(c.ten, 1)} ปี) — ${RP_TEN_NOTE}` : "อายุงานเฉลี่ยคงค่าจริง",
+    w.dp !== c.dp ? `ภาษา CEO วัดจากเอกสาร (${w.src || "ผู้ใช้"}) แทนค่าจริง` : "ภาษา CEO คงค่าจริง"];
+  RP_WI = [{ k: "sim", l: "สถานะจำลองปัจจุบัน", lf: `กรรมการหญิง ${w.nf} คนจาก ${w.n} คน · อายุงานเฉลี่ย ${fmt(w.ten, 1)} ปี`, d: "ค่าที่ตั้งไว้บนหน้านี้",
+    ev: simEv.length ? simEv : ["ไม่มีการปรับตัวแปร — ไม่มีหลักฐานเพิ่มเติมที่ต้องใช้"], as: simAs, s: sim }];
   WI_PRESETS.filter(p => p.k !== "cur").forEach(p => {
-    const v = p.f(c), info = RP_WI_INFO[p.k] || { ev: [], as: [p.d || ""] };
-    RP_WI.push({ k: p.k, l: p.th, d: p.d || "", ev: info.ev, as: info.as, s: rpScen(c, v.fem, v.dp) });
+    const v = typeof wiPresetState === "function" ? wiPresetState(c, p.k) : p.f(c), info = RP_WI_INFO[p.k] || { ev: [], as: [p.d || ""] };
+    const cnt = v && v.nf !== undefined ? (S.lang === "EN" ? ` · female directors ${v.nf} of ${v.n}${v.assumed ? " (assumed board size)" : ""}` : ` · กรรมการหญิง ${v.nf} คนจาก ${v.n}${v.assumed ? " (ขนาดบอร์ดสมมติ)" : ""}`) : "";
+    RP_WI.push({ k: p.k, l: p.th, lf: p.th + cnt, d: (p.d || "") + cnt, ev: info.ev, as: info.as, s: rpScen(c, v.fem, v.dp, v.ten) });
   });
   const bandTxt = b => b ? `${fmt(b[0], 1)}–${fmt(b[1], 1)}` : "—";
-  const dTxt = v => { const d = v.ipi - base.ipi; return d > 0 ? `<span class="pill ok">+${d}</span>` : d < 0 ? `<span class="pill crit">${d}</span>` : `<span class="pill mute">±0</span>`; };
-  const row = (l, v, extra) => `<tr${extra ? ` class="${extra}"` : ""}><td>${esc(l)}</td><td class="n">${pct1(v.fem)}</td><td class="n">${fmt(v.dp)}</td>
+  const sg = x => x > 0 ? "+" + x : x < 0 ? "−" + Math.abs(x) : "±0";
+  const dTxt = v => `<span class="pill mute">${sg(v.ipi - base.ipi)}</span>`;
+  const fTxt = v => v.full === null || fb === null ? `<span class="gx-sm">ยังไม่พร้อม</span>` : !isFinite(v.full) || !isFinite(fb) ? "…" : sg(Math.round(v.full) - Math.round(fb));
+  const row = (l, v, extra) => `<tr${extra ? ` class="${extra}"` : ""}><td>${esc(l)}</td><td class="n">${pct1(v.fem)}</td><td class="n">${fmt(v.ten, 1)}</td>
     <td class="n"><b>${fmt(v.ois, 1)}</b></td><td class="n">${v === base ? "—" : dTxt(v)}</td><td class="n">${v.tier}</td>
-    <td>${esc(ZONES[v.quad].l)}${v.quad !== base.quad ? ` <span class="pill warn">ย้ายช่อง</span>` : ""}</td><td class="n">${bandTxt(v.band)}</td></tr>`;
+    <td>${esc(ZONES[v.quad].l)}${v.quad !== base.quad ? ` <span class="pill warn">ย้ายช่อง</span>` : ""}</td><td class="n">${bandTxt(v.band)}</td><td class="n">${v === base ? "—" : fTxt(v)}</td></tr>`;
   const alts = RP_WI.map((a, i) => `<div class="rp-alt">
       <div class="rp-alt-h"><b>${esc(a.l)}</b>${a.d ? `<span>${esc(a.d)}</span>` : ""}
         <span class="rp-alt-v">OIS ${fmt(a.s.ois, 1)} · Tier ${a.s.tier} · ${esc(ZONES[a.s.quad].l)} ${dTxt(a.s)}</span></div>
@@ -230,15 +245,15 @@ function whatIfReport(c, w) {
         <div><div class="rp-k">สมมติฐานที่ใช้</div><ul class="rp-ctx">${a.as.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
         <div><div class="rp-k">หลักฐานที่ต้องมีก่อนดำเนินการ</div><ul class="rp-ctx">${a.ev.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
       </div>
-      ${a.ctx ? `<span class="pill warn">ผลจากตัวแปรบริบท — ไม่ใช่ทางเลือกเชิงนโยบาย จึงไม่เพิ่มเข้าแผน</span>` : `<button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>`}
+      <button class="btn g rp-add rp-noprint" data-rpwi="${i}">+ เพิ่มทางเลือกนี้เข้าแผนพัฒนาบอร์ด</button>
     </div>`).join("");
   return `<div class="card rp-block rp-wi" style="margin-top:14px">
     <div class="rp-print-head">OpenInnoScore · What-if Report · ${esc(c.n)} (${esc(c.t)}) · ${esc(rpNow())}</div>
     <h3>รายงาน What-if · ผลภายใต้สมมติฐาน ทางเลือก และหลักฐานที่ต้องมีก่อนดำเนินการ <span class="pill mute">รายงานฉบับที่ 3</span></h3>
-    <p class="desc">ใช้หารือทางเลือกกับที่ปรึกษา · คันโยกที่พิจารณามีสองตัว: สัดส่วนกรรมการหญิงและภาษา CEO · ช่วง 90% คำนวณด้วยชุดสุ่มเดียวกับทุกหน้า</p>
+    <p class="desc">ใช้หารือทางเลือกกับที่ปรึกษา · ตัวแปรที่จำลองมีสองตัว: จำนวนกรรมการหญิงและอายุงานเฉลี่ยของบอร์ด · ทางเลือกเรียงลำดับคงที่ ไม่จัดอันดับตามคะแนน · ช่วง 90% ของค่าจริงมาจากไฟล์ผลวิเคราะห์ ค่าที่เปลี่ยนคำนวณสดด้วยชุดสุ่มเดียวกัน</p>
     <div class="note warn" style="margin-bottom:12px"><b>${esc(RP_CAVEAT)}</b> — ตัวเลขเป็นตำแหน่งบนฐานอ้างอิงตามสูตร ไม่ใช่ความน่าจะเป็นหรือจำนวนกิจกรรมที่คาดว่าจะเกิด</div>
-    <div class="tw"><table class="rp-tbl"><thead><tr><th>ฉากทัศน์</th><th class="n">กรรมการหญิง</th><th class="n">CEO PF (pct)</th>
-      <th class="n">OIS</th><th class="n">เทียบปัจจุบัน</th><th class="n">Tier</th><th>quadrant</th><th class="n">ช่วง 90%</th></tr></thead>
+    <div class="tw"><table class="rp-tbl"><thead><tr><th>ฉากทัศน์</th><th class="n">กรรมการหญิง</th><th class="n">อายุงาน (ปี)</th>
+      <th class="n">OIS หลัก</th><th class="n">เทียบปัจจุบัน</th><th class="n">Tier</th><th>ช่อง 2×2</th><th class="n">ช่วง 90%</th><th class="n">ความไว B_FULL</th></tr></thead>
       <tbody>${row(base.l, base, "rp-base")}${RP_WI.map(a => row(a.l, a.s, a.k === "sim" ? "rp-sim" : "")).join("")}</tbody></table></div>
     <div class="rp-k" style="margin-top:14px">ทางเลือก สมมติฐาน และหลักฐานที่ต้องมี</div>
     ${alts}
@@ -246,7 +261,7 @@ function whatIfReport(c, w) {
     <ul class="rp-ctx">${RP_AS_COMMON.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
     <div class="rp-tools rp-noprint"><button class="btn s" id="rpWiPrint">พิมพ์รายงาน What-if</button>
       <span class="rp-hint">พิมพ์เฉพาะบล็อกนี้ · บันทึกเป็น PDF ได้จากหน้าต่างพิมพ์</span></div>
-    <p class="rp-foot">${esc(RP_CAVEAT)} · ไม่แสดงค่าสัมประสิทธิ์ของสูตร · กรรมการครอบครัว political ties และอายุงานไม่อยู่ในข้อเสนอ</p>
+    <p class="rp-foot">${esc(RP_CAVEAT)} · ไม่แสดงค่าสัมประสิทธิ์ของสูตร · กรรมการครอบครัวและ political ties เป็นข้อมูลบริบท อ่านอย่างเดียว</p>
   </div>`;
 }
 const _rpViewStudio = VIEWS.studio;
@@ -282,7 +297,7 @@ function fuRows() {
         concl: p.concl || "", dec: p.decision || "", own: p.owner || "", due: p.due || "", st: p.status || "todo", added: p.d || "" }); });
     [0, 1, 2].forEach(i => {
       if (![o["c" + i], o["a" + i], o["o" + i]].some(x => x && String(x).trim())) return;
-      out.push({ key: `c|${t}|${i}`, co: t, kind: "cmp", issue: o["a" + i] ? `E0${i + 1} · ${o["a" + i]}` : `ตรวจหลักฐาน E0${i + 1}`, src: "Compass", uc: o.uc || "board",
+      out.push({ key: `c|${t}|${i}`, co: t, kind: "cmp", issue: o["iss" + i] || (o["a" + i] ? `E0${i + 1} · ${o["a" + i]}` : `ตรวจหลักฐาน E0${i + 1}`), src: "Compass", uc: o.uc || "board",
         concl: o["c" + i] || "", dec: o["cdec" + i] || "", own: o["o" + i] || "", due: o["cdue" + i] || (rpIso(o.next) ? o.next : ""), st: o["cst" + i] || "todo" });
     });
   });
@@ -301,31 +316,40 @@ function fuSet(key, f, v) {
   const [kind, a, b] = key.split("|");
   if (kind === "p") {
     const o = rpSc(a), p = (o.plan || [])[+b]; if (!p) return;
-    const map = { concl: "concl", dec: "decision", own: "owner", due: "due", st: "status" };
+    const map = { concl: "concl", dec: "decision", own: "owner", due: "due", st: "status", issue: "t" };
+    if (f === "issue" && !String(v).trim()) return;
     p[map[f]] = v;
     if (typeof scSet === "function" && a === S.t) scSet("plan", o.plan); else save();
   } else if (kind === "c") {
-    const o = rpSc(a), map = { concl: "c" + b, dec: "cdec" + b, own: "o" + b, due: "cdue" + b, st: "cst" + b };
+    const o = rpSc(a), map = { concl: "c" + b, dec: "cdec" + b, own: "o" + b, due: "cdue" + b, st: "cst" + b, issue: "iss" + b };
     o[map[f]] = v; save();
   } else if (kind === "d") {
     const P = rpPilot(), r = (P.o.dir.rows || []).find(x => x.id === a); if (!r) return;
-    const map = { concl: "concl", dec: "dec", own: "own", due: "due", st: "st" };
+    const map = { concl: "concl", dec: "dec", own: "own", due: "due", st: "st", issue: "t" };
+    if (f === "issue" && !String(v).trim()) return;
     r[map[f]] = v; rpPilotSave(P);
   }
 }
 /* ร่าง 56-1 ต้องไม่มีชื่อบริษัทอื่น — แทนชื่อย่อหลักทรัพย์ด้วยคำกลาง (keep = ชื่อย่อที่อนุญาต เช่น บริษัทที่จัดทำแบบ 56-1 เอง) */
+/* แก้ไขครั้งที่ 2.4 (ภาคผนวก ง ข้อ 15) — เทียบชื่อย่อหลักทรัพย์แบบตรงตัวพิมพ์ (ตัวพิมพ์ใหญ่) และต้องเป็นคำทั้งคำ
+   คำภาษาอังกฤษทั่วไปอย่าง or · top · ace จึงไม่ถูกแทน · ชื่อย่อที่ตรงกับคำย่อทั่วไป (CEO, OIS, SET …) ไม่ถูกแทน */
 let _rpTK = null;
 function rpAnon(t, keep) {
-  if (!_rpTK) _rpTK = new Set(COMPS.map(c => String(c.t).toUpperCase()).filter(t => !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
-  const k = keep ? String(keep).toUpperCase() : null;
-  let out = String(t ?? "").replace(/[A-Za-z][A-Za-z0-9&.\-]*/g, w => (_rpTK.has(w.toUpperCase()) && w.toUpperCase() !== k) ? "บริษัทในกลุ่มเปรียบเทียบ" : w);
+  if (!_rpTK) _rpTK = new Set(COMPS.map(c => String(c.t)).filter(t => /[A-Z]/.test(t) && !["CEO", "OIS", "OI", "SET", "BOD", "CG", "AI"].includes(t)));
+  const k = keep ? String(keep) : null;
+  let out = String(t ?? "").replace(/(^|[^A-Za-z0-9&.\-])([A-Z][A-Z0-9&.\-]*[A-Z0-9]|[A-Z])(?![A-Za-z0-9&\-]|\.[A-Za-z0-9])/g,
+    (m, pre, w) => (_rpTK.has(w) && w !== k) ? pre + "บริษัทในกลุ่มเปรียบเทียบ" : m);
+  /* ชื่อย่อที่มีตัวพิมพ์เล็ก (เช่น True) — เทียบตรงตัวทั้งคำ */
+  _rpTK.forEach(tk => { if (tk === k || !/[a-z]/.test(tk)) return;
+    out = out.replace(new RegExp(`(^|[^A-Za-z0-9])${tk.replace(/[.*+?^${}()|[\]\\&]/g, "\\$&")}(?![A-Za-z0-9])`, "g"), (m, pre) => pre + "บริษัทในกลุ่มเปรียบเทียบ"); });
   // ชื่อเต็มของบริษัทอื่น (ภาษาไทย/อังกฤษ) ก็ต้องไม่ปรากฏ
   COMPS.forEach(c => { if (c.n && c.n.length > 3 && String(c.t).toUpperCase() !== k && out.includes(c.n)) out = out.split(c.n).join("บริษัทในกลุ่มเปรียบเทียบ"); });
   return out;
 }
 /** รายการที่ "เสร็จ" และมีมติ — ใช้ร่วมกับหน้า Template 56-1 (v2_tiers.js) · co = จำกัดเฉพาะบริษัทเดียว (แถวข้อสั่งการที่ไม่ระบุบริษัทนับรวม) */
 function fuDoneItems(co) {
-  const rows = fuRows().filter(r => r.st === "done" && String(r.dec || "").trim() && (!co || !r.co || r.co === co));
+  /* แก้ไขครั้งที่ 2.4 (ภาคผนวก ง ข้อ 16) — เมื่อระบุบริษัท ใช้เฉพาะรายการที่ผูกกับบริษัทนั้น (ข้อสั่งการที่ไม่ระบุบริษัทไม่นับ) */
+  const rows = fuRows().filter(r => r.st === "done" && String(r.dec || "").trim() && (!co || r.co === co));
   return rows.map(r => ({ co: r.co, src: r.src, issue: rpAnon(r.issue.replace(/^\[[^\]]+\]\s*/, ""), co), dec: rpAnon(r.dec, co), concl: rpAnon(r.concl, co) }));
 }
 window.fuDoneItems = fuDoneItems; window.rpAnon = rpAnon; window.fuRows = fuRows;
@@ -346,6 +370,12 @@ function fu561(rows) {
     <button class="btn g rp-noprint" id="fu561Copy">คัดลอกข้อความ</button>`;
 }
 let RP_561 = "";
+/** ตัวตรวจคำอ้างคะแนน/ตำแหน่งจากแบบจำลอง — ชุดเดียวกับร่าง 56-1 และ Structured Data (ใช้ของ v2_tiers.js เมื่อโหลดแล้ว) */
+function T561_SCORE_HIT(t) {
+  if (typeof t561ScoreHit === "function") return t561ScoreHit(t);
+  const m = String(t || "").match(/OpenInnoScore|\bOIS\b|\bTier\s*\d|เปอร์เซ็นไทล์|percentile|quadrant|Signal\s*B/i);
+  return m ? m[0] : "";
+}
 function viewFollowup() {
   const rows = fuRows(), cnt = { todo: 0, doing: 0, done: 0, late: 0 };
   rows.forEach(r => { cnt[r.st] = (cnt[r.st] || 0) + 1; });
@@ -369,7 +399,7 @@ function viewFollowup() {
       <div class="rp-grp-m">${meta} <button class="lnk rp-noprint" data-fucmp="${esc(g)}">แก้ใน Compass</button></div></td></tr>`;
   };
   const body = order.length ? order.map(g => coHead(g) + groups[g].map(r => `<tr class="${r.late ? "rp-late" : ""}${r.st === "done" ? " rp-done" : ""}">
-      <td class="rp-issue">${esc(r.issue)}${r.added ? `<div class="rp-hint">เพิ่มเมื่อ ${esc(r.added)}</div>` : ""}${r.late ? `<div><span class="pill crit">เกินกำหนด</span></div>` : ""}</td>
+      <td class="rp-issue"><textarea class="inp rp-ta rp-issue-ed" rows="2" data-fu="${esc(r.key)}" data-f="issue" aria-label="ข้อความประเด็น (แก้ได้)">${esc(r.issue)}</textarea>${T561_SCORE_HIT(r.issue) ? `<div class="rp-hint b4-scorehint">มีคำอ้างคะแนน/ตำแหน่ง (“${esc(T561_SCORE_HIT(r.issue))}”) — แก้ข้อความก่อนใช้ในร่าง 56-1</div>` : ""}${r.added ? `<div class="rp-hint">เพิ่มเมื่อ ${esc(r.added)}</div>` : ""}${r.late ? `<div><span class="pill crit">เกินกำหนด</span></div>` : ""}</td>
       <td><span class="pill mute">${esc(r.src)}</span></td>
       <td class="rp-uc">${esc(rpUcLabel(r.uc))}</td>
       <td>${ta(r, "concl", "สรุปสิ่งที่หารือ")}</td>
@@ -382,7 +412,7 @@ function viewFollowup() {
   return `<div class="rp-fu">${pageHead("รายงานฉบับที่ 4 · ติดตามผล", "Board Development & Follow-up Report",
       "ข้อสรุปจากการหารือ มติ ผู้รับผิดชอบ และกำหนดติดตาม — เปลี่ยนผลประเมินเป็นงานที่ติดตามได้ · รวมประเด็นจาก Grid, Compass, Peer, What-if และข้อสั่งการบอร์ดของทุกบริษัทที่บันทึกไว้ในเครื่องนี้")}
     ${reportChain(4)}
-    <div class="note warn rp-rule"><b>มติและข้อสรุปต้องมาจากการประชุมจริงและผู้ใช้ยืนยัน — ระบบไม่เติมให้</b> ·
+    <div class="note warn rp-rule"><b>มติและข้อสรุปต้องมาจากการประชุมจริงและผู้ใช้ยืนยัน — ระบบไม่เติมให้</b> · แก้ข้อความประเด็นได้ในช่องแรกของตาราง ·
       ผู้รับผิดชอบระบุเป็นตำแหน่ง ไม่ใช่ชื่อบุคคล · ข้อมูลอยู่ในเครื่องผู้ใช้เท่านั้น</div>
     <div class="grid g4 tight rp-stats rp-noprint">
       ${stat("all", "ทั้งหมด", rows.length)}${stat("todo", RP_ST.todo, cnt.todo)}${stat("doing", RP_ST.doing, cnt.doing)}
@@ -415,6 +445,7 @@ function wireFollowup(h) {
   h.querySelectorAll("[data-fu]").forEach(el => {
     const fire = () => { fuSet(el.dataset.fu, el.dataset.f, el.tagName === "SELECT" || el.type === "date" ? el.value : el.value.trim()); };
     if (el.tagName === "SELECT" || el.type === "date") el.onchange = () => { fire(); render(); };
+    else if (el.dataset.f === "issue") el.addEventListener("change", () => { fire(); render(); });
     else el.addEventListener("change", fire);
   });
   h.querySelectorAll("[data-fuf]").forEach(b => b.onclick = () => { S.fuF = S.fuF === b.dataset.fuf ? "all" : b.dataset.fuf; render(); });
@@ -425,7 +456,7 @@ function wireFollowup(h) {
   });
   const csv = h.querySelector("#fuCsv"); if (csv) csv.onclick = () => {
     const rows = fuRows();
-    rpDl(`ois_followup_${new Date().getFullYear() + 543}.csv`, rpCsv([["บริษัท", "ประเด็น", "ที่มา", "มุมมอง use case", "ข้อสรุปจากการหารือ", "มติ", "ผู้รับผิดชอบ (ตำแหน่ง)", "กำหนดติดตาม", "สถานะ", "เกินกำหนด"],
+    rpDl(`ois_followup_${new Date().getFullYear() + 543}.csv`, rpCsv([["บริษัท", "ประเด็น", "ที่มา", "มุมมอง use case", "ข้อสรุปจากการหารือ", "มติ", "ผู้รับผิดชอบ (ตำแหน่ง)", "กำหนดติดตาม", "สถานะ", "เกินกำหนด"].map(x => typeof b5H === "function" ? b5H(x) : x),
       ...rows.map(r => [r.co, r.issue, r.src, rpUcLabel(r.uc), r.concl, r.dec, r.own, r.due, RP_ST[r.st] || r.st, r.late ? "ใช่" : ""])]));
     toast(`ส่งออก ${rows.length} รายการ`);
   };
@@ -440,11 +471,12 @@ function wireReportsCommon(h) {
   wireChain(h);
   h.querySelectorAll("[data-rpq]").forEach(b => b.onclick = () => {
     const q = RP_Q[+b.dataset.rpq]; if (!q) return;
-    rpPlanAdd(`[Peer ${q.p}] ${q.t}`, "peer"); b.textContent = "✓ อยู่ในแผนแล้ว"; b.disabled = true;
+    rpPlanAdd(`[Peer ${q.p}] ${q.f || q.t}`, "peer"); b.textContent = "✓ อยู่ในแผนแล้ว"; b.disabled = true;
   });
   h.querySelectorAll("[data-rpwi]").forEach(b => b.onclick = () => {
     const a = RP_WI[+b.dataset.rpwi]; if (!a) return;
-    rpPlanAdd(`[What-if] พิจารณาทางเลือก “${a.l}” (OIS ตามสูตร ${fmt(a.s.ois, 1)} · ${ZONES[a.s.quad].l}) — หลักฐานที่ต้องมี: ${a.ev.join("; ")}`, "whatif");
+    /* ข้อความในแผนไม่มีคะแนนหรือชื่อช่อง — ใช้ต่อในร่าง 56-1 ได้ (ภาคผนวก ง ข้อ 13) */
+    rpPlanAdd(`[What-if] พิจารณาทางเลือก “${a.lf || a.l}” — หลักฐานที่ต้องมี: ${a.ev.join("; ")}`, "whatif");
     b.textContent = "✓ อยู่ในแผนแล้ว"; b.disabled = true;
   });
   const wp = h.querySelector("#rpWiPrint"); if (wp) wp.onclick = () => rpPrint("rp-print-wi");

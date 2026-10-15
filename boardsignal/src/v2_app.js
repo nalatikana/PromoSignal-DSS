@@ -11,6 +11,8 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const fmt = (v, d = 0) => (v === null || v === undefined || isNaN(v)) ? "—"
+  /* ฉบับเซิร์ฟเวอร์: ค่า promo ที่เป็นป้าย "เปอร์เซ็นไทล์ dp" (จากตัวเลื่อน What-if) ไม่มีค่าดิบให้แสดง */
+  : (typeof OIS_REMOTE !== "undefined" && OIS_REMOTE.isPctTok(+v)) ? "—"
   : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct1 = v => fmt(v * 100, 1) + "%";
 
@@ -18,13 +20,17 @@ const pct1 = v => fmt(v * 100, 1) + "%";
    Signal B / OpenInnoScore — parameter card REF928-edit6-20260930 (แก้ไขครั้งที่ 2)
    สมการ E1–E13 ของเอกสาร SignalB_OpenInnoScore_Equations_Workflow_20261005_v2
    ฐานอ้างอิง = REF-928 ที่ freeze แล้ว (928 firm-years) — ไม่ใช่ snapshot 196 บริษัทอีกต่อไป
-   ความลับทางการค้า: parameter card, V̂f และฐานอ้างอิงอยู่ใน OIS (ois_model.json) — ห้ามแสดงค่าตัวเลขเหล่านี้บนหน้าจอ
-   ฉบับใช้งานจริงต้องย้ายชั้นนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์
-   โหมดเซิร์ฟเวอร์ (OIS.server — ไฟล์ OpenInnoScore_server.html): ไม่มี par / chol ในไฟล์ ·
-   ampOf / ampT1 / band90 ส่งต่อให้ OIS_REMOTE (src/v2_remote.js) ซึ่งเรียก /api/amp และ /api/band
-   โหมดออฟไลน์ (ไม่มี OIS.server): ทำงานเหมือนเดิมทุกตำแหน่ง */
+   ความลับทางการค้า: บันทึกพารามิเตอร์ (สัมประสิทธิ์ ค่าเฉลี่ย centring จุดตัด p5/p95 V̂f) และฐานอ้างอิงอยู่ใน OIS (ois_model.json)
+     — ห้ามแสดงค่าเหล่านี้บนหน้าจอในทุกโหมด (รวม P หลัง winsorise คู่กับ cP, ค่า amp/cP/B ดิบ) — แสดงเป็นเปอร์เซ็นไทล์เท่านั้น
+   โหมดออฟไลน์ (ไม่มี OIS.server): ฝังบันทึกพารามิเตอร์ไว้ในไฟล์ตามขอบเขตส่งมอบ #1 และคำนวณในเบราว์เซอร์ — ตัวเลขเหมือนเดิมทุกตำแหน่ง
+   โหมดเซิร์ฟเวอร์ (OIS.server — OpenInnoScore_server.html): ไม่มีบันทึกพารามิเตอร์ ไม่มี amp/cP ดิบ ·
+     ฟังก์ชันชุดนี้ส่งต่อให้ OIS_REMOTE (src/v2_remote.js) ซึ่งเรียก POST /api/score และคืน "ค่าตัวแทน" บนสเกลเปอร์เซ็นไทล์
+     (ชื่อฟังก์ชันและรูปแบบการเรียกเหมือนเดิม — ampOf/cpOf/signalB/oisOf/ampPct/promoPct/band90/tierOf/quadOf … ใช้ได้ทุกไฟล์)
+     ค่าที่ใช้ "คำนวณต่อ" นอกชุดนี้ได้จริงคือ เครื่องหมาย ลำดับ และการวาดบนสเกลเดียวกับ REF_PTS — ไม่ใช่ขนาดของ amp */
 const OIS_SRV = !!OIS.server;
-const OPAR = OIS_SRV ? OIS_REMOTE.par : OIS.par, OM = OIS.mean, OCUT = OIS.cut;
+const OPAR = OIS_SRV ? OIS_REMOTE.par : OIS.par;
+/** ค่าเฉลี่ย centring / จุดตัด winsorise — ใช้ในสูตรเท่านั้น ห้ามพิมพ์ลงหน้าจอ · โหมดเซิร์ฟเวอร์ = ป้ายค่าเฉลี่ย (ไม่มีตัวเลข) และไม่มีจุดตัด */
+const OM = OIS_SRV ? OIS_REMOTE.mean : OIS.mean, OCUT = OIS_SRV ? {} : OIS.cut;
 const IND = DATA.ind, COMPS = DATA.comps;
 const byT = Object.fromEntries(COMPS.map(c => [c.t, c]));
 
@@ -41,50 +47,101 @@ const q8 = b => Math.round(b * 1e8) / 1e8;
 /** pctile แบบเก่า (strict rank + ปัดเศษ) — คงไว้ให้โค้ดเดิมเรียกได้ แต่ตอนนี้ชี้ไปที่ mid-rank แล้ว */
 const pctile = (sorted, v) => Math.round(midRank(sorted, q8(v)));
 
-/** E2 · winsorise 5/95 (political ties ไม่ winsorise) */
-const wins = (x, k) => OCUT[k] ? Math.min(Math.max(x, OCUT[k][0]), OCUT[k][1]) : x;
+/** E2 · winsorise 5/95 (political ties ไม่ winsorise)
+ *  โหมดเซิร์ฟเวอร์: wins(promo, "P") คืนเปอร์เซ็นไทล์ CEO Promotion Focus (สเกลเดียวกับแกนนอนของ REF_PTS) · ตัวแปรอื่นคืนค่าเดิม */
+const wins = (x, k) => OIS_SRV ? (k === "P" ? OIS_REMOTE.promoPct(x) : x)
+  : OCUT[k] ? Math.min(Math.max(x, OCUT[k][0]), OCUT[k][1]) : x;
 /** C5 · ค่าป้อนอยู่นอกช่วง p5–p95 ของฐานอ้างอิงหรือไม่ (ถูก clip ก่อนเข้าสูตร) */
-const clipped = (x, k) => !!OCUT[k] && (x < OCUT[k][0] || x > OCUT[k][1]);
-/** E3 · mean-centring เทียบค่าเฉลี่ยของฐานอ้างอิง (G ต้องเป็น 0/1 เท่านั้น) */
-const cen = (P, F, G, W) => ({ P: wins(P, "P") - OM.P, F: wins(F, "F") - OM.F,
-                               G: (G ? 1 : 0) - OM.G, W: wins(W, "W") - OM.W });
+const clipped = (x, k) => OIS_SRV ? OIS_REMOTE.clipped(x, k) : !!OCUT[k] && (x < OCUT[k][0] || x > OCUT[k][1]);
+/** E3 · mean-centring เทียบค่าเฉลี่ยของฐานอ้างอิง (G ต้องเป็น 0/1 เท่านั้น) — ออฟไลน์เท่านั้น */
+const cen = (P, F, G, W, T) => ({ P: wins(P, "P") - OM.P, F: wins(F, "F") - OM.F,
+                                  G: (G ? 1 : 0) - OM.G, W: wins(W, "W") - OM.W,
+                                  T: T === undefined ? 0 : wins(T, "T") - OM.T });
 /** E4 · Board Amplification Signal = ความชันของ promotion focus ภายใต้บอร์ดนี้
- *  amp = β1 + δF·cF + δG·cG + δW·cW   (δT ถูกปิดด้วย evidence gate g_T = 0 — อายุงานไม่มีผลต่อคะแนน) */
+ *  amp = β1 + δF·cF + δG·cG + δW·cW   (δT ถูกปิดด้วย evidence gate g_T = 0 — อายุงานไม่มีผลต่อคะแนนหลัก) */
 function ampOf(fam, pol, fem, ten) {
   if (OIS_SRV) return OIS_REMOTE.ampOf(fam, pol, fem);
   const z = cen(0, fam, pol, fem);
   return OPAR.b1 + OPAR.dF * z.F + OPAR.dG * z.G + OPAR.dW * z.W;
 }
-/** สูตรทางเลือก B_T1 (H1 + H4 เท่านั้น) — แนวทาง Pilot Use case 2 ให้แสดงคู่กับป้าย Caution */
-function ampT1(fem) { if (OIS_SRV) return OIS_REMOTE.ampT1(fem); const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
+/** สูตรทางเลือก B_T1 (H1 + H4 เท่านั้น) — แนวทาง Pilot Use case 2 ให้แสดงคู่กับป้าย Caution · โหมดเซิร์ฟเวอร์ใช้ t1Of() แทน (คืน NaN) */
+function ampT1(fem) { if (OIS_SRV) return NaN; const z = cen(0, 0, 0, fem); return OPAR.b1 + OPAR.dW * z.W; }
 /** E5 · Signal B = cP × amp */
-const cpOf = promo => wins(promo, "P") - OM.P;
-const signalB = (promo, amp) => cpOf(promo) * amp;
+const cpOf = promo => OIS_SRV ? OIS_REMOTE.cpOf(promo) : wins(promo, "P") - OM.P;
+const signalB = (promo, amp) => OIS_SRV ? OIS_REMOTE.signalB(promo, amp) : cpOf(promo) * amp;
 
-const REF_B = OIS.refB;                       // ฐานอ้างอิง REF-928 (เรียงแล้ว, q8)
-const REF_IND = OIS.refInd;                   // ฐานอ้างอิงรายอุตสาหกรรม (115–143 แถว)
-const REF_T1 = OIS.refT1;
-const REF_AMP = OIS.refAmp;                   // amp ของ 928 แถว (เรียงแล้ว)
-const REF_PROMO = OIS.refP;                   // P หลัง winsorise ของ 928 แถว (เรียงแล้ว)
-const REF_PTS = OIS.pts;                      // [P_w, amp, quad, tier, ind, year, cF, cG, cW] × 928 (ไม่มีชื่อบริษัท)
-                                              // โหมดเซิร์ฟเวอร์: cF/cG/cW เรียงแยกทีละคอลัมน์ (คงการกระจาย แต่ไม่ผูกกับ amp ของแถว)
-const ampPct = a => Math.round(midRank(REF_AMP, q8(a)) * 10) / 10;            // board_amp_pct (แกน y)
-const promoPct = p => Math.round(midRank(REF_PROMO, q8(wins(p, "P"))) * 10) / 10;  // ceo_drive_pct (แกน x)
-const oisOf = b => midRank(REF_B, q8(b));
-const oisIndOf = (b, ind) => midRank(REF_IND[ind] || REF_B, q8(b));
-const oisT1Of = b => midRank(REF_T1, q8(b));
+const REF_B = OIS_SRV ? [] : OIS.refB;        // ฐานอ้างอิง REF-928 (เรียงแล้ว, q8) — โหมดเซิร์ฟเวอร์ไม่มี
+const REF_IND = OIS_SRV ? {} : OIS.refInd;    // ฐานอ้างอิงรายอุตสาหกรรม (115–143 แถว)
+const REF_T1 = OIS_SRV ? [] : OIS.refT1;
+const REF_PTS = OIS.pts;                      // ออฟไลน์: [P_w, amp, quad, tier, ind, year, cF, cG, cW] × 928 (ไม่มีชื่อบริษัท)
+                                              // เซิร์ฟเวอร์: [P pct, amp pct − zA, quad, tier, ind, year] — ไม่มีค่าดิบ
+/** amp ของ 928 แถว (เรียงแล้ว) — โหมดเซิร์ฟเวอร์เป็นสเกลเปอร์เซ็นไทล์ของ REF_PTS (ใช้วัดช่วง/ระยะใกล้เส้นแบ่งเท่านั้น) */
+const REF_AMP = OIS_SRV ? REF_PTS.map(p => p[1]).sort((a, b) => a - b) : OIS.refAmp;
+/** P หลัง winsorise ของ 928 แถว (เรียงแล้ว) — โหมดเซิร์ฟเวอร์เป็นเปอร์เซ็นไทล์ */
+const REF_PROMO = OIS_SRV ? REF_PTS.map(p => p[0]).sort((a, b) => a - b) : OIS.refP;
+const ampPct = a => OIS_SRV ? OIS_REMOTE.ampPct(a) : Math.round(midRank(REF_AMP, q8(a)) * 10) / 10;            // board_amp_pct (แกน y)
+const promoPct = p => OIS_SRV ? OIS_REMOTE.promoPct(p) : Math.round(midRank(REF_PROMO, q8(wins(p, "P"))) * 10) / 10;  // ceo_drive_pct (แกน x)
+const oisOf = b => OIS_SRV ? OIS_REMOTE.oisOf(b) : midRank(REF_B, q8(b));
+const oisIndOf = (b, ind) => OIS_SRV ? OIS_REMOTE.oisIndOf(b, ind) : midRank(REF_IND[ind] || REF_B, q8(b));
+const oisT1Of = b => OIS_SRV ? NaN : midRank(REF_T1, q8(b));
+/** ตำแหน่งเปอร์เซ็นไทล์ของเส้นแบ่ง amp = 0 และ cP = 0 — ใช้แสดง "ระยะจากเส้นแบ่ง" เป็นจุดเปอร์เซ็นไทล์แทนค่าดิบ */
+const Z_AMP = OIS_SRV ? OIS_REMOTE.zA : ampPct(0), Z_CP = OIS_SRV ? OIS_REMOTE.zP : promoPct(OM.P);
 /** คะแนนรวมจากคู่ (ceo_drive_pct, amp) — ใช้โดยหน้าจำลองที่ทำงานบนเปอร์เซ็นไทล์ */
-const ipiFrom = (dp, amp) => Math.round(oisOf(signalB(promoAtPct(dp), amp)));
+const ipiFrom = (dp, amp) => {
+  /* โหมดเซิร์ฟเวอร์: CEO Promotion Focus ปรับไม่ได้ (คำขอรับเฉพาะกรรมการหญิง/อายุงาน) — dp ของบริษัทที่เลือกใช้ค่าดิบของบริษัท
+     dp อื่นไม่มีทางไปเซิร์ฟเวอร์ → NaN ("—") */
+  const c0 = OIS_SRV && typeof S !== "undefined" && byT[S.t];
+  return Math.round(oisOf(signalB(c0 && dp === c0.dp ? c0.promo : promoAtPct(dp), amp)));
+};
 /** E9 · quartile tier (1 = บนสุด) */
 const TIER_CUTS = OIS.tierCuts || [75, 50, 25];
 const tierOf = o => o >= TIER_CUTS[0] ? 1 : o >= TIER_CUTS[1] ? 2 : o >= TIER_CUTS[2] ? 3 : 4;
+
+/* ---- B_FULL · การวิเคราะห์ความไวของอายุงานบอร์ด (ที่ประชุม 15 ต.ค. 2569 — What-if จำลอง 2 ตัวแปร: กรรมการหญิง และอายุงาน)
+   คะแนนหลัก B_EG ปิดเทอมอายุงานด้วย evidence gate (δT·g_T = 0, DP1) อายุงานจึงไม่ขยับคะแนนหลัก
+   ชุดนี้คืนเทอม δT·cT แล้วจัดเปอร์เซ็นไทล์เทียบฐาน B_FULL ของ REF-928 เอง (OIS.refFull — ตรงกับคอลัมน์ B_FULL ของ REF928_scored)
+   ป้ายบนหน้าจอ: "การวิเคราะห์ความไว (B_FULL) — คะแนนหลักไม่เปลี่ยน" · ห้ามนำไปแทนคะแนนหลัก */
+const REF_FULL = OIS_SRV ? [] : (OIS.refFull || []);
+/** amp ของ B_FULL — ออฟไลน์คืนค่าดิบ (ใช้ภายใน ห้ามแสดง) · เซิร์ฟเวอร์คืน NaN (ใช้ oisFullOf / OIS_FULL.scoreFull แทน) */
+function ampFullOf(fam, pol, fem, ten) {
+  if (OIS_SRV) return NaN;
+  const z = cen(0, fam, pol, fem, ten);
+  return OPAR.b1 + OPAR.dF * z.F + OPAR.dG * z.G + OPAR.dW * z.W + OPAR.dT * z.T;
+}
+/** OpenInnoScore ตามสูตร B_FULL (0–100) — ออฟไลน์คำนวณสด · เซิร์ฟเวอร์อ่านจาก /api/score (variant full · NaN ระหว่างรอ) */
+function oisFullOf(promo, fam, pol, fem, ten) {
+  if (OIS_SRV) { const r = OIS_REMOTE.fullOf(promo, fam, pol, fem, ten); return r && r.real ? r.ois : NaN; }   // ค่าประมาณระหว่างรอไม่แสดง
+  if (!REF_FULL.length) return NaN;
+  return midRank(REF_FULL, q8(cpOf(promo) * ampFullOf(fam, pol, fem, ten)));
+}
+/** สำหรับ What-if (v2_invest / v2_reports): window.OIS_FULL.oisFullOf(promo, fam, pol, fem, ten) → OIS ของ B_FULL ·
+ *  scoreFull(...) → { ois, ipi, tier } หรือ null ระหว่างรอเซิร์ฟเวอร์ · ป้ายที่ต้องแสดงคู่: OIS_FULL.label */
+window.OIS_FULL = {
+  available: OIS_SRV || REF_FULL.length > 0,
+  ampFullOf, oisFullOf,
+  scoreFull(promo, fam, pol, fem, ten) {
+    if (OIS_SRV) return OIS_REMOTE.fullOf(promo, fam, pol, fem, ten);
+    const o = oisFullOf(promo, fam, pol, fem, ten);
+    return isFinite(o) ? { ois: o, ipi: Math.round(o), tier: tierOf(o), real: true } : null;
+  },
+  label: "การวิเคราะห์ความไว (B_FULL) — คะแนนหลักไม่เปลี่ยน",
+};
 /** R4 · ใช้ได้เฉพาะ SET นอกกลุ่มการเงิน อุตสาหกรรม 1–7 */
 const inDomainOf = ind => !!IND[ind];
 /** R5 · อุตสาหกรรมที่ ρ ไม่ต่างจากศูนย์ (รายการจาก ois_model: ตอนนี้ 1, 2 — รอยืนยันเรื่องกลุ่ม 4) */
 const WEAK_IND = new Set(OIS.weakInd || [1, 2]);
-/** Critical mass (Table 4): ผลของกรรมการหญิงมีนัยเมื่อ ≥ 3 คน — นับคน ไม่ใช่สัดส่วน */
+/** Critical mass ≥ 3 คน — เกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008) · นับคน ไม่ใช่สัดส่วน
+ *  (บทความวิจัยไม่มีตารางทดสอบ critical mass — เดิมอ้าง "Table 4" ผิดแหล่ง · ภาคผนวก ง-20) */
+const CM_CITE = "เกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008)";
 const CRIT_N = OIS.critMass || 3;
 const femaleN = (fem, bsize) => bsize ? Math.round(fem * bsize) : null;
+/** สัดส่วนกรรมการหญิงเมื่อเพิ่ม/ลด dk คน บนกริดที่ทั้งสองโหมดคำนวณได้ (ขนาดบอร์ด b = c.bsize หรือ 11 · บีบ 5–25 คน)
+ *  ใช้แทน c.fem ± 0.1 ใน What-if / ตัวเลือกที่เปลี่ยนกรรมการหญิง — ฉบับเซิร์ฟเวอร์รับเฉพาะ fem = k/b (POST /api/score) */
+function femStep(c, dk) {
+  const b = clamp(Math.round(+(c && c.bsize) || 11), 5, 25), k = clamp(Math.round((+(c && c.fem) || 0) * b) + (dk || 0), 0, b);
+  return k / b;
+}
+window.femStep = femStep;
 
 /* E10 · quadrant — ชื่อโซนบนหน้าจอใช้ชุด Board Strategy Compass
    A Deliver · B Discipline · C Develop · D Discover  (mapping ตาม ois_model.zone — รอคุณปูลมยืนยัน) */
@@ -172,20 +229,33 @@ function verdictOf(c) {
   if (!reg) chips.push({ k: "ยังไม่ได้ validate", t: `ปีบัญชี ${fy} ยังไม่มีผลลัพธ์ปีถัดไปให้ตรวจ (R3)` });
   if (WEAK_IND.has(c.ind)) chips.push({ k: "หลักฐานอ่อนในอุตสาหกรรมนี้", t: "Spearman ไม่ต่างจากศูนย์ในอุตสาหกรรมนี้ (R5, ตารางที่ 8)" });
   const fn = femaleN(c.fem, c.bsize);
-  if (fn !== null && fn < CRIT_N) chips.push({ k: `กรรมการหญิง ${fn} คน — ต่ำกว่า critical mass`, t: `งานวิจัยพบว่าความสัมพันธ์ของกรรมการหญิงกับการหนุนสัญญาณมีนัยเมื่อมี ≥ ${CRIT_N} คน (Table 4) บอร์ดที่มี 1–2 คนไม่ต่างจาก 0 คนอย่างมีนัย` });
+  if (fn !== null && fn < CRIT_N) chips.push({ k: `กรรมการหญิง ${fn} คน — ต่ำกว่า critical mass`, t: `ใช้เกณฑ์ ≥ ${CRIT_N} คน ตาม${CM_CITE} — บอร์ดที่มี 1–2 คนยังไม่ถึงเกณฑ์นี้` });
   if (c.amp !== undefined && c.amp <= 0) chips.push({ k: "amp ≤ 0", t: "องค์ประกอบบอร์ดนี้อยู่ในรูปแบบที่ความชันของ promotion focus ไม่เป็นบวก — ภาษาเชิงรุกของ CEO ไม่สัมพันธ์กับ open innovation ที่สูงขึ้นในบอร์ดลักษณะนี้" });
   if (c.clipped && c.clipped.length) chips.push({ k: "ค่าป้อนถูก clip", t: "ค่า " + c.clipped.join(", ") + " อยู่นอกช่วง p5–p95 ของฐานอ้างอิง จึงถูกแทนด้วยจุดตัดก่อนเข้าสูตร (E2)" });
   return { tier, quad, band: bd, chips, regime: reg, inDomain, fy,
            st: t10Of(tier, quad),
            flag: inDomain && quad === "A" && bd[0] >= 50 && reg !== "FAIL" };
 }
-/** รายชื่อตัวแปรที่ค่าป้อนถูก clip (C5) */
+/** รายชื่อตัวแปรที่ค่าป้อนถูก clip (C5) — โหมดเซิร์ฟเวอร์ตรวจที่เซิร์ฟเวอร์ (ไม่มีจุดตัดในเบราว์เซอร์) */
 const clippedOf = c => [["promo", "P", "CEO Promotion Focus"], ["fam", "F", "กรรมการครอบครัว"], ["fem", "W", "กรรมการหญิง"]]
   .filter(([k, kk]) => clipped(c[k], kk)).map(x => x[2]);
 
-/* ค่าที่คิดไว้ตอน build จาก ois_model.json — ไม่ให้ต้นแบบคิดใหม่ทุกครั้งที่เปิดหน้า */
-COMPS.forEach(c => {
+/* ค่าที่คิดไว้ตอน build จาก ois_model.json — ไม่ให้ต้นแบบคิดใหม่ทุกครั้งที่เปิดหน้า
+   โหมดเซิร์ฟเวอร์: OIS.co มีเฉพาะค่าที่แสดง (OIS 1 ตำแหน่ง · tier · quadrant · ช่วง 90% · ap/dp จำนวนเต็ม · ป้าย clip)
+   ส่วน cP / amp / B ของบริษัทเป็นค่าตัวแทนจาก OIS_REMOTE (ลงทะเบียนจาก OIS.co จึงไม่ต้องรอเซิร์ฟเวอร์) */
+const CLIP_LAB = { P: "CEO Promotion Focus", F: "กรรมการครอบครัว", W: "กรรมการหญิง" };
+if (OIS_SRV) COMPS.forEach(c => {
   const o = OIS.co[c.t]; if (!o) return;
+  c.cP = cpOf(c.promo); c.amp = ampOf(c.fam, c.pol, c.fem); c.B = signalB(c.promo, c.amp);
+  c.ois = oisOf(c.B); c.oisInd = oisIndOf(c.B, c.ind);
+  c.tier = o.tier; c.quad = o.quad; c.band = o.band.slice(); c.fy = o.fy;
+  c.t1 = Object.assign({ B: NaN }, o.t1); c.full = o.full;
+  c.ipi = o.ipi; c.iip = o.iip; c.dp = o.dp; c.ap = o.ap;
+  c.clipped = (o.clip || []).map(k => CLIP_LAB[k]);
+});
+else COMPS.forEach(c => {
+  const o = OIS.co[c.t]; if (!o) return;
+  c.full = o.full;
   c.cP = o.cP; c.cF = o.cF; c.cG = o.cG; c.cW = o.cW;
   c.amp = o.amp; c.B = o.B; c.ois = o.ois; c.oisInd = o.oisInd;
   c.tier = o.tier; c.quad = o.quad; c.band = o.band; c.fy = o.fy; c.t1 = o.t1;
@@ -216,15 +286,17 @@ function critNote(c) {
 /** C4 · ประโยคเต็มเรื่อง critical mass สำหรับใส่ในหมายเหตุ */
 function critText(c) {
   const fn = femaleN(c.fem, c.bsize);
-  if (fn === null) return `ความสัมพันธ์ของกรรมการหญิงกับการหนุนสัญญาณมีหลักฐานรองรับเมื่อมี ≥ ${CRIT_N} คน (นับคน ไม่ใช่สัดส่วน · Table 4) — ระบุจำนวนกรรมการทั้งหมดใน Zone A เพื่อตรวจ critical mass`;
+  if (fn === null) return `ความสัมพันธ์ของกรรมการหญิงกับการหนุนสัญญาณมีหลักฐานรองรับเมื่อมี ≥ ${CRIT_N} คน (นับคน ไม่ใช่สัดส่วน · ${CM_CITE}) — ระบุจำนวนกรรมการทั้งหมดใน Zone A เพื่อตรวจ critical mass`;
   return fn < CRIT_N
-    ? `บอร์ดนี้มีกรรมการหญิง ${fn} คน — ต่ำกว่า critical mass (≥ ${CRIT_N} คน, Table 4) ความสัมพันธ์ที่สูตรใช้จึงยังไม่มีหลักฐานรองรับในช่วงนี้ บอร์ดที่มี 1–2 คนไม่ต่างจาก 0 คนอย่างมีนัย`
-    : `บอร์ดนี้มีกรรมการหญิง ${fn} คน — ถึง critical mass (≥ ${CRIT_N} คน, Table 4) ซึ่งเป็นช่วงที่ความสัมพันธ์มีหลักฐานรองรับ`;
+    ? `บอร์ดนี้มีกรรมการหญิง ${fn} คน — ต่ำกว่า critical mass (≥ ${CRIT_N} คน · ${CM_CITE}) จึงยังไม่ถึงเกณฑ์ที่ใช้อ่านความสัมพันธ์ของกรรมการหญิง`
+    : `บอร์ดนี้มีกรรมการหญิง ${fn} คน — ถึง critical mass (≥ ${CRIT_N} คน · ${CM_CITE})`;
 }
 /** ป้ายกำกับตัวเลข "+X จุด" ทุกครั้งที่แสดง — ตามกติกา R7 */
 const ASSOC = "ตามสูตร (เชิงความสัมพันธ์)";
 /** สูตรที่แถบสถานะกำลังแสดง — "EG" หลัก หรือ "T1" shadow (ป้าย Caution) */
-const useT1 = () => S.pilotFormula === "T1";
+/** สลับเป็น B_T1 ได้เฉพาะ Pro ขึ้นไป (ภาคผนวก ง: Basic สลับได้ทั้งที่บรรทัด shadow เป็นสิทธิ์ Pro) */
+const canT1 = () => typeof tierRank === "function" ? tierRank() >= 1 : S.plan === "pro";
+const useT1 = () => S.pilotFormula === "T1" && canT1();
 
 /* ---------------------------------------------------------------- 2 · สถานะ */
 /* กติกาตามเอกสารแก้ไขครั้งที่ 1
@@ -272,13 +344,17 @@ function load() {
 }
 /** ค่า promotion focus ที่ตรงกับเปอร์เซ็นไทล์ — ใช้ย้อนกลับจากคะแนนภาษาเป็นค่าดิบ
  *  เพื่อให้แผนภาพน้ำตกกับคะแนนรวมมาจากชุดตัวเลขเดียวกันเสมอ */
-function promoAtPct(dp) { const a = REF_PROMO, n = a.length; return a[clamp(Math.round(dp / 100 * n) - 1, 0, n - 1)]; }
+function promoAtPct(dp) {
+  if (OIS_SRV) return OIS_REMOTE.promoAtPct(dp);     // ป้าย "เปอร์เซ็นไทล์ dp" — เซิร์ฟเวอร์แปลงเป็นค่าดิบเอง (ไม่มีฐานอ้างอิงดิบในเบราว์เซอร์)
+  const a = REF_PROMO, n = a.length; return a[clamp(Math.round(dp / 100 * n) - 1, 0, n - 1)];
+}
 /* ค่าที่ผู้ใช้แก้เองได้ใน Zone A
    fem / fam / pol / dp — เข้าสูตรโดยตรง · bsize = จำนวนกรรมการทั้งหมด (ใช้ตรวจ critical mass เท่านั้น)
    pRaw = ค่า promotion % จาก LIWC-22 ที่กรอกตรง (มีน้ำหนักเหนือ dp) · ten เก็บไว้เป็นบริบท ไม่มีผลต่อคะแนน (δT = 0) */
 const OV_FIELDS = ["fem", "fam", "pol", "ten", "dp", "bsize", "pRaw"];
 /** สูตรทางเลือก B_T1 ของบริษัทหนึ่ง (shadow log · ป้าย Caution) — คิดสดจากค่าป้อนชุดเดียวกับสูตรหลัก */
 function t1Of(c) {
+  if (OIS_SRV) return OIS_REMOTE.t1Of(c.promo, c.fam, c.pol, c.fem);
   const cP = c.cP !== undefined ? c.cP : cpOf(c.promo), a1 = ampT1(c.fem), B = cP * a1, ois = oisT1Of(B);
   return { B, ois, tier: tierOf(ois), quad: quadOf(cP, a1) };
 }
@@ -294,9 +370,20 @@ function coOf(t) {
     m.promo = +o.pRaw; m.pRaw = +o.pRaw; dp = promoPct(m.promo);
   } else if (dp !== b.dp) m.promo = promoAtPct(dp);
   else m.promo = b.promo;
+  if (OIS_SRV) {
+    /* แก้ไขครั้งที่ 2.5 · โหมดเซิร์ฟเวอร์จำลองได้เฉพาะกรรมการหญิง (คน/ขนาดบอร์ด 5–25) และอายุงาน — ค่าที่แก้ใน Zone A สำหรับ
+       ครอบครัว / political ties / CEO Promotion Focus ใช้ค่าที่เก็บของบริษัทแทน (m.srvIgnored บอกว่าตัวไหนถูกละไว้) */
+    const ign = [];
+    ["fam", "pol"].forEach(k => { if (o[k] !== undefined && o[k] !== b[k]) { m[k] = b[k]; ign.push(k); } });
+    if (m.promo !== b.promo) { m.promo = b.promo; dp = b.dp; delete m.pRaw; ign.push("dp"); }
+    if (m.fem !== b.fem && !OIS_REMOTE.femGrid(m.fem, m.bsize)) {
+      const bs = clamp(Math.round(+m.bsize || 11), 5, 25); m.fem = Math.round(m.fem * bs) / bs; m.femSnapped = bs;
+    }
+    m.srvIgnored = ign;
+  }
   m.amp = ampOf(m.fam, m.pol, m.fem, m.ten);          // ten ไม่เข้าสูตร — evidence gate g_T = 0
   m.cP = cpOf(m.promo);
-  m.B = m.cP * m.amp;
+  m.B = signalB(m.promo, m.amp);                      // = cP × amp (โหมดเซิร์ฟเวอร์จดคู่ค่าป้อนไว้ให้ oisOf ถอดกลับ)
   m.ois = oisOf(m.B);
   m.oisInd = oisIndOf(m.B, m.ind);
   m.ap = ampPct(m.amp);
@@ -306,6 +393,7 @@ function coOf(t) {
   m.tier = tierOf(m.ois);
   m.quad = quadOf(m.cP, m.amp);
   m.band = band90(m.promo, m.fam, m.pol, m.fem);
+  m.full = OIS_FULL.scoreFull(m.promo, m.fam, m.pol, m.fem, m.ten);   // B_FULL — การวิเคราะห์ความไวเท่านั้น
   m.clipped = clippedOf(m);
   m.t1 = t1Of(m);
   m.edited = true;
@@ -393,8 +481,11 @@ function syncChrome() {
   const bn = "OpenInnoScore";
   ["#sBrand", "#gBrand", "#fBrand"].forEach(s => { const e = $(s); if (e) e.textContent = bn; });
   $("#chipCredit").innerHTML = `<span aria-hidden="true">◈</span> token <b>${S.credits}</b>`;
-  const c = cur(), z = ZONES[zoneOf(c.promo, c.amp)];
-  $("#chipZone").innerHTML = `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${z.l} · OIS <b>${c.ipi}</b>`;
+  /* ภาคผนวก ง-12: ชิปโซนแสดง OIS เฉพาะบริษัทที่ผู้ใช้มีสิทธิ์ดู (Basic = บริษัทของตนเอง) */
+  const c0 = cur(), see = typeof canSeeCo !== "function" || canSeeCo(c0.t);
+  const c = see ? c0 : (byT[S.freeCo] ? coOf(S.freeCo) : null), z = c ? ZONES[zoneOf(c.promo, c.amp)] : null;
+  $("#chipZone").innerHTML = c ? `<span style="width:8px;height:8px;border-radius:99px;background:${z.c};display:inline-block"></span> ${z.l} · ${see ? "" : esc(c.t) + " · "}OIS <b>${c.ipi}</b>`
+    : `<span aria-hidden="true">🔒</span> OIS`;
   $("#sUser").textContent = S.user || "";
   $("#sPlan").textContent = `token คงเหลือ ${S.credits} · ${Object.keys(S.sectors).length} อุตสาหกรรมที่ซื้อแล้ว`;
   syncNavLocks();
@@ -405,8 +496,11 @@ function fillSelectors() {
   $("#selInd").value = S.ind;
   fillCompanies();
 }
+/** ตัวเลือกบริษัท: เรียงตาม OIS เฉพาะผู้ที่เห็นคะแนนทุกบริษัท (Pro Max) — ระดับอื่นเรียงตามชื่อย่อ (ไม่เผยลำดับคะแนน · ภาคผนวก ง-12) */
+const coSortByScore = () => typeof tierRank === "function" ? tierRank() >= 2 : false;
 function fillCompanies() {
-  const list = (S.ind === "all" ? COMPS : indComps(+S.ind)).slice().sort((a, b) => b.ipi - a.ipi);
+  const list = (S.ind === "all" ? COMPS : indComps(+S.ind)).slice()
+    .sort(coSortByScore() ? (a, b) => b.ipi - a.ipi : (a, b) => String(a.t).localeCompare(String(b.t)));
   $("#selCo").innerHTML = list.map(c => `<option value="${c.t}">${esc(c.t)} · ${esc(c.n)}</option>`).join("");
   if (!list.some(c => c.t === S.t)) S.t = list[0].t;
   $("#selCo").value = S.t;
@@ -477,10 +571,11 @@ function strip(v, arr, opt = {}) {
 
 /** แถวแท่งแนวนอน — ปลายมน มีช่องว่างระหว่างแท่ง ป้ายตัวเลขนอกแท่ง */
 function bars(rows, opt = {}) {
-  const mx = Math.max(...rows.map(r => Math.abs(r.v)), opt.max || 0, 1) * 1.02;
+  const av = r => isFinite(r.v) ? Math.abs(r.v) : 0;      // ค่า NaN (ฉบับเซิร์ฟเวอร์ไม่มีทางคำนวณ) → แท่งว่าง + ป้าย "—"
+  const mx = Math.max(...rows.map(av), opt.max || 0, 1) * 1.02;
   return rows.map(r => `<div class="rowbar" style="--lw:${opt.lw || 150}px">
     <div style="${r.hl ? "font-weight:500" : ""};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.l)}">${r.pre || ""}${esc(r.l)}</div>
-    <div class="mbar" style="height:${opt.h || 9}px"><span style="width:${Math.abs(r.v) / mx * 100}%;background:${r.c || "var(--q4)"}"></span></div>
+    <div class="mbar" style="height:${opt.h || 9}px"><span style="width:${av(r) / mx * 100}%;background:${r.c || "var(--q4)"}"></span></div>
     <div class="n" style="${r.hl ? "font-weight:500" : "color:var(--ink-2)"}">${r.t !== undefined ? r.t : fmt(r.v, opt.dec ?? 0)}</div>
   </div>`).join("");
 }
@@ -614,7 +709,7 @@ function viewFit() {
         <div style="display:inline-flex;align-items:center;gap:7px;margin-top:6px;padding:5px 13px;border-radius:99px;border:1px solid ${z.c};color:${z.c};font-size:12.5px">
           <span style="width:8px;height:8px;border-radius:99px;background:${z.c}"></span>${z.l}</div>
         <div style="font-size:11px;color:var(--ink-2);margin-top:7px">Tier ${vd.tier} · ช่วง 90% ${fmt(vd.band[0], 1)}–${fmt(vd.band[1], 1)}</div>
-        <div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">เส้นสีเทาบนเกจ = ค่ากลางฐานอ้างอิง (${fmt(medIPI)})</div>
+        <div style="font-size:10.5px;color:var(--ink-3);margin-top:3px">เส้นสีเทาบนเกจ = ค่ากลางของ ${COMPS.length} บริษัท ปีบัญชี ${FY_SHOWN + 543} (${fmt(medIPI)}) — ไม่ใช่ค่ากลางของฐานอ้างอิง REF-928</div>
         <div class="grid g3 tight" style="margin-top:15px;gap:8px;text-align:center">
           ${[[c.dp, "CEO Promotion Focus", "เปอร์เซ็นไทล์"], [ampPct(c.amp), "Board Amplification Signal", "เปอร์เซ็นไทล์"], [fmt(c.oisInd ?? c.iip, 0), "OIS ในอุตสาหกรรม", "อันดับ #" + rank + " จาก " + peers.length]]
       .map(([v, k, u]) => `<div><div style="font-size:21px;font-weight:500;letter-spacing:-.02em">${v}</div>
@@ -647,9 +742,10 @@ function viewFit() {
         { l: "Board Amplification Signal · เปอร์เซ็นไทล์", v: ampPct(c.amp), t: ampPct(c.amp) + " / 100", c: rampAt(ampPct(c.amp)), hl: 1 },
       ], { lw: 175, h: 11 })}
         <div class="note brand" style="margin-top:13px">
-          <b>B = cP × amp</b> — cP ${fmt(c.cP ?? cpOf(c.promo), 3)} × amp ${fmt(c.amp, 3)} = ${fmt(c.B ?? (cpOf(c.promo) * c.amp), 4)}
-          · exp(B) = ${fmt(Math.exp(c.B ?? (cpOf(c.promo) * c.amp)), 3)} เท่าของบริษัทที่ CEO อยู่ที่ค่าเฉลี่ยฐานอ้างอิง
-          (${fmt(100 * (Math.exp(c.B ?? (cpOf(c.promo) * c.amp)) - 1), 1)}%) ${ASSOC} แล้วแปลงเป็นเปอร์เซ็นไทล์ได้ OpenInnoScore ${c.ipi}
+          <b>B = cP × amp</b> — CEO Promotion Focus อยู่ที่เปอร์เซ็นไทล์ ${fmt(c.dp, 0)} (${c.cP >= 0 ? "เหนือ" : "ต่ำกว่า"}ค่าเฉลี่ยฐานอ้างอิง · cP ${c.cP >= 0 ? "≥ 0" : "< 0"})
+          × Board Amplification Signal เปอร์เซ็นไทล์ ${fmt(ampPct(c.amp), 0)} (amp ${c.amp >= 0 ? "≥ 0" : "< 0"})
+          → ผลคูณ${(c.cP >= 0) === (c.amp >= 0) ? "เป็นบวก" : "เป็นลบ"} ${ASSOC} แล้วแปลงเป็นเปอร์เซ็นไทล์ได้ OpenInnoScore ${c.ipi}
+          <br><span style="color:var(--ink-3)">ค่า cP / amp / B ดิบและค่าในบันทึกพารามิเตอร์ไม่แสดงบนหน้าจอ (ความลับทางการค้า) — ผู้ดูแล/อาจารย์ตรวจการคำนวณได้ที่หน้า System log</span>
           <br><span style="color:var(--ink-2)">คะแนนเป็นผลคูณ ไม่ใช่ค่าเฉลี่ย — จึงเป็นบวกได้ทั้งเมื่อทั้งสองค่าเป็นบวกและเมื่อทั้งสองค่าเป็นลบ จึงต้องอ่านคู่กับ quadrant เสมอ</span></div>
         <div style="margin-top:13px">${statusBar(c)}</div>
       </div>
@@ -658,7 +754,7 @@ function viewFit() {
         <h3>ภาษาผู้นำ — Promotion Focus</h3>
         <p class="desc">สัดส่วนคำเชิงรุกในสารผู้บริหาร วัดด้วยพจนานุกรมแบบ LIWC · ยิ่งสูงยิ่งสื่อถึงการมองไปข้างหน้าและการแสวงหาโอกาส</p>
         <div class="grid g3 tight" style="gap:9px">
-          ${[[fmt(c.promo, 2), "บริษัทนี้", "var(--ink)"], [fmt(ist.promo, 2), "ค่าเฉลี่ยอุตสาหกรรม", "var(--ink-2)"], [fmt(OM.P, 2), "ค่าเฉลี่ยฐานอ้างอิง", "var(--ink-2)"]]
+          ${[[fmt(c.promo, 2), "บริษัทนี้ (ค่าดิบ)", "var(--ink)"], [fmt(ist.promo, 2), "ค่าเฉลี่ยอุตสาหกรรม (196 บริษัท)", "var(--ink-2)"], [fmt(c.dp, 0), "เปอร์เซ็นไทล์ในฐานอ้างอิง REF-928", "var(--ink-2)"]]
       .map(([v, k, col]) => `<div class="stat" style="background:var(--panel-2);padding:11px 13px">
               <div class="v num" style="font-size:22px;color:${col}">${v}</div><div class="k" style="margin:2px 0 0">${k}</div></div>`).join("")}
         </div>
@@ -684,7 +780,7 @@ function viewFit() {
   </div>`;
 
   const head = pageHead("รายงานวินิจฉัย", `${c.t} · ${c.n}`,
-    `${IND[c.ind]} · วินิจฉัยสถานะปัจจุบันจากภาพปี 2566 — ระบบอ่านสองสัญญาณคู่กัน คือภาษาเชิงรุกของผู้นำ และความสามารถของโครงสร้างบอร์ดในการขยายสัญญาณนั้น`);
+    `${IND[c.ind]} · วินิจฉัยสถานะปัจจุบันจากภาพปีบัญชี ${(c.fy || FY_SHOWN) + 543} — ระบบอ่านสองสัญญาณคู่กัน คือภาษาเชิงรุกของผู้นำ และความสามารถของโครงสร้างบอร์ดในการขยายสัญญาณนั้น`);
 
   if (isUnlocked("report")) {
     const badge = S.freeCo === c.t ? `<span class="chip free">◇ รายงานฟรีของคุณ</span>` : `<span class="chip">เปิดด้วย token แล้ว</span>`;
@@ -708,15 +804,21 @@ function nextSteps(c) {
   const base = c.ipi, out = [];
   const mk = (lab, why, fem, dp) => {
     const v = ipiFrom(dp ?? c.dp, ampOf(c.fam, c.pol, fem, c.ten));
-    out.push({ lab, why, v, d: v - base });
+    if (isFinite(v)) out.push({ lab, why, v, d: v - base });     // ไม่มีผล (ฉบับเซิร์ฟเวอร์ · รอผล) → ไม่แสดงแถว
   };
+  /* ฉบับเซิร์ฟเวอร์: /api/score จำลองได้เฉพาะจำนวนกรรมการหญิงบนกริด k/b — ใช้ ±1 คน (femStep) และไม่มีคันโยกภาษา CEO */
+  if (OIS_SRV) {
+    mk("กรรมการหญิงเพิ่มขึ้น 1 คน", "ค่าที่มีน้ำหนักมากที่สุดในสูตร — " + critText(c), femStep(c, 1));
+    mk("กรรมการหญิงลดลง 1 คน", "กรณีกรรมการหญิงครบวาระแล้วตำแหน่งนั้นไม่ได้เป็นผู้หญิง — อ่านเป็นตำแหน่งบนฐานอ้างอิง ไม่ใช่การทำนาย", femStep(c, -1));
+  } else {
   mk("องค์ประกอบกรรมการหญิงสูงกว่านี้ 10 จุด", "ค่าที่มีน้ำหนักมากที่สุดในสูตร — " + critText(c),
     clamp(c.fem + .1, 0, 1));
   mk("องค์ประกอบกรรมการหญิงต่ำกว่านี้ 10 จุด", "กรณีกรรมการหญิงครบวาระแล้วตำแหน่งนั้นไม่ได้เป็นผู้หญิง — อ่านเป็นตำแหน่งบนฐานอ้างอิง ไม่ใช่การทำนาย",
     clamp(c.fem - .1, 0, 1));
-  if (c.dp < 85) mk("ภาษาของ CEO อยู่สูงกว่านี้ 15 เปอร์เซ็นไทล์", "องค์ประกอบอีกครึ่งหนึ่งของ B = cP × amp ซึ่งวัดจากสารถึงผู้ถือหุ้น ไม่เกี่ยวกับโครงสร้างบอร์ด",
+  }
+  if (c.dp < 85 && !OIS_SRV) mk("ภาษาของ CEO อยู่สูงกว่านี้ 15 เปอร์เซ็นไทล์", "องค์ประกอบอีกครึ่งหนึ่งของ B = cP × amp ซึ่งวัดจากสารถึงผู้ถือหุ้น ไม่เกี่ยวกับโครงสร้างบอร์ด",
     c.fem, clamp(c.dp + 15, 0, 100));
-  if (c.dp > 15) mk("ภาษาของ CEO อยู่ต่ำกว่านี้ 15 เปอร์เซ็นไทล์", "กรณีสารปีถัดไปใช้ภาษาเชิงระมัดระวังมากขึ้น",
+  if (c.dp > 15 && !OIS_SRV) mk("ภาษาของ CEO อยู่ต่ำกว่านี้ 15 เปอร์เซ็นไทล์", "กรณีสารปีถัดไปใช้ภาษาเชิงระมัดระวังมากขึ้น",
     c.fem, clamp(c.dp - 15, 0, 100));
   out.sort((a, b) => b.d - a.d);
   const ctx = `<div style="font-size:11px;color:var(--ink-3);line-height:1.55;padding:9px 0 0">
@@ -770,22 +872,29 @@ function statusBar(c) {
   </div>`;
 }
 
-/** บริษัทที่อยู่ในโซน Deliver อยู่แล้ว — บอกว่าเหลือระยะห่างจากเส้นแบ่งเท่าไหร่ */
+/** บริษัทที่อยู่ในโซน Deliver อยู่แล้ว — บอกว่าเหลือระยะห่างจากเส้นแบ่งเท่าไหร่
+ *  ระยะแสดงเป็นจุดเปอร์เซ็นไทล์จากเส้นแบ่ง (ไม่แสดง cP / amp ดิบ ซึ่งเมื่อเทียบกับค่าป้อนจะถอดค่าเฉลี่ยและสัมประสิทธิ์ได้) */
+function femEq(c) {
+  /* จุดเปอร์เซ็นต์ของสัดส่วนกรรมการหญิงที่เทียบเท่าระยะ amp ถึงเส้นแบ่ง (feq0) / ถึงค่ากลางโซน Deliver ของอุตสาหกรรม (feqT)
+     ออฟไลน์คำนวณจากบันทึกพารามิเตอร์ (ไม่แสดงค่าสัมประสิทธิ์ · ปัดเป็นจำนวนเต็ม) */
+  if (OIS_SRV) return {};            // เซิร์ฟเวอร์ไม่ส่งค่านี้ (amp/δW เป็นเชิงเส้นในค่าป้อน — ถอดอัตราส่วนสัมประสิทธิ์ได้) → หน้าจอแสดง "—"
+  return { feq0: c.amp / OPAR.dW * 100 };
+}
 function holdAnalysis(c) {
-  const marginP = cpOf(c.promo), marginA = c.amp;
-  const femDrop = marginA / OPAR.dW * 100;                 // จุดเปอร์เซ็นต์ (คำนวณภายใน ไม่แสดงค่าสัมประสิทธิ์)
+  const dP = Math.max(0, Math.round((c.dp - Z_CP) * 10) / 10), dA = Math.max(0, Math.round((ampPct(c.amp) - Z_AMP) * 10) / 10);
+  const femDrop = femEq(c).feq0;                                 // จุดเปอร์เซ็นต์ (ไม่แสดงค่าสัมประสิทธิ์)
   const cap = c.fem * 100;
-  const femCell = femDrop > cap ? "เกินช่วงที่เป็นไปได้" : fmt(femDrop, 1) + " จุด";
+  const femCell = !isFinite(femDrop) ? "—" : femDrop > cap ? "เกินช่วงที่เป็นไปได้" : fmt(femDrop, 0) + " จุด";
   const femWhy = femDrop > cap ? "องค์ประกอบนี้เพียงตัวเดียวไปไม่ถึงเส้นแบ่ง (เพดานคือ " + fmt(cap, 1) + " จุด)"
     : "กรณีกรรมการหญิงครบวาระแล้วตำแหน่งนั้นไม่ได้เป็นผู้หญิง";
   return `<div class="note ok" style="margin-bottom:12px">
-      <b>อยู่ในโซน Deliver</b> — ตำแหน่งปัจจุบันห่างจากเส้นแบ่งอยู่ ${fmt(marginA, 2)} หน่วยในแกน Board Amplification Signal
-      และ ${fmt(marginP, 2)} ในแกน CEO Promotion Focus</div>
+      <b>อยู่ในโซน Deliver</b> — ตำแหน่งปัจจุบันห่างจากเส้นแบ่งประมาณ ${fmt(dA, 0)} จุดเปอร์เซ็นไทล์ในแกน Board Amplification Signal
+      และ ${fmt(dP, 0)} จุดเปอร์เซ็นไทล์ในแกน CEO Promotion Focus</div>
     <div style="font-size:11.5px;color:var(--ink-3);margin-bottom:6px">ป้ายโซนเปลี่ยนเมื่อค่าป้อนเปลี่ยนถึงระดับต่อไปนี้ —
       เป็นการอ่านความชันของสูตร ${ASSOC} ไม่ใช่การทำนายผล</div>
     <div class="tw"><table><thead><tr><th>ค่าป้อนที่เปลี่ยน</th><th class="n">เปลี่ยนได้ถึง</th><th>อ่านอย่างไร</th></tr></thead><tbody>
       <tr><td>องค์ประกอบกรรมการหญิงต่ำลง</td><td class="n"><b>${femCell}</b></td><td style="color:var(--ink-2)">${femWhy}</td></tr>
-      <tr><td>CEO Promotion Focus ต่ำลง</td><td class="n"><b>${fmt(marginP, 2)} (ค่าหลัง winsorise)</b></td><td style="color:var(--ink-2)">ภาษาในสารปีถัดไปอยู่ต่ำกว่าค่าเฉลี่ยฐานอ้างอิง</td></tr>
+      <tr><td>CEO Promotion Focus ต่ำลง</td><td class="n"><b>${fmt(dP, 0)} จุดเปอร์เซ็นไทล์</b></td><td style="color:var(--ink-2)">ภาษาในสารปีถัดไปอยู่ต่ำกว่าค่าเฉลี่ยฐานอ้างอิง</td></tr>
     </tbody></table></div>
     <div style="font-size:11px;color:var(--ink-3);margin-top:8px">${critText(c)} · กรรมการครอบครัวและ political ties เป็นข้อมูลบริบท ไม่แสดงเป็นคันโยก (R6)</div>
     <button class="btn p" data-goto="studio" style="margin-top:13px">ทดสอบค่าป้อนเหล่านี้ใน What-if</button>`;
@@ -809,11 +918,15 @@ function viewMatrix() {
   const Y = v => H - B - (v - (yr[0] - pady)) / ((yr[1] + pady) - (yr[0] - pady)) * (H - T - B);
   const cx = X(mP), cy = Y(0);
 
-  // จุดอ้างอิงเชิงเปรียบเทียบ: ค่ามัธยฐานของบริษัทโซน Deliver (quadrant A) ในอุตสาหกรรมเดียวกัน (FY2566)
+  // จุดอ้างอิงเชิงเปรียบเทียบ: ค่ามัธยฐานของบริษัทโซน Deliver (quadrant A) ในอุตสาหกรรมเดียวกัน (ปีบัญชี FY_SHOWN)
   const eng = indComps(c.ind).filter(x => zoneOf(x.promo, x.amp) === "A");
   const tgt = eng.length ? { promo: qstats(eng.map(pw)).med, amp: qstats(eng.map(x => x.amp)).med }
     : { promo: mP + .25, amp: .35 };
-  const tgtIPI = Math.round(oisOf((wins(tgt.promo, "P") - mP) * tgt.amp));
+  /* เปอร์เซ็นไทล์ของจุดอ้างอิง — ออฟไลน์คำนวณ · เซิร์ฟเวอร์ใช้ OIS.dlv (คำนวณตอน build จากค่าดิบบนเซิร์ฟเวอร์) */
+  const DLV = OIS_SRV ? ((OIS.dlv || {})[c.ind] || null) : null;
+  const tgtIPI = OIS_SRV ? (DLV ? DLV.ipi : NaN) : Math.round(oisOf((wins(tgt.promo, "P") - mP) * tgt.amp));
+  const tgtDp = OIS_SRV ? (DLV ? DLV.dp : NaN) : promoPct(tgt.promo), tgtAp = OIS_SRV ? (DLV ? DLV.ap : NaN) : ampPct(tgt.amp);
+  const feqT = OIS_SRV ? femEq(c).feqT : (tgt.amp - c.amp) / OPAR.dW * 100;
   const needP = Math.max(0, tgt.promo - pw(c)), needA = Math.max(0, tgt.amp - c.amp);
   const showPath = zk !== "A" && eng.length > 0;
 
@@ -852,7 +965,7 @@ function viewMatrix() {
     ${statusBar(c)}
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin:14px 0 6px">
       <div><h3>Board Strategy Compass — ตำแหน่งบริษัทและประเด็นสำหรับการหารือของบอร์ด</h3>
-        <p class="desc" style="margin-bottom:0">แกนนอน = CEO Promotion Focus (หลัง winsorise) · แกนตั้ง = Board Amplification Signal (amp) ·
+        <p class="desc" style="margin-bottom:0">แกนนอน = CEO Promotion Focus · แกนตั้ง = Board Amplification Signal (amp) — ไม่มีสเกลตัวเลขบนแกน ·
           เส้นประแนวตั้ง = ค่าเฉลี่ยฐานอ้างอิง (cP = 0) · เส้นประแนวนอนที่ 0 แยกบอร์ดที่อยู่ในรูปแบบสัมพันธ์กับการหนุนออกจากที่ไม่ ·
           พื้นหลัง = ฐานอ้างอิง REF-928 ทั้งชุด (${REF_PTS.length} บริษัท-ปี · ไม่ระบุชื่อ)</p></div>
       <label style="font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px;white-space:nowrap">
@@ -885,7 +998,7 @@ function viewMatrix() {
       ${peers.map((p, i) => numCircle(p, i + 1)).join("")}
       ${numCircle(c, 0)}
       ${labelC}
-      <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 10}" font-size="11" fill="var(--ink-2)" text-anchor="middle">CEO Promotion Focus (หลัง winsorise)</text>
+      <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 10}" font-size="11" fill="var(--ink-2)" text-anchor="middle">CEO Promotion Focus</text>
       <text transform="translate(15,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="11" fill="var(--ink-2)" text-anchor="middle">Board Amplification Signal (amp)</text>
     </svg>
     <div class="legend">
@@ -906,17 +1019,17 @@ function viewMatrix() {
   <div class="grid g-side-r" style="margin-top:14px">
     <div class="card">
       <h3>ระยะห่างจากค่ากลางของโซน Deliver</h3>
-      <p class="desc">ค่ากลางตั้งจากบริษัทที่อยู่โซน Deliver ในอุตสาหกรรมเดียวกัน ปีบัญชี 2566
+      <p class="desc">ค่ากลางตั้งจากบริษัทที่อยู่โซน Deliver ในอุตสาหกรรมเดียวกัน ปีบัญชี ${FY_SHOWN + 543}
         (${eng.length} บริษัทจาก ${indComps(c.ind).length}) — เป็นจุดอ้างอิงเชิงเปรียบเทียบ ไม่ใช่เป้าหมายที่ระบบแนะนำให้ไปถึง</p>
       ${zk === "A"
       ? holdAnalysis(c)
       : `<div class="tw"><table><thead><tr><th>แกน</th><th class="n">ตอนนี้</th><th class="n">ค่ากลางโซน Deliver</th><th class="n">ส่วนต่าง</th><th>อ่านอย่างไร</th></tr></thead><tbody>
-          <tr><td>CEO Promotion Focus</td><td class="n">${fmt(pw(c), 2)}</td><td class="n">${fmt(tgt.promo, 2)}</td>
-            <td class="n"><b>${needP > 0 ? "+" + fmt(needP, 2) : "ถึงแล้ว"}</b></td>
-            <td style="color:var(--ink-2)">${needP > 0 ? `เปอร์เซ็นไทล์ ${c.dp} เทียบกับ ${promoPct(tgt.promo)}` : "ไม่ต่างจากค่ากลาง"}</td></tr>
-          <tr><td>Board Amplification Signal</td><td class="n">${fmt(c.amp, 2)}</td><td class="n">${fmt(tgt.amp, 2)}</td>
-            <td class="n"><b>${needA > 0 ? "+" + fmt(needA, 2) : "ถึงแล้ว"}</b></td>
-            <td style="color:var(--ink-2)">${needA > 0 ? `ส่วนต่างนี้เทียบเท่าองค์ประกอบกรรมการหญิงที่ต่างกัน ${fmt(needA / OPAR.dW * 100, 0)} จุด ${ASSOC}` : "ไม่ต่างจากค่ากลาง"}</td></tr>
+          <tr><td>CEO Promotion Focus (เปอร์เซ็นไทล์)</td><td class="n">${fmt(c.dp, 0)}</td><td class="n">${fmt(tgtDp, 0)}</td>
+            <td class="n"><b>${needP > 0 ? "+" + fmt(tgtDp - c.dp, 0) : "ถึงแล้ว"}</b></td>
+            <td style="color:var(--ink-2)">${needP > 0 ? "ส่วนต่างของตำแหน่งบนฐานอ้างอิง (จุดเปอร์เซ็นไทล์)" : "ไม่ต่างจากค่ากลาง"}</td></tr>
+          <tr><td>Board Amplification Signal (เปอร์เซ็นไทล์)</td><td class="n">${fmt(ampPct(c.amp), 0)}</td><td class="n">${fmt(tgtAp, 0)}</td>
+            <td class="n"><b>${needA > 0 ? "+" + fmt(tgtAp - ampPct(c.amp), 0) : "ถึงแล้ว"}</b></td>
+            <td style="color:var(--ink-2)">${needA > 0 ? `ส่วนต่างนี้เทียบเท่าองค์ประกอบกรรมการหญิงที่ต่างกัน ${fmt(feqT, 0)} จุด ${ASSOC}` : "ไม่ต่างจากค่ากลาง"}</td></tr>
           <tr class="hl"><td><b>OpenInnoScore</b></td><td class="n"><b>${c.ipi}</b></td><td class="n"><b>${tgtIPI}</b></td>
             <td class="n"><b>${tgtIPI - c.ipi >= 0 ? "+" : ""}${tgtIPI - c.ipi}</b></td>
             <td style="color:var(--ink-2)">ส่วนต่างของเปอร์เซ็นไทล์ ไม่ใช่จำนวนกิจกรรม open innovation (R1)</td></tr>
@@ -1094,7 +1207,7 @@ function viewStudio() {
   const c = cur(), w = wiInit();
   const amp1 = ampOf(w.fam, w.pol, w.fem, w.ten), ipi1 = ipiFrom(w.dp, amp1);
   const d = ipi1 - c.ipi;
-  const z0 = zoneOf(c.promo, c.amp), z1 = zoneOf(w.dp >= c.dp ? Math.max(c.promo, OM.P + .001) : c.promo, amp1);
+  const z0 = zoneOf(c.promo, c.amp);
   const zone1 = zoneOf(promoInv(w.dp), amp1);
 
   const inner = `
@@ -1160,7 +1273,7 @@ function viewStudio() {
         <div class="u">${zone1 !== z0 ? ZONES[z0].l + " → " + ZONES[zone1].l : ZONES[z0].l}</div></div>
     </div>
     <div style="margin-bottom:6px;font-size:11.5px;color:var(--ink-3)">ตำแหน่งบนการกระจายตัวของทั้งตลาด</div>
-    ${boxplot(IPI_ALL, ipi1, "OpenInnoScore · 196 บริษัท (ปีบัญชี 2566)")}
+    ${boxplot(IPI_ALL, ipi1, `OpenInnoScore · ${COMPS.length} บริษัท (ปีบัญชี ${FY_SHOWN + 543})`)}
     <div class="legend"><span><i class="dia" style="background:var(--ink)"></i>ค่าจำลอง ${ipi1}</span>
       <span style="color:var(--ink-3)">เดิม ${c.ipi}</span></div>
     ${bars([
@@ -1195,6 +1308,7 @@ function viewStudio() {
 }
 /** แปลงเปอร์เซ็นไทล์ CEO กลับเป็นค่า promotion โดยประมาณ (ใช้จัดโซนเท่านั้น) */
 function promoInv(p) {
+  if (OIS_SRV) return OIS_REMOTE.promoInv(p);
   const i = clamp(Math.round(p / 100 * (REF_PROMO.length - 1)), 0, REF_PROMO.length - 1);
   return REF_PROMO[i];
 }
@@ -1240,11 +1354,23 @@ function persona(w, ipi) {
    เครื่องนับคำ — แปลงข้อความ CEO เป็นคะแนน Promotion focus
    ใช้พจนานุกรมเปิด (ไทย + อังกฤษ) ไม่ใช่ซอฟต์แวร์ LIWC ที่มีลิขสิทธิ์
    ============================================================================ */
+/** ตัวนับคำกลางของทั้งระบบ — window.countWords(text) (ภาคผนวก ง ใหม่-6: เกณฑ์ ≥ 2,000 คำต้องนับวิธีเดียวกันทุกหน้า)
+ *  · ช่วงอักษรไทย: Intl.Segmenter("th", word) นับเฉพาะส่วนที่ isWordLike · ไม่มี Segmenter → จำนวนอักขระไทย ÷ 5 (ปัดเศษ)
+ *  · ส่วนที่เหลือ (ละติน/ตัวเลข): นับ token ที่คั่นด้วยช่องว่างและมีตัวอักษรหรือตัวเลขอย่างน้อยหนึ่งตัว
+ *  ข้อความว่างคืน 0 · ฝั่งเซิร์ฟเวอร์ (data_api.count_words) ต้องใช้กติกาเดียวกัน */
 function countWords(t) {
-  const th = (t.match(/[฀-๿]/g) || []).length;
-  const en = (t.match(/[A-Za-z][A-Za-z'-]*/g) || []).length;
-  return Math.max(1, Math.round(th / 4.5) + en);   // ไทยไม่มีช่องว่าง ประมาณ 4.5 อักขระ/คำ
+  t = String(t ?? "");
+  if (!t.trim()) return 0;
+  if (countWords.seg === undefined) countWords.seg = (() => { try { return typeof Intl !== "undefined" && Intl.Segmenter
+    ? new Intl.Segmenter("th", { granularity: "word" }) : null; } catch (e) { return null; } })();
+  const seg = countWords.seg, TH = /[\u0E00-\u0E7F]+/g, runs = t.match(TH) || [];
+  const latin = t.replace(TH, " ").split(/\s+/).filter(w => /[A-Za-z0-9]/.test(w)).length;
+  let th = 0;
+  if (seg) runs.forEach(r => { for (const sg of seg.segment(r)) if (sg.isWordLike) th++; });
+  else th = Math.round(runs.join("").length / 5);
+  return th + latin;
 }
+if (typeof window !== "undefined") window.countWords = countWords;
 function hits(text, list) {
   const low = text.toLowerCase(), out = {};
   let n = 0;
@@ -1259,7 +1385,12 @@ function hits(text, list) {
 /** จุดยึดสำหรับแปลง “ความเอียงไปทางคำเชิงรุก” เป็นเปอร์เซ็นไทล์ CEO Promotion Focus
  *  ใช้สัดส่วน pro/(pro+pre) ซึ่งไม่ขึ้นกับความกว้างของพจนานุกรมและความยาวข้อความ
  *  จึงเทียบข้ามเอกสารได้ ต่างจากการนับ “คำต่อร้อยคำ” ที่ขึ้นกับพจนานุกรมโดยตรง */
+/* ที่มา (ภาคผนวก ง-25): ผู้พัฒนาตั้งจุดยึดชุดนี้เองในแก้ไขครั้งที่ 1 โดยวางค่ากลางที่สัดส่วนคำเชิงรุก 40% (รายงานประจำปีไทยมีภาษากำกับดูแล
+   มากโดยธรรมชาติ) — <b>ไม่ได้ปรับเทียบ</b>และหาจาก REF-928 ไม่ได้ เพราะ REF-928 เก็บ promotion focus จาก LIWC-22 (ร้อยละของคำ)
+   ไม่ได้เก็บสัดส่วนคำของพจนานุกรมเปิดนี้ · ต้องปรับเทียบกับคลังสารถึงผู้ถือหุ้นที่ให้คะแนน LIWC-22 แล้ว ก่อนใช้แทนค่า LIWC-22
+   ป้ายบนหน้าจอใช้ TILT_ANCHOR_LABEL ทุกครั้งที่แสดงผลจากตารางนี้ */
 const TILT_ANCHOR = [[.15, 5], [.25, 15], [.33, 30], [.40, 50], [.50, 72], [.60, 88], [.72, 96]];
+const TILT_ANCHOR_LABEL = "จุดยึดชั่วคราวที่ผู้พัฒนากำหนด — ยังไม่ได้ปรับเทียบกับ REF-928 / LIWC-22";
 function tiltToPct(x) {
   const A = TILT_ANCHOR;
   if (x <= A[0][0]) return A[0][1];
@@ -1277,7 +1408,7 @@ function analyseText(t) {
   const pre = hits(t, LEX.prevention.th.concat(LEX.prevention.en));
   const tot = pro.n + pre.n;
   const tilt = tot ? pro.n / tot : .5;                 // 0 = ป้องกันล้วน · 1 = รุกล้วน
-  const rate = pro.n / wc * 100;                       // อัตราคำเชิงรุกต่อ 100 คำ (ตัวประกอบ)
+  const rate = pro.n / Math.max(1, wc) * 100;          // อัตราคำเชิงรุกต่อ 100 คำ (ตัวประกอบ)
   return { wc, pro, pre, tot, tilt, rate, dp: tiltToPct(tilt) };
 }
 
@@ -1331,7 +1462,8 @@ function renderCeoOut(t, r) {
         <b>วิธีแปลงเป็นคะแนน</b> — ระบบใช้ <b>สัดส่วน</b> คำเชิงรุกต่อคำที่บ่งทิศทางทั้งหมด ไม่ใช่จำนวนคำต่อร้อยคำ
         เพราะสัดส่วนไม่ขึ้นกับความกว้างของพจนานุกรมและความยาวเอกสาร จึงเทียบข้ามเอกสารได้
         แล้วแปลงด้วยตารางจุดยึดนี้<br>
-        <span class="mono" style="font-size:10.5px">${TILT_ANCHOR.map(([x, y]) => fmt(x * 100, 0) + "% → " + y).join(" · ")}</span><br>
+        <span class="mono" style="font-size:10.5px">${TILT_ANCHOR.map(([x, y]) => fmt(x * 100, 0) + "% → " + y).join(" · ")}</span>
+        <span class="pill warn" style="font-size:9.5px">${TILT_ANCHOR_LABEL}</span><br>
         อัตราดิบของข้อความนี้คือ ${fmt(r.rate, 2)} คำเชิงรุกต่อ 100 คำ (แสดงไว้เป็นข้อมูลประกอบ ไม่ได้ใช้คิดคะแนน)<br>
         จุดยึดตั้งไว้ให้ค่ากลางอยู่ที่สัดส่วน 40% ไม่ใช่ 50% เพราะรายงานประจำปีไทยมีภาษาเชิงกำกับดูแล
         และการปฏิบัติตามกฎระเบียบอยู่มากโดยธรรมชาติ ทำให้ฝั่งเชิงป้องกันสูงกว่าปกติ —
@@ -1425,7 +1557,7 @@ function viewSector() {
         มัธยฐานของกลุ่มนี้ ${fmt(st.med)} ${st.med >= qstats(IPI_ALL).med ? "สูงกว่า" : "ต่ำกว่า"}ทั้งตลาด (${fmt(qstats(IPI_ALL).med)})</div>
     </div>
     <div class="card"><h3>ค่ากลางองค์ประกอบบอร์ดของกลุ่ม</h3>
-      <p class="desc">ค่าเฉลี่ยของบริษัทในกลุ่ม ปีบัญชี 2566 — ใช้เทียบตำแหน่งเท่านั้น ไม่ใช่เป้าหมายที่แนะนำ</p>
+      <p class="desc">ค่าเฉลี่ยของบริษัทในกลุ่ม ปีบัญชี ${FY_SHOWN + 543} — ใช้เทียบตำแหน่งเท่านั้น ไม่ใช่เป้าหมายที่แนะนำ</p>
       ${bars([
         { l: "สัดส่วนกรรมการหญิง", v: ist.fem * 100, t: pct1(ist.fem), c: "var(--s1)" },
         { l: "สัดส่วนกรรมการครอบครัว", v: ist.fam * 100, t: pct1(ist.fam), c: "var(--s2)" },
@@ -1469,7 +1601,7 @@ function viewBilling() {
       <div class="grid g2">
         <div style="border:1px solid ${S.plan === "free" ? "var(--brand)" : "var(--line)"};border-radius:var(--radius);padding:16px;background:${S.plan === "free" ? "color-mix(in srgb,var(--brand) 5%,var(--panel))" : "var(--panel)"}">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-            <b style="font-size:15px">Free User</b>
+            <b style="font-size:15px">Basic User</b>
             ${S.plan === "free" ? `<span class="pill ok">แผนปัจจุบัน</span>` : ""}</div>
           <div style="font-size:12.3px;color:var(--ink-2);line-height:1.65;margin-top:6px">
             เริ่มต้น 3 token · รายงานบริษัทของตัวเองฟรี · เทียบคู่แข่งและภาพรวมอุตสาหกรรมจ่ายด้วย token<br>
@@ -1481,7 +1613,7 @@ function viewBilling() {
             ${S.plan === "pro" ? `<span class="pill ok">แผนปัจจุบัน</span>` : ""}</div>
           <div style="font-size:12.3px;color:var(--ink-2);line-height:1.65;margin-top:6px">
             เริ่มต้น ${PLAN_TOKENS.pro} token · เปิด <b>What-if Studio</b> และ <b>ตาราง Validity รายปี</b>
-            ซึ่งใช้ token ปลดไม่ได้ · ค่ารายงานคิด token เท่ากับ Free</div>
+            ซึ่งใช้ token ปลดไม่ได้ · ค่ารายงานคิด token เท่ากับ Basic</div>
           ${S.plan === "pro" ? "" : `<button class="btn p" data-pro="1" style="width:100%;justify-content:center;margin-top:12px">เปลี่ยนเป็นแผน Pro</button>`}
         </div>
       </div>
@@ -1512,7 +1644,7 @@ function viewBilling() {
           <tr><td>รายงานวินิจฉัยรายบริษัท</td><td class="n"><b>${PRICE.report}</b></td><td style="color:var(--ink-2)">บริษัทแรกฟรี · ปลดล็อกแล้วดูซ้ำไม่เสียเพิ่ม</td></tr>
           <tr><td>เทียบคู่แข่ง 3 ราย</td><td class="n"><b>${PRICE.peer}</b></td><td style="color:var(--ink-2)">เปลี่ยนคู่แข่งได้ไม่จำกัดหลังปลดล็อก</td></tr>
           <tr><td>What-if Studio · ตรวจข้อความ CEO</td><td class="n"><b>Pro</b></td><td style="color:var(--ink-2)">สิทธิ์ของแผน ใช้ token ปลดไม่ได้ · ใช้ได้ไม่จำกัดครั้งเมื่ออยู่แผน Pro</td></tr>
-          <tr><td>Validity แยกรายปี</td><td class="n"><b>Pro</b></td><td style="color:var(--ink-2)">Free เห็นผลสรุปและ remark · Pro เห็นตารางเต็มรายปี</td></tr>
+          <tr><td>Validity แยกรายปี</td><td class="n"><b>Pro</b></td><td style="color:var(--ink-2)">Basic เห็นผลสรุปและ remark · Pro เห็นตารางเต็มรายปี</td></tr>
           <tr class="hl"><td>ภาพรวมทั้งอุตสาหกรรม</td><td class="n"><b>${PRICE.sector}</b></td><td style="color:var(--ink-2)">หรือชำระรายครั้ง 990 บาท</td></tr>
           <tr><td>เมทริกซ์ 2×2 · หลักฐานความแม่น</td><td class="n">ฟรี</td><td style="color:var(--ink-2)">เปิดให้ดูเสมอ เพื่อให้ประเมินได้ก่อนซื้อ</td></tr>
         </tbody></table></div></div>
@@ -1565,11 +1697,12 @@ function viewArch() {
     <div class="grid g3" style="margin-bottom:14px">
       ${[["เฟส 1 · ทำแล้ว (ต้นแบบ)", "ok", [
       "ฐานอ้างอิง REF-928 (928 บริษัท-ปี, 2562–2566) ที่ freeze แล้ว — คะแนนตรงกับ STATA ทุกตำแหน่ง",
-      "parameter card + V̂f (Krinsky–Robb 500 ชุด) + ฐานอ้างอิง อยู่ในไฟล์สัญญาโมเดล",
+      OIS_SRV ? "ฉบับเซิร์ฟเวอร์ (ไฟล์นี้): parameter card + V̂f (Krinsky–Robb 500 ชุด) + ฐานอ้างอิง อยู่หลัง API บนเซิร์ฟเวอร์แล้ว — เบราว์เซอร์ได้รับเฉพาะผลลัพธ์ระดับเปอร์เซ็นไทล์ (POST /api/score รับเฉพาะบริษัทที่มีอยู่ + กรรมการหญิง/อายุงาน)"
+        : "ฉบับออฟไลน์ (ไฟล์นี้): parameter card + V̂f (Krinsky–Robb 500 ชุด) + ฐานอ้างอิง ฝังในไฟล์ตามขอบเขตส่งมอบ #1 — ใช้ภายใต้ NDA · ฉบับเซิร์ฟเวอร์ย้ายไว้หลัง API แล้ว",
       "อัปโหลดรายงานประจำปีเองแล้วนับคำผ่านพจนานุกรมเปิดในเบราว์เซอร์",
       "Company Profile · รายงานวินิจฉัย · 2×2 · เทียบคู่แข่ง · What-if · token"]],
     ["เฟสถัดไป · ฉบับใช้งานจริง", "warn", [
-      "ย้าย parameter card, V̂f และฐานอ้างอิงไปหลัง API ฝั่งเซิร์ฟเวอร์ (ความลับทางการค้า) — เบราว์เซอร์เห็นเฉพาะผลลัพธ์",
+      "บัญชีเครดิตและการตัดสิทธิ์ตามแผนบนเซิร์ฟเวอร์ทั้งหมด (ตอนนี้เซิร์ฟเวอร์ตรวจระดับแผน แต่เครดิตยังนับในเบราว์เซอร์)",
       "แผนการเชื่อมต่อ: OCR · LLM API (LIWC-22 แทนพจนานุกรมเปิด) · One Report input · Email — ดูหน้า “การเชื่อมต่อ”",
       "Google OAuth 2.0 · ช่องทางชำระเงินไทย (พร้อมเพย์ / บัตร) · บัญชีผู้ใช้ข้ามอุปกรณ์",
       "Pilot shadow log: บันทึก B_T1 คู่กับ B_EG ทุกครั้งที่ให้คะแนน (ดูการ์ดสูตรด้านบน)"]],
@@ -1601,8 +1734,9 @@ function viewArch() {
         209 บริษัท 928 บริษัท-ปี (2562–2566) ประกอบด้วย parameter card (สัมประสิทธิ์ปฏิสัมพันธ์ 4 ตัว — ไม่แสดงค่าบนหน้าจอ)
         ค่าเฉลี่ยสำหรับ mean-centring จุดตัด winsorise เมทริกซ์ Cholesky ของ V̂f
         และ<b>ฐานอ้างอิง REF-928 (928 บริษัท-ปี)</b> สำหรับจัดเปอร์เซ็นไทล์แบบ mid-rank —
-        รายชื่อ 196 บริษัทเป็นเพียงชุดแสดงผลปีบัญชี 2566 ไม่ใช่ฐานอ้างอิง ·
-        <b>ฉบับใช้งานจริง</b>ต้องย้ายทั้งสามส่วนนี้ไปหลัง API ฝั่งเซิร์ฟเวอร์</div>
+        รายชื่อ ${COMPS.length} บริษัทเป็นเพียงชุดแสดงผลปีบัญชี ${FY_SHOWN + 543} ไม่ใช่ฐานอ้างอิง ·
+        ${OIS_SRV ? "<b>ฉบับเซิร์ฟเวอร์ (ไฟล์นี้)</b>: ทั้งสามส่วนอยู่หลัง API บนเซิร์ฟเวอร์แล้ว — ไฟล์ HTML มีเฉพาะผลลัพธ์ระดับเปอร์เซ็นไทล์ (ตรวจด้วยด่าน leak check ตอน build)"
+          : "<b>ฉบับออฟไลน์ (ไฟล์นี้)</b>: ทั้งสามส่วนฝังในไฟล์ตามขอบเขตส่งมอบ #1 (ใช้ภายใต้ NDA) · <b>ฉบับเซิร์ฟเวอร์</b> (OpenInnoScore_server.html บน Render) ย้ายไว้หลัง API แล้ว"}</div>
     </div>`;
 }
 /** การ์ดสลับสูตรที่แถบสถานะแสดง — B_EG (หลัก) / B_T1 (shadow · Caution) ตามแนวทาง Pilot Use case 2 */
@@ -1617,7 +1751,7 @@ function pilotFormulaCard() {
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <span style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
         <button class="btn ${T1 ? "g" : "p"}" onclick="setPilotFormula('EG')" style="border-radius:0;padding:6px 14px;font-size:12px">B_EG (หลัก)</button>
-        <button class="btn ${T1 ? "p" : "g"}" onclick="setPilotFormula('T1')" style="border-radius:0;padding:6px 14px;font-size:12px">B_T1 (shadow · Caution)</button></span>
+        <button class="btn ${T1 ? "p" : "g"}" onclick="setPilotFormula('T1')" style="border-radius:0;padding:6px 14px;font-size:12px"${canT1() ? "" : ' disabled title="สิทธิ์ Pro ขึ้นไป"'}>B_T1 (shadow · Caution)${canT1() ? "" : " 🔒 Pro"}</button></span>
       <span style="font-size:11.5px;color:var(--ink-2)">ตอนนี้แถบสถานะทุกหน้าแสดง <b>${T1 ? "B_T1" : "B_EG"}</b>${T1 ? " พร้อมป้าย Caution" : ""}</span>
     </div>
     <div class="tw" style="margin-top:10px"><table><thead><tr><th>สูตร</th><th>นิยาม</th><th>validity (pooled)</th><th>สถานะ</th></tr></thead><tbody>
@@ -1629,6 +1763,7 @@ function pilotFormulaCard() {
 }
 /** สลับสูตรที่แสดง — เรียกจากปุ่มในหน้าสถาปัตยกรรม */
 function setPilotFormula(f) {
+  if (f === "T1" && !canT1()) { toast("การสลับเป็น B_T1 เป็นสิทธิ์ของ Pro ขึ้นไป"); return; }
   S.pilotFormula = f === "T1" ? "T1" : "EG"; save(); render();
   toast(S.pilotFormula === "T1" ? "แถบสถานะแสดง B_T1 (shadow · Caution)" : "แถบสถานะกลับไปแสดงสูตรหลัก B_EG");
 }
@@ -1748,10 +1883,13 @@ function margAmpBand(fam, pol, fem) {
   return [q(.05), q(.95)];
 }
 function margPanel(c, key) {
-  const fem = key === "fem", hi = (OCUT[fem ? "W" : "F"] || [0, fem ? .5 : .6])[1];
+  /* ช่วงแกนนอนคงที่ (ไม่ผูกกับจุดตัด winsorise เพื่อไม่ให้ปลายแกนเผยจุดตัด) */
+  const fem = key === "fem", hi = fem ? .55 : .65;
   const W = 460, H = 270, L = 46, R = 14, T = 16, B = 44, N = 26;
   const X = x => L + x / hi * (W - L - R), Y = y => H - B - clamp(y, 0, 100) / 100 * (H - T - B);
-  const xs = Array.from({ length: N }, (_, i) => hi * i / (N - 1));
+  /* โหมดเซิร์ฟเวอร์: /api/score จำลองได้เฉพาะกรรมการหญิงบนกริด k/20 (ขนาดบอร์ด 20 คน · ทีละ 5%) · กรรมการครอบครัวไม่มีทางไปเซิร์ฟเวอร์ */
+  if (OIS_SRV && !fem) return `<div class="note" style="margin:8px 0">ฉบับเซิร์ฟเวอร์ไม่คำนวณเส้นนี้ — การจำลองบนเซิร์ฟเวอร์เปิดเฉพาะจำนวนกรรมการหญิงและอายุงาน (กรรมการครอบครัวเป็นบริบท R6)</div>`;
+  const xs = OIS_SRV ? Array.from({ length: 12 }, (_, i) => i / 20) : Array.from({ length: N }, (_, i) => hi * i / (N - 1));
   const pts = xs.map(x => { const a = fem ? ampOf(c.fam, c.pol, x) : ampOf(x, c.pol, c.fem); return [x, isFinite(a) ? ampPct(a) : NaN]; });
   const ok = pts.every(p => isFinite(p[1]));
   const bands = xs.map(x => fem ? margAmpBand(c.fam, c.pol, x) : margAmpBand(x, c.pol, c.fem));
@@ -1761,8 +1899,9 @@ function margPanel(c, key) {
     + xs.slice().reverse().map((x, j) => `L${X(x).toFixed(1)} ${Y(bands[N - 1 - j][0]).toFixed(1)}`).join(" ") + "Z" : "";
   const y0 = ampPct(0), cx = Math.min(fem ? c.fem : c.fam, hi), cy = ampPct(c.amp);
   const col = fem ? "var(--s1)" : "var(--ink-3)";
-  const refX = REF_PTS.map(p => (fem ? p[8] + OM.W : p[6] + OM.F)).filter(isFinite);
-  const rug = refX.filter((_, i) => i % 3 === 0).map(v => `<line x1="${X(clamp(v, 0, hi)).toFixed(1)}" x2="${X(clamp(v, 0, hi)).toFixed(1)}" y1="${H - B + 1}" y2="${H - B + 6}" stroke="var(--ink-3)" stroke-opacity=".25"/>`).join("");
+  /* การกระจายของ REF-928 = ฮิสโตแกรมหยาบของค่าดิบ (ช่องละ 5 จุด · OIS.hist) — ไม่ใช้ค่ารายแถว */
+  const hs = (OIS.hist || {})[fem ? "W" : "F"] || [], hw = (OIS.hist || {}).w || .05, hmx = Math.max(1, ...hs);
+  const rug = hs.map((n, i) => n && i * hw < hi ? `<rect x="${X(i * hw).toFixed(1)}" y="${(H - B + 7 - 6 * n / hmx).toFixed(1)}" width="${Math.max(1, X(Math.min(hi, (i + 1) * hw)) - X(i * hw) - 1).toFixed(1)}" height="${(6 * n / hmx).toFixed(1)}" fill="var(--ink-3)" fill-opacity=".3"/>` : "").join("");
   const ticks = [0, .1, .2, .3, .4, .5, .6].filter(t => t <= hi + 1e-9);
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="mv-marg" role="img" aria-label="Marginal plot · ความชันของ promotion focus ตาม${fem ? "สัดส่วนกรรมการหญิง" : "สัดส่วนกรรมการครอบครัว"}">
     ${[0, 25, 50, 75, 100].map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/>
@@ -1772,10 +1911,10 @@ function margPanel(c, key) {
     ${area ? `<path d="${area}" fill="${col}" fill-opacity=".14" stroke="none"/>` : ""}
     <line x1="${L}" x2="${W - R}" y1="${Y(y0).toFixed(1)}" y2="${Y(y0).toFixed(1)}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
     <text x="${fem ? W - R - 2 : L + 4}" y="${(Y(y0) + (fem ? -5 : 13)).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" text-anchor="${fem ? "end" : "start"}" paint-order="stroke" stroke="var(--panel)" stroke-width="3">ความชัน = 0 (เส้นแบ่งช่องบน/ล่าง)</text>
-    ${line ? `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>` : `<text x="${(L + W - R) / 2}" y="${H / 2}" font-size="11" fill="var(--ink-3)" text-anchor="middle">กำลังคำนวณบนเซิร์ฟเวอร์…</text>`}
+    ${line ? `<path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>` : `<text x="${(L + W - R) / 2}" y="${H / 2}" font-size="11" fill="var(--ink-3)" text-anchor="middle">${OIS_SRV && !OIS_REMOTE.canScore(c.promo, c.fam, c.pol, xs[1]) ? "ฉบับเซิร์ฟเวอร์จำลองได้เฉพาะบริษัทที่มีในระบบ" : "กำลังคำนวณบนเซิร์ฟเวอร์…"}</text>`}
     ${isFinite(cy) ? `<g transform="translate(${X(cx).toFixed(1)},${Y(cy).toFixed(1)})"><circle r="8" fill="var(--panel)"/><path d="M0-6 6 0 0 6-6 0Z" fill="var(--ink)"/></g>
       <text x="${(X(cx) + (X(cx) > W - 120 ? -11 : 11)).toFixed(1)}" y="${(Y(cy) - 9).toFixed(1)}" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="${X(cx) > W - 120 ? "end" : "start"}" paint-order="stroke" stroke="var(--panel)" stroke-width="3">${esc(c.t)}</text>` : ""}
-    <text x="${(L + W - R) / 2}" y="${H - 6}" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">${fem ? "สัดส่วนกรรมการหญิง (ช่วงอ้างอิง REF-928 หลัง winsorise)" : "สัดส่วนกรรมการครอบครัว (ช่วงอ้างอิง REF-928 หลัง winsorise)"}</text>
+    <text x="${(L + W - R) / 2}" y="${H - 6}" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">${fem ? "สัดส่วนกรรมการหญิง" : "สัดส่วนกรรมการครอบครัว"}</text>
     <text transform="translate(12,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="10" fill="var(--ink-2)" text-anchor="middle">Board amplification · เปอร์เซ็นไทล์ใน REF-928</text>
   </svg>`;
 }
@@ -1785,13 +1924,13 @@ function marginalCard(c) {
     <h3>Moderation Analysis · Marginal Plot — ความชันของ CEO promotion focus แปรตามองค์ประกอบบอร์ด</h3>
     <p class="desc">เส้นแสดงว่า “board amplification” (ความชันของ promotion focus ภายใต้บอร์ดลักษณะนั้น) อยู่ที่เปอร์เซ็นไทล์เท่าใดของ REF-928
       เมื่อสัดส่วนกรรมการเปลี่ยนไปตลอดช่วงที่พบจริงในฐานอ้างอิง โดยตรึงตัวแปรอื่นไว้ที่ค่าของ ${esc(c.t)} · ◆ = ตำแหน่งปัจจุบันของ ${esc(c.t)} ·
-      ขีดสั้นใต้แกน = การกระจายของบริษัท-ปีใน REF-928 · <b>ไม่แสดงค่าสัมประสิทธิ์หรือความชันเป็นตัวเลข</b> (ความลับทางการค้า)</p>
+      แท่งเล็กใต้แกน = การกระจายของบริษัท-ปีใน REF-928 (ช่องละ 5 จุดเปอร์เซ็นต์) · <b>ไม่แสดงค่าสัมประสิทธิ์หรือความชันเป็นตัวเลข</b> (ความลับทางการค้า)</p>
     ${inD ? "" : `<div class="note warn" style="margin-bottom:10px">${esc(c.t)} อยู่นอกกลุ่มอ้างอิง (R4) — กราฟแสดงรูปแบบของฐานอ้างอิงเพื่ออธิบายโมเดลเท่านั้น</div>`}
     <div class="grid g2" style="gap:14px">
       <div><div class="mv-margh"><b>สัดส่วนกรรมการหญิง</b> <span class="pill ok">ทนต่อ FE-Poisson · Tier 1 (within-firm)</span></div>
         ${margPanel(c, "fem")}
         <p class="mv-sub">เทอมกรรมการหญิงยังมีนัยเมื่อเปลี่ยนเป็น fixed-effects Poisson — อ่านเป็นรูปแบบภายในบริษัทเดียวกันที่ค่อนข้างคงทน แต่ยังเป็น<b>ความสัมพันธ์</b> ไม่ใช่เหตุ-ผล ·
-          งานวิจัยพบว่าความสัมพันธ์มีนัยเมื่อมีกรรมการหญิง ≥ ${CRIT_N} คน (Table 4)</p></div>
+          เกณฑ์ critical mass ≥ ${CRIT_N} คน เป็น${CM_CITE}</p></div>
       <div><div class="mv-margh"><b>สัดส่วนกรรมการครอบครัว</b> <span class="pill warn">ไม่ทนต่อ FE · Tier 2 (between-firm · บริบท R6)</span></div>
         ${margPanel(c, "fam")}
         <p class="mv-sub">เทอมครอบครัวอ่อนลงจนไม่มีนัยเมื่อใช้ fixed-effects — เป็นรูปแบบระหว่างบริษัท จึงแสดงเป็นข้อมูลบริบทเท่านั้น ไม่ใช่คันโยกหรือเหตุผลเชิงบวก (R6)</p></div>
@@ -1802,12 +1941,22 @@ function marginalCard(c) {
   </div>`;
 }
 
+/** บริษัทที่ marginal plot แสดงได้ — Basic เห็นเฉพาะบริษัทของตน (S.freeCo) ตามสิทธิ์ canSeeCo ของ v2_tiers.js
+ *  ถ้าดูบริษัทอื่นไม่ได้: แสดงบริษัทของตน หรือถ้ายังไม่เลือก ใช้ "บริษัทนิรนาม" ที่ค่าเฉลี่ยของ 196 บริษัท (ไม่มีชื่อ) */
+function validCo() {
+  const c = cur(), ok = typeof canSeeCo === "function" ? canSeeCo(c.t) : true;
+  if (ok) return c;
+  if (S.freeCo && byT[S.freeCo]) return coOf(S.freeCo);
+  const avg = k => COMPS.reduce((t, x) => t + (+x[k] || 0), 0) / COMPS.length;
+  const fam = avg("fam"), fem = avg("fem"), amp = ampOf(fam, 1, fem);
+  return { t: "บริษัทนิรนาม", n: "ค่าเฉลี่ย 196 บริษัท", ind: c.ind, fam, fem, pol: 1, amp, anon: true };
+}
 function viewValid() {
-  const VY = DATA.validYear, c = cur();
+  const VY = DATA.validYear, c = validCo();
   const vv = validity4(), rm = validRemark();
   const GR = { pass: ["ผ่านเกณฑ์", "ok"], caution: ["ควรระวัง", "warn"], fail: ["ไม่ผ่าน", "crit"] };
   const VD = { PASS: ["✓ PASS", "ok"], CAUTION: ["⚠ CAUTION", "warn"], FAIL: ["✕ FAIL", "crit"] };
-  const sorted = [...COMPS].sort((a, b) => a.B - b.B);
+  const sorted = [...COMPS].sort((a, b) => OIS_SRV ? a.ois - b.ois : a.B - b.B);   // OIS เรียงตาม B เสมอ (โหมดเซิร์ฟเวอร์ไม่มี B ดิบ)
   const dec = Array.from({ length: 10 }, (_, i) => {
     const g = sorted.slice(Math.floor(i * sorted.length / 10), Math.floor((i + 1) * sorted.length / 10));
     return g.reduce((t, x) => t + (x.oi || 0), 0) / (g.length || 1);
@@ -1826,7 +1975,7 @@ function viewValid() {
 
   const decCard = `<div class="card" style="margin-bottom:14px">
       <h3>ยิ่งคะแนนสูง กิจกรรมนวัตกรรมเปิดยิ่งมากหรือไม่ (ภาพตัดขวางชุดแสดงผล)</h3>
-      <p class="desc">แบ่งบริษัทในชุดแสดงผลปีบัญชี 2566 (${COMPS.length} บริษัท — ไม่ใช่ฐานอ้างอิง REF-928) เป็น 10 กลุ่มตาม Signal B แล้วดูค่าเฉลี่ยกิจกรรมนวัตกรรมเปิดของแต่ละกลุ่ม ·
+      <p class="desc">แบ่งบริษัทในชุดแสดงผลปีบัญชี ${FY_SHOWN + 543} (${COMPS.length} บริษัท — ไม่ใช่ฐานอ้างอิง REF-928) เป็น 10 กลุ่มตาม Signal B แล้วดูค่าเฉลี่ยกิจกรรมนวัตกรรมเปิดของแต่ละกลุ่ม ·
         Decile lift ${fmt(P.pooled.lift, 2)}× ของงานวิจัยคำนวณบนแผงเต็ม 928 บริษัท-ปี จึงไม่เท่ากับภาพนี้พอดี</p>
       <div style="display:flex;align-items:flex-end;gap:6px;height:150px;margin:14px 0 6px">
         ${dec.map((v, i) => `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px">
@@ -1926,7 +2075,7 @@ function viewValid() {
 
   const proWall = `<div class="card" style="margin-bottom:14px">
       <h3>ตัวชี้วัดเต็มชุดและความแม่นรายปี <span class="pill mute">🔒 สิทธิ์ Pro</span></h3>
-      <p class="desc" style="margin-bottom:0">ผู้ใช้ฟรีเห็น remark สองระดับด้านบน (แนบไปกับรายงานทุกฉบับ) และ Marginal plot ·
+      <p class="desc" style="margin-bottom:0">ผู้ใช้ Basic เห็น remark สองระดับด้านบน (แนบไปกับรายงานทุกฉบับ) และ Marginal plot ·
         ตาราง Table 3–5 รายปี รายอุตสาหกรรม out-of-sample bootstrap ตัวเปรียบเทียบ และ Tier × quadrant เป็นสิทธิ์ของผู้ใช้ Pro
         <button class="lnk" data-pro="1">สลับผู้ใช้สาธิตเป็น Pro</button></p></div>`;
 
@@ -1978,7 +2127,7 @@ function viewProfile() {
   const tierLine = inD
     ? `<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:30px;font-weight:600;letter-spacing:-.03em">Tier ${vd.tier}</span>
         <span style="font-size:14px">OpenInnoScore <b>${fmt(c.ois ?? c.ipi, 1)}</b> <span style="color:var(--ink-3)">(เปอร์เซ็นไทล์ในฐานอ้างอิง REF-928 · ไม่ใช่ความน่าจะเป็น)</span></span></div>
-       <div style="font-size:12px;color:var(--ink-2);margin-top:3px">ช่วง 90% ${fmt(vd.band[0], 1)}–${fmt(vd.band[1], 1)} (Krinsky–Robb) · ในอุตสาหกรรม OIS ${fmt(c.oisInd ?? c.iip, 0)} · อันดับ ${rank} จาก ${peers.length} (ปีบัญชี 2566)</div>`
+       <div style="font-size:12px;color:var(--ink-2);margin-top:3px">ช่วง 90% ${fmt(vd.band[0], 1)}–${fmt(vd.band[1], 1)} (Krinsky–Robb) · ในอุตสาหกรรม OIS ${fmt(c.oisInd ?? c.iip, 0)} · อันดับ ${rank} จาก ${peers.length} (ปีบัญชี ${(c.fy || FY_SHOWN) + 543} · ชุดแสดงผล ${COMPS.length} บริษัท)</div>`
     : `<div style="font-size:16px;font-weight:500">นอกกลุ่มอ้างอิง — ไม่แสดง tier</div><div style="font-size:12px;color:var(--ink-2)">บริษัทนอกอุตสาหกรรม 1–7 (R4)</div>`;
   const quadLine = `<div style="display:flex;align-items:center;gap:9px"><span style="width:12px;height:12px;border-radius:99px;background:${z.c};display:inline-block"></span>
       <b style="font-size:15px">${esc(z.q)}</b> <span style="color:var(--ink-2)">· ${esc(z.th)}</span></div>
@@ -1991,11 +2140,11 @@ function viewProfile() {
     : `<div style="font-size:12.8px">ไม่มี bottom line สำหรับบริษัทนอกกลุ่มอ้างอิง (R4)</div>`;
 
   return pageHead("Company Profile", `${c.t} · ${c.n}`,
-    `${esc(IND[c.ind] || "นอกกลุ่มอ้างอิง")} · ภาพรวมค่าป้อนปีบัญชี 2566 และผลลัพธ์ 4 ชั้นของ OpenInnoScore — อ่านเป็นตำแหน่งบนฐานอ้างอิง REF-928 ${ASSOC}`)
+    `${esc(IND[c.ind] || "นอกกลุ่มอ้างอิง")} · ภาพรวมค่าป้อนปีบัญชี ${(c.fy || FY_SHOWN) + 543} และผลลัพธ์ 4 ชั้นของ OpenInnoScore — อ่านเป็นตำแหน่งบนฐานอ้างอิง REF-928 ${ASSOC}`)
     + `<div class="grid g-side">
     <div class="stack">
       <div class="card">
-        <h3>ค่าป้อนปีบัญชี 2566${isEdited() ? ` <span class="pill warn" style="font-size:9.5px">แก้ค่าเองใน Zone A</span>` : ""}</h3>
+        <h3>ค่าป้อนปีบัญชี ${(c.fy || FY_SHOWN) + 543}${isEdited() ? ` <span class="pill warn" style="font-size:9.5px">แก้ค่าเองใน Zone A</span>` : ""}</h3>
         <p class="desc">สองค่าแรกที่ติดป้าย “เข้าสูตร” คือองค์ประกอบของ B = cP × amp · ที่เหลือเป็นบริบท</p>
         ${inputs.map(([k, v, u, cls]) => `<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px">
           <div><div>${k}</div><div style="font-size:10.5px;color:var(--ink-3)">${u}</div></div>
@@ -2005,7 +2154,8 @@ function viewProfile() {
       <div class="card" style="text-align:center">
         <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">OpenInnoScore</div>
         ${inD ? gauge(c.ipi, "เปอร์เซ็นไทล์ในฐานอ้างอิง") : `<div style="padding:22px 0;color:var(--ink-3)">ไม่แสดง tier / เปอร์เซ็นไทล์ (R4)</div>`}
-        <div style="font-size:11px;color:var(--ink-2)">เทียบค่าเฉลี่ยฐานอ้างอิง: กรรมการหญิง ${pct1(OM.W)} · กรรมการครอบครัว ${pct1(OM.F)} · political ties ${pct1(OM.G)} · promotion ${fmt(OM.P, 2)}</div>
+        <div style="font-size:11px;color:var(--ink-2)">ตำแหน่งเทียบฐานอ้างอิง REF-928: CEO Promotion Focus ${c.cP >= 0 ? "เหนือ" : "ต่ำกว่า"}ค่าเฉลี่ย (เปอร์เซ็นไทล์ ${fmt(c.dp, 0)}) ·
+          Board Amplification เปอร์เซ็นไทล์ ${fmt(ampPct(c.amp), 0)} — ค่าเฉลี่ยและจุดตัดในบันทึกพารามิเตอร์ไม่แสดงบนหน้าจอ</div>
       </div>
     </div>
     <div class="stack">
@@ -2119,10 +2269,10 @@ function wireSector(h) {
   const cs = h.querySelector("#btnSecCsv");
   if (cs) cs.onclick = () => {
     const pool = indComps(+S.ind).slice().sort((a, b) => b.ipi - a.ipi);
-    const head = ["อันดับ", "ตัวย่อ", "ชื่อบริษัท", "อุตสาหกรรม", "โซน", "OI", "CEO_Drive", "Board_Amp_pct", "Board_Amp_raw",
+    const head = ["อันดับ", "ตัวย่อ", "ชื่อบริษัท", "อุตสาหกรรม", "โซน", "OIS", "CEO_Drive_pct", "Board_Amp_pct",
       "promotion_focus", "กรรมการหญิง_%", "กรรมการครอบครัว_%", "สายนโยบาย", "อายุงานเฉลี่ย_ปี", "นวัตกรรมเปิด"].join(",");
     const rows = pool.map((x, i) => [i + 1, x.t, `"${x.n}"`, `"${IND[x.ind]}"`, `"${ZONES[zoneOf(x.promo, x.amp)].l}"`,
-      x.ipi, x.dp, ampPct(x.amp), x.amp.toFixed(4), x.promo, (x.fem * 100).toFixed(1), (x.fam * 100).toFixed(1),
+      x.ipi, x.dp, ampPct(x.amp), x.promo, (x.fem * 100).toFixed(1), (x.fam * 100).toFixed(1),
       x.pol ? "มี" : "ไม่มี", x.ten.toFixed(1), x.oi].join(","));
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["﻿" + [head, ...rows].join("\n")], { type: "text/csv;charset=utf-8" }));
@@ -2162,6 +2312,12 @@ function setMode(m) { document.body.dataset.mode = m; save(); }
 /** เข้าระบบ — ล็อกอินใหม่เปิดหน้า Company Profile เสมอ (F2) · restore = เปิดจาก localStorage ให้คงหน้าเดิม */
 function enter(mail, restore) {
   S.user = mail || $("#gMail").value.trim() || "guest@openinnoscore.co";
+  /* โหมดเซิร์ฟเวอร์ (PLAN_SOURCE=server): ระดับสิทธิ์จาก /api/me ชนะตัวเลือกบนหน้าเข้าใช้เสมอ (ภาคผนวก ง ใหม่ · C)
+     — คืนค่าที่เซิร์ฟเวอร์กำหนดทันที และถามซ้ำหลังเข้าใช้ (กรณีกดเข้าใช้ก่อน /api/me ตอบ) */
+  if (S.planSrv) S.plan = S.planSrv;
+  if (OIS_SRV && window.OIS_API && typeof OIS_API.me === "function") Promise.resolve(OIS_API.me()).then(me => {
+    if (me && me.plan && typeof trApplyServerPlan === "function") trApplyServerPlan(me);
+  }).catch(() => { });
   if (!restore) S.view = "profile";
   save();
   $("#gate").style.display = "none";
