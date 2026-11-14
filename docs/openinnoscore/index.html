@@ -14458,7 +14458,9 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
   const recOf = a => (allRecs()[a || acct()] || null);
   const setRec = (rec, a) => { const o = allRecs(); if (rec) o[a || acct()] = rec; else delete o[a || acct()]; LSset(CONSENT_KEY, o); };
   const valid = r => !!(r && r.ver === CONSENT_VER && r.signed_at && !r.withdrawn);
-  const needed = () => cfg().srv === "abroad" ? ["c1", "c2", "c3", "c4"] : ["c1", "c2", "c3"];
+  /* ข้อ 4 (โอนข้อมูลไปต่างประเทศ) — ผู้วิจัยสั่งซ่อนไว้ก่อน (14 พ.ย.) จนกว่าจะเริ่มเก็บข้อมูลจริง: เปลี่ยนเป็น true เพื่อเปิด */
+  const XFER_ON = false;
+  const needed = () => XFER_ON && cfg().srv === "abroad" ? ["c1", "c2", "c3", "c4"] : ["c1", "c2", "c3"];
 
   /* ---------------------------------------------------------------- เนื้อเอกสาร (บล็อก) */
   const PIS = () => wfDeep(EN() ? PIS_EN : PIS_TH);
@@ -14488,7 +14490,7 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
       [L("วันและเวลาที่ลงนาม", "Date and time of signing"), dispT(rec.signed_at, rec.signed_at_th) + L(" (เวลาประเทศไทย)", " (Thailand time)")],
       [L("รายการที่ยินยอม", "Items consented to"), itemsTxt(rec.items || [])],
       [L("ฉบับของเอกสาร", "Document version"), DOC_VERSION()],
-      [L("ประเทศที่ตั้งของเซิร์ฟเวอร์", "Server location"), rec.srv === "abroad" ? (rec.country || srvCountry()) : L("ประเทศไทย", "Thailand")],
+      ...(XFER_ON ? [[L("ประเทศที่ตั้งของเซิร์ฟเวอร์", "Server location"), rec.srv === "abroad" ? (rec.country || srvCountry()) : L("ประเทศไทย", "Thailand")]] : []),
       [L("เลขที่หนังสือรับรองจริยธรรม", "Ethics approval number"), rec.approval || approvalNo()],
       [L("ผู้วิจัยหลัก", "Principal researcher"), PI_NAME()]];
   }
@@ -14496,7 +14498,7 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
       ${sigRows(rec).map(([a, b]) => `<tr><td>${E(a)}</td><td>${E(b)}</td></tr>`).join("")}</table></div>` : "";
   /** ส่วนหนังสือแสดงความยินยอม — chk = สถานะช่องที่ติ๊ก · rec = บันทึกที่ลงนามแล้ว (ช่องถูกล็อก) */
   function consentHTML(chk, rec) {
-    let ci = 0; const abroad = (rec ? rec.srv : cfg().srv) === "abroad";
+    let ci = 0; const abroad = XFER_ON && (rec ? rec.srv : cfg().srv) === "abroad";
     return CONSENT().map(b => {
       if (b[0] === "check") {
         const k = "c" + (++ci); if (k === "c4" && !abroad) return "";
@@ -14510,7 +14512,7 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
       return "";
     }).join("");
   }
-  const srvNote = () => cfg().srv === "abroad"
+  const srvNote = () => !XFER_ON ? "" : cfg().srv === "abroad"
     ? `<div class="irb-warnbox">${L(`เซิร์ฟเวอร์ของระบบตั้งอยู่นอกประเทศไทย (${E(srvCountry())}) ข้อมูลของท่านจะถูกส่งไปจัดเก็บที่ประเทศดังกล่าวตามข้อ 11.5 ระบบจึงขอความยินยอมเพิ่มในข้อ 4`,
         `The system's server is located outside Thailand (${E(srvCountry())}). Your data will be transferred to and stored in that country as described in item 11.5, so the system asks for additional consent in item 4.`)}</div>`
     : `<div class="irb-note">${L("เซิร์ฟเวอร์ของระบบตั้งอยู่ในประเทศไทย ข้อมูลจัดเก็บภายในประเทศตามข้อ 11.5", "The system's server is located in Thailand; data are stored in the country as described in item 11.5.")}</div>`;
@@ -14541,7 +14543,7 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
   function dlDoc(kind, rec) {
     rec = rec || recOf();
     if (kind === "pis") return dl(L("เอกสารชี้แจงชุดที่3.txt", "Information_sheet_Set3.txt"), pisTitle() + L(" ชุดที่ 3", " Set 3") + "\n\n" + plainBlocks(PIS()));
-    const abroad = rec ? rec.srv === "abroad" : cfg().srv === "abroad";
+    const abroad = XFER_ON && (rec ? rec.srv === "abroad" : cfg().srv === "abroad");
     let ci = 0;
     const body = consentTitle() + "\n\n" + plainBlocks(CONSENT().filter(b => b[0] !== "table" && b[0] !== "cap").map(b => {
       if (b[0] !== "check") return b; const k = "c" + (++ci); if (k === "c4" && !abroad) return null;
@@ -14678,7 +14680,7 @@ VIEWS.aireport = viewAi; WIRES2.aireport = wireAi;
       : `<div class="irb-warnbox">${L("บัญชีนี้ยังไม่มีบันทึกการลงนามยินยอมที่ใช้ได้", "This account has no valid consent record.")}</div>`;
     const c = cfg();
     const admin = isAdmin() ? `<div class="card irb-admin" style="margin-top:14px"><h3>${L("การตั้งค่าของผู้วิจัย (ผู้ดูแล)", "Researcher settings (administrator)")}</h3>
-        <p class="desc">${L("ค่าที่แสดงในหน้าลงนาม: ที่ตั้งเซิร์ฟเวอร์ (ข้อ 4 แสดงและบังคับเฉพาะนอกประเทศไทย) และเลขที่หนังสือรับรองจริยธรรม · บริษัทสาธิตของงานตามสถานการณ์ตั้งได้ในหน้าแบบสอบถาม", "Values shown on the consent page: server location (item 4 is shown and required only outside Thailand) and the ethics approval number · the scenario-task demonstration company is set on the questionnaire page")}</p>
+        <p class="desc">${XFER_ON ? "" : `<b>${L("ข้อ 4 (โอนข้อมูลไปต่างประเทศ) ปิดไว้ชั่วคราวจนกว่าจะเริ่มเก็บข้อมูลจริง — ค่าที่ตั้งด้านล่างยังไม่มีผลกับหน้าลงนาม", "Item 4 (transfer abroad) is switched off until data collection starts — the server setting below has no effect on the signing page yet")}</b><br>`}${L("ค่าที่แสดงในหน้าลงนาม: ที่ตั้งเซิร์ฟเวอร์ (ข้อ 4 แสดงและบังคับเฉพาะนอกประเทศไทย) และเลขที่หนังสือรับรองจริยธรรม · บริษัทสาธิตของงานตามสถานการณ์ตั้งได้ในหน้าแบบสอบถาม", "Values shown on the consent page: server location (item 4 is shown and required only outside Thailand) and the ethics approval number · the scenario-task demonstration company is set on the questionnaire page")}</p>
         <div class="irb-grid3"><label class="pl-lab">${L("ที่ตั้งเซิร์ฟเวอร์", "Server location")}<select class="sel" id="irbCfgSrv"><option value="th"${c.srv === "th" ? " selected" : ""}>${L("ในประเทศไทย", "In Thailand")}</option><option value="abroad"${c.srv === "abroad" ? " selected" : ""}>${L("นอกประเทศไทย", "Outside Thailand")}</option></select></label>
           <label class="pl-lab">${L("ประเทศ (กรณีนอกประเทศไทย)", "Country (if outside Thailand)")}<input class="inp" id="irbCfgCountry" value="${E(c.country)}"></label>
           <label class="pl-lab">${L("เลขที่หนังสือรับรองจริยธรรม", "Ethics approval number")}<input class="inp" id="irbCfgAppr" value="${E(c.approval)}"></label></div>
