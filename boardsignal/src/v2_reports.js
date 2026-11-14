@@ -62,8 +62,9 @@ const M1A = window.M1A = (() => {
   /** มุมมอง (lens) — ชื่อไม่ระบุประเภทองค์กร (#12) */
   function lens(id) {
     id = id || (typeof rpUcId === "function" ? rpUcId() : "board");
-    if (id === "credit") return { id, code: "UC1", lab: lab("uc1"), readers: Tx("Relationship team", "ทีมดูแลความสัมพันธ์ลูกค้า"), uc1: true };
-    if (id === "bankbod") return { id, code: "BP", lab: lab("bp"), readers: Tx("Company secretary / board", "เลขานุการบริษัท / คณะกรรมการ") };
+    if (typeof ucId === "function") id = ucId(id);
+    if (id === "uc1") return { id, code: "UC1", lab: lab("uc1"), readers: Tx("Relationship team", "ทีมดูแลความสัมพันธ์ลูกค้า"), uc1: true };
+    if (id === "bprofile") return { id, code: "BP", lab: lab("bp"), readers: Tx("Company secretary / board", "เลขานุการบริษัท / คณะกรรมการ") };
     if (id === "board") return { id, code: "UC3", lab: lab("uc3"), readers: Tx("Company secretary / board", "เลขานุการบริษัท / คณะกรรมการ"), uc3: true };
     return { id, code: id, lab: id, readers: "—" };
   }
@@ -115,7 +116,7 @@ const M1A = window.M1A = (() => {
 const RP_ST ={ todo: "ยังไม่เริ่ม", doing: "กำลังทำ", done: "เสร็จ", late: "เลื่อน" };
 const RP_SRC = { grid: "Grid", matrix: "Grid", compass: "Compass", peer: "Peer", whatif: "What-if", bod: "BOD",
   res: "มติ", report: "Insight" };
-const RP_UC = { board: "BOD Evaluation", credit: "UC1 · ความสัมพันธ์ลูกค้า (P2)", search: "Nomination", investor: "Engagement", bankbod: "Board Profile (นอกกลุ่มอ้างอิง)", invest: "Engagement", cg: "CG / เลขานุการบริษัท",
+const RP_UC = { board: "BOD Evaluation", uc1: "UC1 · ความสัมพันธ์ลูกค้า (P2)", search: "Nomination", investor: "Engagement", bprofile: "Board Profile (นอกกลุ่มอ้างอิง)", invest: "Engagement", cg: "CG / เลขานุการบริษัท",
   strategy: "ฝ่ายกลยุทธ์", consult: "ที่ปรึกษา", advisor: "ที่ปรึกษา", mgmt: "ฝ่ายจัดการ" };
 const rpToday = () => new Date().toISOString().slice(0, 10);
 const rpIso = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ""));
@@ -127,6 +128,7 @@ function rpUcId() {
 }
 function rpUcLabel(id) {
   if (!id) return "—";
+  if (typeof ucId === "function") id = ucId(id);   // รหัสเดิมที่บันทึกไว้ (credit / bankbod)
   try { if (typeof USECASES !== "undefined" && Array.isArray(USECASES)) { const u = USECASES.find(x => x.id === id); if (u) return u.short || u.lab || id; } } catch (e) { }
   try { if (typeof ucLens === "function") { const u = ucLens(); if (u && u.id === id && (u.short || u.lab)) return u.short || u.lab; } } catch (e) { }
   return RP_UC[id] || id;
@@ -557,7 +559,7 @@ function wireFollowup(h) {
   });
   const csv = h.querySelector("#fuCsv"); if (csv) csv.onclick = () => {
     const rows = fuRows();
-    const uc1 = rpUcId() === "credit" || rows.some(r => r.uc === "credit");
+    const uc1 = rpUcId() === "uc1" || rows.some(r => (typeof ucId === "function" ? ucId(r.uc) : r.uc) === "uc1");
     rpDl(`ois_followup_${new Date().getFullYear() + 543}.csv`, rpCsv([...(uc1 ? [[M1A.lab("supporting")]] : []), ["param_version", M1A.ver()], ["บริษัท", "ประเด็น", "ที่มา", "มุมมอง use case", "ข้อสรุปจากการหารือ", "มติ", "ผู้รับผิดชอบ (ตำแหน่ง)", "กำหนดติดตาม", "สถานะ", "เกินกำหนด"].map(x => typeof b5H === "function" ? b5H(x) : x),
       ...rows.map(r => [r.co, rpAnon(r.issue, r.co), r.src, rpUcLabel(r.uc), rpAnon(r.concl, r.co), rpAnon(r.dec, r.co), r.own, r.due, RP_ST[r.st] || r.st, r.late ? "ใช่" : ""])]));
     toast(`ส่งออก ${rows.length} รายการ`);

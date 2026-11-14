@@ -53,10 +53,10 @@ TOOLS = [
     {"name": "get_board_questions",
      "title": "คำถามหารือของคณะกรรมการ",
      "description": "คำถามหารือ 3 ข้อ หลักฐานที่ควรตรวจ และสิ่งที่ยังสรุปไม่ได้ ตาม quadrant ของบริษัทและมุมมองผู้ใช้ "
-                    "(board = ประเมินบอร์ดตัวเอง, credit = UC1 ความสัมพันธ์กับลูกค้าขององค์กรนำร่อง (P2), search = สรรหากรรมการ, investor = ผู้ถือหุ้น). " + OUTPUT_ONLY,
+                    "(board = ประเมินบอร์ดตัวเอง, uc1 = UC1 ความสัมพันธ์กับลูกค้าขององค์กรนำร่อง (P2), search = สรรหากรรมการ, investor = ผู้ถือหุ้น). " + OUTPUT_ONLY,
      "inputSchema": {"type": "object", "required": ["ticker"], "properties": {
          "ticker": {"type": "string"},
-         "usecase": {"type": "string", "enum": ["board", "credit", "search", "investor"], "default": "board"}}},
+         "usecase": {"type": "string", "enum": ["board", "uc1", "search", "investor"], "default": "board"}}},
      "annotations": {"readOnlyHint": True, "openWorldHint": False}},
     {"name": "draft_561_outline",
      "title": "โครงร่าง 56-1 One Report ส่วนที่ 2 ข้อ 7–8",
@@ -72,7 +72,7 @@ TOOLS = [
                  "action": {"type": "string"}, "status": {"type": "string", "description": "completed | in_progress | planned"},
                  "approved": {"type": "boolean", "description": "ผ่านการอนุมัติของคณะกรรมการแล้วหรือไม่"},
                  "date": {"type": "string"}, "owner": {"type": "string", "description": "ตำแหน่ง/คณะกรรมการชุดย่อย"}}}},
-         "usecase": {"type": "string", "enum": ["board", "credit", "search", "investor"], "default": "board"}}},
+         "usecase": {"type": "string", "enum": ["board", "uc1", "search", "investor"], "default": "board"}}},
      "annotations": {"readOnlyHint": True, "openWorldHint": False}},
 ]
 

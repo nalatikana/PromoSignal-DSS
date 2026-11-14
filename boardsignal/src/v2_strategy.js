@@ -16,7 +16,7 @@
      name  = ชื่อที่ลูกค้าใช้อยู่ (Deliver / Discipline / Develop / Discover)
      paper = ชื่อตามบทความวิจัย (OIS.quadName: Amplified drive / Constrained drive / Consistent restraint / Untapped board)
      th · desc = คำอธิบายสั้น/ยาว · head · sub · shows · cannot · qs · ev · ask = เนื้อหาประเด็นสำหรับบอร์ด (มุมมองพื้นฐาน)
-     uc.{credit|search|investor} = ถ้อยคำตามมุมมองการใช้งาน
+     uc.{uc1|search|investor} = ถ้อยคำตามมุมมองการใช้งาน
    ZONES[k].l / .th / .q / .d ของ v2_app.js ถูกผูกให้อ่านจากวัตถุนี้ (getter) จึงเปลี่ยนตามทุกจุดที่ใช้ ZONES
    ============================================================================ */
 const ZONE_CFG = window.ZONE_CFG = {
@@ -82,7 +82,7 @@ const ZONE_CFG = window.ZONE_CFG = {
 const UC_TEXT = {
   /* MVP 1 (F3 · #14): มุมมอง UC1 = โปรแกรมความสัมพันธ์กับลูกค้า — คำถามด้านความสัมพันธ์/นวัตกรรมเท่านั้น
      ไม่อ้างถึงคำขอใด ๆ ของลูกค้า และไม่มีคำถามเรื่องแผนชำระคืน (ตัดข้อ 3 เดิม) · ถ้อยคำผ่านกติกาห้ามใช้คำของที่ปรึกษา 14 พ.ย. */
-  credit: {
+  uc1: {
     A: { qs: ["ชวนลูกค้าเล่าว่าเลือกพันธมิตรด้านนวัตกรรมอย่างไร และอยากขยายเครือข่ายความร่วมมือไปทางใดในปีถัดไป",
               "ลูกค้าสื่อสารการเติบโตผ่านพันธมิตรชัดเจน — ชวนคุยว่าคณะกรรมการติดตามการคัดเลือกพันธมิตร การเรียนรู้ และเกณฑ์หยุดโครงการอย่างไร"],
          ev: ["ตัวอย่างโครงการร่วมพัฒนาที่ลูกค้าเปิดเผยต่อสาธารณะ (รายงานประจำปี / ข่าวประกาศ)",
@@ -154,8 +154,8 @@ const UC_TEXT = {
   },
 };
 /* ถ้อยคำตามมุมมองการใช้งานย้ายเข้า ZONE_CFG[k].uc — UC_TEXT เหลือเป็นทางเข้าเดิมที่อ่านจาก ZONE_CFG */
-["credit", "search", "investor"].forEach(u => ["A", "B", "C", "D"].forEach(k => { (ZONE_CFG[k].uc = ZONE_CFG[k].uc || {})[u] = UC_TEXT[u][k]; }));
-["credit", "search", "investor"].forEach(u => { UC_TEXT[u] = {}; ["A", "B", "C", "D"].forEach(k =>
+["uc1", "search", "investor"].forEach(u => ["A", "B", "C", "D"].forEach(k => { (ZONE_CFG[k].uc = ZONE_CFG[k].uc || {})[u] = UC_TEXT[u][k]; }));
+["uc1", "search", "investor"].forEach(u => { UC_TEXT[u] = {}; ["A", "B", "C", "D"].forEach(k =>
   Object.defineProperty(UC_TEXT[u], k, { enumerable: true, get: () => ZONE_CFG[k].uc[u] })); });
 /** เนื้อหาฐานประจำช่อง — ชื่อเดิม COMPASS ชี้ไปที่ ZONE_CFG (วัตถุเดียวกัน) */
 const COMPASS = ZONE_CFG;
@@ -177,8 +177,11 @@ function zoneName(k, short) {
 window.zoneNamesAll = () => ["A", "B", "C", "D"].flatMap(k => [ZONE_CFG[k].name, ZONE_CFG[k].paper]).filter(Boolean);
 /* MVP 1 · ขอบเขตฉบับนำร่อง (X #8 #13 #19) — แท็บมุมมองแสดงเฉพาะ UC1 · UC3 · Board Profile
    มุมมอง Executive Search และ Investor ยังอยู่ในโค้ด แต่ซ่อนด้วยค่าตั้งนี้ (ไม่ลบ เพื่อเปิดคืนได้เมื่อมีงานวิจัยรองรับ) */
-const GX_PILOT = window.GX_PILOT = { hiddenLenses: ["search", "investor"], order: ["credit", "board", "bankbod"] };
-const PRIMARY_UC = window.PRIMARY_UC = ["credit", "board", "bankbod"];
+const GX_PILOT = window.GX_PILOT = { hiddenLenses: ["search", "investor"], order: ["uc1", "board", "bprofile"] };
+const PRIMARY_UC = window.PRIMARY_UC = ["uc1", "board", "bprofile"];
+/* รหัสมุมมองเดิม (ก่อน MVP 1 รอบ 2) ที่อาจค้างใน localStorage / ประวัติ / ลิงก์ — อ่านแล้วแปลงเป็นรหัสใหม่ */
+const UC_LEGACY = window.UC_LEGACY = { credit: "uc1", bankbod: "bprofile" };
+const ucId = window.ucId = id => UC_LEGACY[id] || id;
 const PRIMARY_UC_NOTE = "ฉบับนำร่อง MVP 1 แสดงเฉพาะมุมมอง UC1 · UC3 และ Board Profile (นอกกลุ่มอ้างอิง)";
 const m1SupTH = "ข้อมูลประกอบ — ไม่ใช่ข้อมูลเข้าแบบจำลองการตัดสินใจขององค์กรนำร่อง";
 const m1SupEN = "Supporting information — not an input to the pilot organisation's decision models";
@@ -187,8 +190,8 @@ const USECASES = [
     adapt: (b) => ({ qs: b.qs.slice(0, 3), ev: b.ev.slice(), ask: b.ask, askLabel: "เรื่องที่ให้บอร์ดพิจารณา",
       audience: "เลขานุการบริษัท / คณะกรรมการ",
       note: "ใช้ประกอบการประเมินตนเองของคณะกรรมการ (BOD Evaluation) ระดับคณะ — ไม่ประเมินกรรมการรายบุคคล" }) },
-  { id: "credit", lab: "UC1 · โปรแกรมความสัมพันธ์กับลูกค้า (P2)", en: "UC1 · Client relationship (P2)", short: "UC1 · Client relationship", audience: "RM / ทีมดูแลความสัมพันธ์ลูกค้า", placeable: true,
-    adapt: (b, c, k) => ({ qs: UC_TEXT.credit[k].qs, ev: UC_TEXT.credit[k].ev,
+  { id: "uc1", lab: "UC1 · โปรแกรมความสัมพันธ์กับลูกค้า (P2)", en: "UC1 · Client relationship (P2)", short: "UC1 · Client relationship", audience: "RM / ทีมดูแลความสัมพันธ์ลูกค้า", placeable: true,
+    adapt: (b, c, k) => ({ qs: UC_TEXT.uc1[k].qs, ev: UC_TEXT.uc1[k].ev,
       ask: "ข้อมูลประกอบสำหรับ RM — ไม่ใช่ข้อเสนอแนะ · บันทึกคำตอบของลูกค้าและเอกสารที่ได้รับไว้ในรายงานเยี่ยมลูกค้า",
       askLabel: "ข้อมูลประกอบ — ไม่ใช่ข้อเสนอแนะ", audience: "RM / ทีมดูแลความสัมพันธ์ลูกค้า",
       note: "political ties และความเป็นกิจการครอบครัวไม่ใช้เป็นเหตุผลในการตัดสินใจใด ๆ ขององค์กรนำร่อง ไม่ว่าทางบวกหรือทางลบ (R6) · คำถามด้านบนใช้ชวนลูกค้าคุยเรื่องความสัมพันธ์และนวัตกรรม ไม่ใช่เกณฑ์ให้คะแนนลูกค้า" }) },
@@ -202,13 +205,14 @@ const USECASES = [
       ask: "ประเด็นสำหรับการประชุม engagement กับฝ่ายจัดการและคณะกรรมการ",
       askLabel: "ประเด็นสำหรับการประชุม engagement", audience: "ผู้จัดการกองทุน",
       note: "ตำแหน่งเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์ผลตอบแทนหรือราคาหุ้น" }) },
-  { id: "bankbod", lab: "Board Profile (นอกกลุ่มอ้างอิง)", en: "Board Profile (outside the reference group)", short: "Board Profile", audience: "เลขานุการบริษัท / คณะกรรมการ", placeable: false,
+  { id: "bprofile", lab: "Board Profile (นอกกลุ่มอ้างอิง)", en: "Board Profile (outside the reference group)", short: "Board Profile", audience: "เลขานุการบริษัท / คณะกรรมการ", placeable: false,
     adapt: () => null },
 ];
 const gxLensHidden = id => (GX_PILOT.hiddenLenses || []).includes(id);
 const gxLensesShown = () => GX_PILOT.order.map(id => USECASES.find(u => u.id === id)).filter(u => u && !gxLensHidden(u.id));
 const ucLab = u => (typeof S === "object" && S.lang === "EN" && u.en) ? u.en : u.lab;
 function ucLens() {
+  if (UC_LEGACY[S.uc]) S.uc = UC_LEGACY[S.uc];
   const id = gxLensHidden(S.uc) ? "board" : (S.uc || "board");   // มุมมองที่ซ่อนเข้าถึงไม่ได้แม้ผ่านค่าที่จำไว้/ลิงก์ตรง
   return USECASES.find(u => u.id === id) || USECASES[0];
 }
@@ -467,7 +471,7 @@ function scSet(k, v) { const o = scGet(); o[k] = v; (S.sc || (S.sc = {}))[SKEY()
 /* ค่าตั้งของหน้า (มุมมอง Use case · โหมดตาราง) — เก็บคนละกุญแจ เพราะ save() เดิมเขียนทับทั้งก้อน */
 const LS_GX = LS + "_gx";
 (function gxLoad() {
-  try { const o = JSON.parse(localStorage.getItem(LS_GX) || "null") || {};
+  try { const o = JSON.parse(localStorage.getItem(LS_GX) || "null") || {}; o.uc = ucId(o.uc);
     if (S.uc === undefined) S.uc = USECASES.some(u => u.id === o.uc) ? o.uc : "board";
     if (S.gxTable === undefined) S.gxTable = !!o.tb;
     S.gxPath = false;            /* F9 · G6: ชั้นจุดอ้างอิงปิดทุกครั้งที่เปิดแอป (ไม่จำค่า) */
@@ -553,8 +557,8 @@ const gxPeersOf = (c, show) => show && gxMode() === "peers"
   ? (typeof peersFor === "function" ? peersFor(c) : (S.peers || [])).map(t => byT[t]).filter(x => x && x.t !== c.t).slice(0, 3) : [];
 /** บริษัทอื่นในอุตสาหกรรมเดียวกัน (ชุดแสดงผล) — โหมด "เทียบทั้งอุตสาหกรรม" */
 const gxIndCos = (c, show) => show && gxMode() === "industry" ? indComps(c.ind).filter(x => x.t !== c.t && inDomainOf(x.ind)) : [];
-/** ชั้นจุดอ้างอิงใช้ได้กับ Pro ขึ้นไป และไม่แสดงในมุมมองธนาคาร (credit / bankbod) */
-const gxPathAllowed = L => !["credit", "bankbod"].includes(L.id);   // UC1 / Board Profile: ไม่มีชั้นนี้ · UC3: ปิดเป็นค่าเริ่มต้น
+/** ชั้นจุดอ้างอิงใช้ได้กับ Pro ขึ้นไป และไม่แสดงในมุมมอง UC1 / Board Profile (uc1 / bprofile) */
+const gxPathAllowed = L => !["uc1", "bprofile"].includes(L.id);   // UC1 / Board Profile: ไม่มีชั้นนี้ · UC3: ปิดเป็นค่าเริ่มต้น
 const gxPathOn = (L, show) => show && gxPathAllowed(L) && gxRank() >= 1 && !!S.gxPath;
 const gxIndOn = show => show && gxMode() === "industry";
 const gxMed = a => { const b = a.slice().sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
@@ -581,7 +585,7 @@ function gxIndShares(ind) {
 }
 function gxSvg(c, v, show, selQ, opt) {
   opt = opt || {};
-  const L = ucLens(), uc1 = L.id === "credit";
+  const L = ucLens(), uc1 = L.id === "uc1";
   const peers = gxPeersOf(c, show), others = gxIndCos(c, show);
   const sc = show ? m1ScoreOf(c) : null;
   const bg = m1BgPts().filter(p => !opt.ind || p.ind === c.ind);
@@ -651,7 +655,7 @@ function gxSel(c, v, show) {
 function gxPanel(c, v, show, sel) {
   const L = ucLens(), u = scGet();
   if (!sel.q) {
-    return `<div class="gx-panel gx-off" id="gxPanel">${!L.placeable ? gxBank() : gxOut(c)}
+    return `<div class="gx-panel gx-off" id="gxPanel">${!L.placeable ? gxBoardProfile() : gxOut(c)}
       <p class="gx-sm" style="margin-top:10px">คลิกช่องใดช่องหนึ่งบนกราฟเพื่อดูตัวอย่างคำถามประจำช่อง</p></div>`;
   }
   const k = sel.q, z = ZONES[k];
@@ -669,14 +673,14 @@ function gxPanel(c, v, show, sel) {
   }
   const addB = (txt, lab) => `<button class="btn g gx-add" data-gxadd="${esc(txt)}" title="${esc(txt)}">+ เพิ่มประเด็นเข้าสู่แผนพัฒนาบอร์ด${lab ? " · " + lab : ""}</button>`;
   const inPlan = t => (u.plan || []).some(x => x.t === t);
-  const uc1 = L.id === "credit";
+  const uc1 = L.id === "uc1";
   const pTitle = uc1 ? m1T(`Relationship programme · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[0]}`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[1]}`)
     : m1T(`Points for the board · ${c.t}`, `ประเด็นสำหรับบอร์ด · ${c.t}`);
   return `<div class="gx-panel" id="gxPanel" style="--zc:${z.c}">
     <div class="gx-ph"><span class="gx-exlab on m1b-ptitle">${esc(pTitle)}</span>
       <h3><span style="color:${z.c}">${z.l}</span> · ${esc(ct.sub)}</h3>
       <span class="gx-sm">${m1T("Lens", "มุมมอง")}: ${esc(ucLab(L))} · ${m1T("Reader", "ผู้อ่าน")}: ${esc(ct.audience)}</span></div>
-    ${uc1 ? m1SupBadge() + gxCreditNote(c) + `<div class="gx-part m1b-pbwrap"><b>${m1T("Relationship programme by quadrant", "โปรแกรมความสัมพันธ์ตามช่อง")}</b>${m1PlaybookAll(k)}</div>` : ""}
+    ${uc1 ? m1SupBadge() + gxUc1Note(c) + `<div class="gx-part m1b-pbwrap"><b>${m1T("Relationship programme by quadrant", "โปรแกรมความสัมพันธ์ตามช่อง")}</b>${m1PlaybookAll(k)}</div>` : ""}
     <div class="gx-part"><b><i>1</i>สิ่งที่ข้อมูลแสดง</b><p>${esc(gxShows(c, k))}</p></div>
     <div class="gx-part"><b><i>2</i>สิ่งที่ยังสรุปไม่ได้</b><ul class="gx-ev">${gxCannot(c, v, k).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
     <div class="gx-part"><b><i>3</i>คำถามสำหรับหารือ (${ct.qs.length} ข้อ)</b>
@@ -697,7 +701,7 @@ function gxPanel(c, v, show, sel) {
   </div>`;
 }
 /** มุมมอง UC1 (D1): B_EG เป็นตัวหลักของช่องและ OIS · B_T1 แสดงเป็นเงาสีเทาพร้อมชิป CAUTION เท่านั้น · ไม่มีแถวครอบครัว/political ties */
-function gxCreditNote(c) {
+function gxUc1Note(c) {
   const sc = m1ScoreOf(c), t1 = sc.t1 || (() => { try { return t1Of(c); } catch (e) { return null; } })();
   return `<div class="note gx-cnote m1b-d1"><b>${m1T("Lens formula: B_EG", "สูตรของมุมมองนี้: B_EG")}</b> — ${m1T("quadrant and OIS on this screen come from B_EG (pooled PASS)", "ช่องและ OIS บนหน้านี้มาจาก B_EG (ผ่านเกณฑ์ภาพรวม)")} ·
     <span class="m1b-shadowtxt">${m1T("Shadow", "เงา")} B_T1: ${t1 && isFinite(t1.ois) ? `OIS ${fmt(t1.ois, 1)} · ${m1T("quadrant", "ช่อง")} ${t1.quad}` : m1T("not available", "ไม่มีค่า")}</span>
@@ -706,7 +710,7 @@ function gxCreditNote(c) {
       "political ties และความเป็นกิจการครอบครัวเป็นข้อมูลบริบท ไม่ใช้เป็นเหตุผลในการตัดสินใจใด ๆ ขององค์กรนำร่อง (R6) — ซ่อนแถวเหล่านี้ในมุมมองนี้")}</div></div>`;
 }
 /** มุมมอง Board Profile (นอกกลุ่มอ้างอิง) — ไม่วางบน Grid (R4 · D2) */
-function gxBank() {
+function gxBoardProfile() {
   return `<div class="gx-ph"><span class="gx-exlab on">${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</span>
       <h3>${m1T("This lens is not placed on the Grid", "มุมมองนี้ไม่วางตำแหน่งบน Grid")}</h3></div>
     <p class="gx-p">${m1T("REF-928 covers SET firms in industries 1–7 outside the Financials sector. Boards outside that group — Financials, firms without an English letter, or the board under review when it is outside REF-928 — get a descriptive Board Profile only: no position, OIS, tier or What-if (R4, D2). The background points show the quadrant definitions only.",
@@ -736,7 +740,7 @@ function viewMatrix2() {
         <button class="btn s" data-goto="outdomain">เปิดโหมดนอกกลุ่มอ้างอิง</button></div>`
     : !L.placeable ? `<div class="note warn gx-msg"><b>${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</b> — ${m1T("boards outside REF-928 get a descriptive profile only; no point is placed on the Grid (R4)", "บอร์ดนอก REF-928 ได้เฉพาะโปรไฟล์เชิงพรรณนา ไม่วางจุดบนกราฟ (R4)")}
         <button class="btn s" data-goto="bod">OI-1…6</button><button class="btn s" data-goto="outdomain">Board Profile</button></div>` : "";
-  const uc1 = L.id === "credit", sc0 = show ? m1ScoreOf(c) : null, clPts = show && uc1 ? gxClientPts() : [];
+  const uc1 = L.id === "uc1", sc0 = show ? m1ScoreOf(c) : null, clPts = show && uc1 ? gxClientPts() : [];
   return pageHead("Board Strategy Compass · 2×2", "ตำแหน่งบริษัทและประเด็นสำหรับการหารือของบอร์ด",
     `Grid นี้ใช้เปิด <b>ประเด็นสำหรับการหารือของบอร์ด</b> — ไม่ได้บอกว่าบริษัทต้องย้ายไปช่องใด ·
      คลิกจุดของบริษัท (หมายเลข 1) หรือคลิกช่องใดก็ได้ เพื่อดูคำถาม หลักฐานที่ใช้ตรวจ และเรื่องที่ให้พิจารณาใต้กราฟ`)
@@ -870,7 +874,7 @@ function b4Neigh(c) {
 const b4Med = a => { const b = a.filter(v => isFinite(v)).sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
 function b4NeighTable(rows, c, cap) {
   const q = x => x.quad || zoneOf(x.promo, x.amp);
-  const ctx = !(typeof ucLens === "function" && ucLens().id === "credit");    // D1: UC1 ซ่อนแถวครอบครัว / political ties
+  const ctx = !(typeof ucLens === "function" && ucLens().id === "uc1");    // D1: UC1 ซ่อนแถวครอบครัว / political ties
   return `<div class="tw"><table class="tr-tbl b4-ntbl"><caption>${esc(cap)}</caption>
     <thead><tr><th class="n">อันดับ</th><th>บริษัท</th><th class="n">OIS</th><th>ช่อง 2×2</th><th class="n">กรรมการหญิง</th><th class="n">อายุงานเฉลี่ย (ปี)</th>
       ${ctx ? `<th class="n">ครอบครัว <span class="gx-sm">บริบท</span></th><th>political ties <span class="gx-sm">บริบท</span></th>` : ""}</tr></thead>
@@ -990,7 +994,7 @@ function viewCompass() {
   const d = new Date();
   const dstr = d.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" });
   const code = k + "-" + c.t + "-" + String(d.getFullYear() + 543).slice(-2);
-  const cp = gxContent(k, c, L);           // null เมื่อมุมมองวางบน Grid ไม่ได้ (บอร์ดธนาคาร)
+  const cp = gxContent(k, c, L);           // null เมื่อมุมมองวางบน Grid ไม่ได้ (Board Profile)
 
   const cell = (key, pos) => {
     const zz = ZONES[key], on = key === k && !!cp && v.inDomain;
@@ -1012,7 +1016,7 @@ function viewCompass() {
         <span>รหัสรายงาน ${esc(code)} · ฉบับ 01</span><span>จัดทำ ${esc(dstr)}</span></div>
     </div>
     ${gxLensBar()}
-    <p class="gx-lensline">มุมมอง: <b>${esc(ucLab(L))}</b> · ผู้อ่าน: <b>${esc(L.audience)}</b></p>${L.id === "credit" ? m1SupBadge() : ""}`;
+    <p class="gx-lensline">มุมมอง: <b>${esc(ucLab(L))}</b> · ผู้อ่าน: <b>${esc(L.audience)}</b></p>${L.id === "uc1" ? m1SupBadge() : ""}`;
   const legal = `<div class="cmp-legal">
       <b>ข้อจำกัดของรายงานฉบับนี้</b> — ตำแหน่งบนกริดคำนวณจากองค์ประกอบคณะกรรมการและข้อความในรายงานประจำปี
       เทียบกับฐานอ้างอิงที่ freeze แล้ว เป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ
@@ -1028,13 +1032,13 @@ function viewCompass() {
     return `<div class="cmp">${head}
       <h2 class="cmp-h1">${!cp ? esc(m1T("Board Profile (outside the reference group) — board-level self-assessment instead of a Grid position", "Board Profile (นอกกลุ่มอ้างอิง) — ใช้การประเมินตนเองระดับคณะแทนตำแหน่งบน Grid")) : esc(c.t) + " อยู่นอกกลุ่มอ้างอิง"}</h2>
       <div class="grid g-side-r cmp-pos"><div>${grid}</div>
-        <div class="cmp-panel">${!cp ? gxBank() : gxOut(c)}</div></div>
+        <div class="cmp-panel">${!cp ? gxBoardProfile() : gxOut(c)}</div></div>
       ${legal}</div>`;
   }
 
   return `<div class="cmp">${head}
-    <h2 class="cmp-h1">${L.id === "credit" ? esc(m1T(`Relationship programme · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[0]}`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[1]}`)) : esc(cp.head)}</h2>
-    ${L.id === "credit" ? `<div class="m1b-pbwrap">${m1PlaybookAll(k)}</div>` : ""}
+    <h2 class="cmp-h1">${L.id === "uc1" ? esc(m1T(`Relationship programme · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[0]}`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[1]}`)) : esc(cp.head)}</h2>
+    ${L.id === "uc1" ? `<div class="m1b-pbwrap">${m1PlaybookAll(k)}</div>` : ""}
     <p class="cmp-sub">${esc(c.n)} (${esc(c.t)}) · วาระทบทวนการกำกับดูแลนวัตกรรม · สำหรับ${esc(L.audience)}</p>
 
     <h3 class="cmp-sec">ตำแหน่งจากผลโมเดล</h3>
@@ -1049,7 +1053,7 @@ function viewCompass() {
         <p class="cmp-q">ประเด็นสำหรับหารือ: ${esc(cp.sub)}</p>
         <p><b>สิ่งที่ข้อมูลแสดง</b> — ${esc(gxShows(c, k))}</p>
         <p><b>สิ่งที่ยังสรุปไม่ได้</b> — ${esc(gxCannot(c, v, k).join(" · "))}</p>
-        ${L.id === "credit" ? gxCreditNote(c) : ""}
+        ${L.id === "uc1" ? gxUc1Note(c) : ""}
         <p class="cmp-note">${esc(cp.note)} · การอยู่ช่องนี้ใช้เป็นจุดเริ่มต้นตั้งคำถาม ไม่ได้ยืนยันว่า CEO หรือบอร์ดมีข้อบกพร่อง ·
           สี่ช่องนี้คือ quadrant ไม่ใช่ควอไทล์อันดับอุตสาหกรรม</p>
       </div>
@@ -1076,7 +1080,7 @@ function viewCompass() {
     <h3 class="cmp-sec">แผนพัฒนาบอร์ดที่เก็บไว้จากรายงานฉบับนี้
       <span class="cmp-tag">ประเด็นที่กดเพิ่ม (จากหน้านี้และจาก Strategy Grid) เก็บไว้กับบริษัทนี้ในเครื่องของผู้ใช้เท่านั้น</span></h3>
     ${(u.plan || []).length ? `<ol class="cmp-plan">${(u.plan || []).map((x, i) => {
-        const ul = USECASES.find(y => y.id === x.uc);
+        const ul = USECASES.find(y => y.id === ucId(x.uc));
         return `<li><span>${esc(x.t)}</span><span class="cmp-plan-d">เพิ่มเมื่อ ${esc(x.d)}${ul ? " · มุมมอง " + esc(ul.short) : ""}${x.src === "grid" ? " · จาก Grid" : ""}</span>
           <button class="lnk" data-rm="${i}">นำออก</button></li>`; }).join("")}</ol>`
       : `<p class="cmp-note" style="margin:0 0 10px">ยังไม่มีประเด็นในแผน — กดปุ่มด้านล่างเพื่อเพิ่มคำถามหรือหลักฐานที่ต้องตรวจเข้าแผนพัฒนาบอร์ด</p>`}
@@ -1088,7 +1092,7 @@ function viewCompass() {
     </div>
 
     <h3 class="cmp-sec">${esc(cp.askLabel)}</h3>
-    <p class="cmp-ask">${esc(cp.ask)}</p>${L.id === "credit" ? m1Wording() : ""}
+    <p class="cmp-ask">${esc(cp.ask)}</p>${L.id === "uc1" ? m1Wording() : ""}
     <div class="gx-sm" style="margin-bottom:5px">ผลหลังประชุม — ผู้ใช้กรอกหลังประชุมจริงเท่านั้น — ระบบไม่เติมมติ</div>
     ${field("res", "มติหรือข้อสรุปหลังการประชุมจริง — กรอกหลังประชุมเท่านั้น", 3)}
     <p class="cmp-status">สถานะ: ${u.res ? "มีบันทึกผลหลังประชุมแล้ว" : "ยังไม่มีมติ"} ·

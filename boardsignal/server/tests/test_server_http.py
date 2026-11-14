@@ -101,8 +101,10 @@ def test_all():
         dumped = json.dumps(c)
         for bad in ("cP", "cF", "cW", "\"amp\"", "\"B\"", "par", "chol", "3.7251", "0.21057"):
             assert bad not in dumped, bad                                  # ไม่มีค่าภายใน/สัมประสิทธิ์
-        st, q = api.json("GET", "/api/v1/companies/GULF/board-questions?usecase=credit", headers=H)
-        assert st == 200 and len(q["questions"]) == 3 and q["usecase"] == "credit", q
+        st, q = api.json("GET", "/api/v1/companies/GULF/board-questions?usecase=uc1", headers=H)
+        assert st == 200 and len(q["questions"]) >= 2 and q["usecase"] == "uc1", q   # UC1 มี 2 คำถาม (F3: ตัด Q3 ออก)
+        st, q = api.json("GET", "/api/v1/companies/GULF/board-questions?usecase=credit", headers=H)   # รหัสเดิมยังรับได้
+        assert st == 200 and q["usecase"] == "uc1", q
         st, q = api.json("GET", "/api/v1/companies/GULF/board-questions?usecase=xx", headers=H)
         assert st == 400
         st, q = api.json("GET", "/api/v1/companies/NOPE", headers=H)

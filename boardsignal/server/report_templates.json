@@ -178,7 +178,7 @@
       ]
     },
     {
-      "id": "uc1_relationship", "tier": "max", "lens": "credit",
+      "id": "uc1_relationship", "tier": "max", "lens": "uc1",
       "name_th": "บันทึกความสัมพันธ์ลูกค้า UC1 (ข้อมูลประกอบ)",
       "name_en": "UC1 relationship note (supporting information)",
       "audience": "Relationship team (UC1 · client relationship programme)",

@@ -93,6 +93,17 @@
   const PIS = () => wfDeep(EN() ? PIS_EN : PIS_TH);
   const CONSENT = () => wfDeep(EN() ? CONSENT_EN : CONSENT_TH);
   const inl = t => E(t).replace(/&lt;b&gt;/g, "<b>").replace(/&lt;\/b&gt;/g, "</b>");
+  /** อ่านง่าย (คำสั่งผู้ใช้ 14 พ.ย.): ย่อหน้าที่มีรายการ (1) (2) … เรียงต่อกัน → แสดงทีละบรรทัด
+      ข้อความทุกตัวอักษรคงเดิม — ตัดแบ่งที่ช่องว่างหน้าเครื่องหมาย (n) เท่านั้น ไม่เพิ่ม/ลบ/เปลี่ยนคำ */
+  function para(t) {
+    const h = inl(t), re = /(^|\s)\((\d{1,2})\)\s/g, cut = []; let m, want = 1;
+    while ((m = re.exec(h))) { if (+m[2] === want) { cut.push(m.index + m[1].length); want++; } }
+    if (cut.length < 2) return `<p>${h}</p>`;
+    const intro = h.slice(0, cut[0]).trim();
+    const items = cut.map((c, i) => h.slice(c, i + 1 < cut.length ? cut[i + 1] : undefined).trim());
+    return `<div class="irb-enumw">${intro ? `<p>${intro}</p>` : ""}<div class="irb-enum">${items.map(x => {
+      const mm = x.match(/^\((\d{1,2})\)\s*/); return `<div class="irb-en"><span class="irb-enn">${mm[0].trim()}</span><span>${x.slice(mm[0].length)}</span></div>`; }).join("")}</div></div>`;
+  }
   const tableHTML = rows => `<div class="tw"><table class="irb-t"><tr>${rows[0].map(c => `<th>${inl(c)}</th>`).join("")}</tr>${rows.slice(1).map(r => `<tr>${r.map(c => `<td>${inl(c)}</td>`).join("")}</tr>`).join("")}</table></div>`;
   function blocksHTML(bl) {
     return bl.map(b => {
@@ -100,7 +111,7 @@
         case "kv": return `<p><b>${E(b[1])}</b> ${inl(b[2])}</p>`;
         case "h": return `<h3>${E(b[1])}</h3>`;
         case "sh": return `<h4>${E(b[1])}</h4>`;
-        case "p": return `<p>${inl(b[1])}</p>`;
+        case "p": return para(b[1]);
         case "table": return tableHTML(b[1]);
         case "ol": return `<ol class="irb-ol">${b[1].map(x => `<li>${inl(x)}</li>`).join("")}</ol>`;
         case "cap": return `<p class="irb-cap"><b>${E(b[1])}</b> ${E(b[2])}</p>`;
@@ -135,7 +146,7 @@
       if (b[0] === "table") return sigRecord(rec);
       if (b[0] === "cap") return rec ? `<p class="irb-cap"><b>${E(b[1])}</b> ${E(b[2])}</p>` : "";
       if (b[0] === "sh") return `<h4>${E(b[1])}</h4>`;
-      if (b[0] === "p") return `<p>${inl(b[1])}</p>`;
+      if (b[0] === "p") return para(b[1]);
       return "";
     }).join("");
   }

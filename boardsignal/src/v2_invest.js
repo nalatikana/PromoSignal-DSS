@@ -14,8 +14,8 @@
 const PLAN_RANK = { free: 0, pro: 1, max: 2 };
 const PLAN_LAB = { free: "Basic", pro: "Pro", max: "Pro Max" };
 const tierRank = () => PLAN_RANK[S.plan] ?? 0;
-/** มุมมองธนาคาร (Pilot) — ล็อกตัวแปรบริบทใน What-if */
-const wiCtxLocked = () => { try { return typeof ucLens === "function" && ["credit", "bankbod"].includes(ucLens().id); } catch (e) { return false; } };
+/** มุมมอง UC1 / Board Profile (Pilot) — ล็อกตัวแปรบริบทใน What-if */
+const wiCtxLocked = () => { try { return typeof ucLens === "function" && ["uc1", "bprofile"].includes(ucLens().id); } catch (e) { return false; } };
 /** นับคำของข้อความไทย + อังกฤษ — ใช้ Intl.Segmenter ถ้ามี ไม่งั้นนับคำละตินด้วยช่องว่าง และประมาณคำไทยด้วยจำนวนอักขระ / 4.5 */
 function wordCount(txt) {
   const s = String(txt || "");
@@ -550,7 +550,7 @@ function pmKpis(rows) {
   </div>`;
 }
 function viewPort() {
-  const L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "credit";
+  const L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "uc1";
   const head = pageHead("Portfolio Matrix", b5T("Client positions on the 2×2", "ตำแหน่งของบริษัทลูกค้าบน 2×2"),
     b5T(`Positions of the pilot organisation's client companies on the same 2×2 as the Strategy Grid — not a stock-selection tool ·
      sorted by quadrant, then ticker · lists you paste or upload are read in this browser, never stored or sent`,
@@ -2050,7 +2050,7 @@ const WI_CTRL2 = [{ k: "fem", l: "สัดส่วนกรรมการห�
 const WARN_FAM = "ข้อมูลบริบท อ่านอย่างเดียว — ความสัมพันธ์ไม่ทนต่อการวิเคราะห์ fixed-effects ในงานวิจัย และไม่ใช่ตัวแปรจำลอง (R6)";
 const WARN_POL = "ข้อมูลบริบท อ่านอย่างเดียว — ไม่ใช้เป็นเหตุผลเชิงบวก ไม่ใช่เป้าการสรรหา และไม่ใช่ตัวแปรจำลอง (R6)";
 const CHIP_CTX = "ตัวแปรบริบท (ครอบครัว · political ties) อ่านอย่างเดียวในทุกมุมมอง";
-const LOCK_BANK = "มุมมอง UC1: ตัวแปรบริบทอ่านอย่างเดียว (เหมือนทุกมุมมอง) และไม่ใช้เป็นเหตุผลในการตัดสินใจขององค์กรนำร่อง";
+const LOCK_BP = "มุมมอง UC1: ตัวแปรบริบทอ่านอย่างเดียว (เหมือนทุกมุมมอง) และไม่ใช้เป็นเหตุผลในการตัดสินใจขององค์กรนำร่อง";
 const wiCtxMoved = () => false;                         // ตัวแปรบริบทไม่มีตัวควบคุมแล้ว
 const BS_DEFAULT = 11;                                   // ขนาดบอร์ดตั้งต้นเมื่อฐานข้อมูลไม่มีจำนวนกรรมการ
 const BS_MIN = 3, BS_MAX = 25;
@@ -2406,7 +2406,7 @@ function m1CritNote(target) {
     <div class="gx-sm">${esc(b5T(CM_NOTE_EN, CM_NOTE_TH))}</div></div>`;
 }
 function m1StudioBody(trial) {
-  const sub = m1Subj(), c = sub.co, L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "credit";
+  const sub = m1Subj(), c = sub.co, L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "uc1";
   const cls = typeof m1Clients === "function" ? m1Clients() : [];
   const fySt = m1FY(sub.fy), n = m1BoardN(sub);
   const gateOk = isFinite(+c.promo) && +c.promo >= M1_JN;

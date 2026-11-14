@@ -26,7 +26,8 @@ T10_TEXT = {
 T10_DEFAULT = "สัญญาณใกล้ศูนย์ — ไม่สรุป (B ≈ 0)"
 ZONE_TH = {"A": "Deliver — เปลี่ยนโอกาสเป็นผลลัพธ์", "B": "Discipline — เติบโตอย่างมีหลักเกณฑ์",
            "C": "Develop — ทบทวนฐานความพร้อม", "D": "Discover — เปิดมุมมองโอกาส"}
-USECASES = ("board", "credit", "search", "investor")
+USECASES = ("board", "uc1", "search", "investor")
+USECASE_LEGACY = {"credit": "uc1", "bankbod": "bprofile"}   # รหัสเดิมจากไคลเอนต์รุ่นก่อน — รับแล้วแปลงเป็นรหัสใหม่
 DISCLAIMER = ("ผลลัพธ์เป็นความสัมพันธ์เชิงสถิติกับฐานอ้างอิง REF-928 (928 firm-years, FY2562–2566) ไม่ใช่เหตุและผล "
               "ไม่ใช่การพยากรณ์ และไม่ใช่หลักฐานประสิทธิผลของคณะกรรมการ · API นี้ส่งเฉพาะผลลัพธ์ ไม่มีสูตรหรือสัมประสิทธิ์")
 
@@ -124,6 +125,7 @@ class Outputs:
         co = self.company(ticker)
         if not co:
             return None
+        usecase = USECASE_LEGACY.get(usecase, usecase)
         uc = self.questions.get("usecases", {}).get(usecase)
         if not uc:
             return {"error": "usecase", "allowed": list(USECASES)}

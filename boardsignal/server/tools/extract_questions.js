@@ -6,12 +6,12 @@ const root = path.resolve(__dirname, "..", "..");
 const src = fs.readFileSync(path.join(root, "src", "v2_strategy.js"), "utf8");
 const cut = src.indexOf("function ucLens");
 if (cut < 0) throw new Error("ไม่พบ function ucLens ใน v2_strategy.js");
-const r = vm.runInContext(src.slice(0, cut) + "\n;({COMPASS, UC_TEXT, USECASES})", vm.createContext({}));
+const r = vm.runInContext(src.slice(0, cut) + "\n;({COMPASS, UC_TEXT, USECASES})", vm.createContext({ window: {}, ZONES: {}, OIS: {}, S: { lang: "TH" } }));
 const out = { source: "src/v2_strategy.js (COMPASS, UC_TEXT, USECASES)", extracted: new Date().toISOString().slice(0, 10),
   disclaimer: "คำถามเหล่านี้เป็นแนวทางสำหรับตรวจสอบต่อ ไม่ใช่ข้อสรุปว่าบริษัทในช่องนั้นมีปัญหาตามที่ถาม · ตำแหน่งบน Grid เพียงอย่างเดียวยังไม่ใช่หลักฐานว่าบอร์ดพัฒนาประสิทธิผลสำเร็จ",
   usecases: {} };
 for (const u of r.USECASES) {
-  if (!["board", "credit", "search", "investor"].includes(u.id)) continue;
+  if (!["board", "uc1", "search", "investor"].includes(u.id)) continue;
   const q = {};
   for (const k of "ABCD") {
     const b = r.COMPASS[k];

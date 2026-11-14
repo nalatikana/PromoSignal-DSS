@@ -940,7 +940,7 @@ function viewManual() {
     <section class="card" id="man-uc"><h3>7 · มุมมอง Use Case</h3>
       <p class="desc">เลือกมุมมองที่หน้า Strategy Grid — เนื้อหาฐานชุดเดียวกัน แต่ถ้อยคำและผู้อ่านต่างกัน${window.PILOT_BUILD ? "" : " · " + esc(typeof PRIMARY_UC_NOTE !== "undefined" ? PRIMARY_UC_NOTE : "")}</p>
       <ul class="tr-ol" id="manUcList">${window.PILOT_BUILD
-        ? ["credit", "board", "bankbod"].map(id => { const L = M1A.lens(id); return `<li data-uc="${id}"><b>${esc(L.lab)}</b> — ${T("readers", "ผู้อ่าน")}: ${esc(L.readers)}</li>`; }).join("")
+        ? ["uc1", "board", "bprofile"].map(id => { const L = M1A.lens(id); return `<li data-uc="${id}"><b>${esc(L.lab)}</b> — ${T("readers", "ผู้อ่าน")}: ${esc(L.readers)}</li>`; }).join("")
         : (typeof USECASES !== "undefined" ? USECASES : []).map(u => `<li data-uc="${esc(u.id)}">${typeof PRIMARY_UC !== "undefined" && PRIMARY_UC.includes(u.id) ? "★ " : ""}<b>${esc(u.lab)}</b> — ผู้อ่าน: ${esc(u.audience)}</li>`).join("")}</ul>
       <p class="gx-sm">ฉบับนำร่องแสดง 3 มุมมอง: UC1 · ความสัมพันธ์ลูกค้า (P2) · UC3 · ประเมิน OI ของคณะกรรมการ (P1) · Board Profile (นอกกลุ่มอ้างอิง) — ชั้นจุดอ้างอิงและเส้นทางย้ายช่องปิดเป็นค่าเริ่มต้น (G6) · มุมมอง UC1 ใช้สูตร B_EG และซ่อนแถวกรรมการครอบครัว/political ties (D1) · ตัวแปรบริบทอ่านอย่างเดียวในทุกมุมมอง</p></section>
     <section class="card" id="man-rules"><h3>8 · กติกาสำคัญ</h3>
