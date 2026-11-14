@@ -53,7 +53,7 @@ TOOLS = [
     {"name": "get_board_questions",
      "title": "คำถามหารือของคณะกรรมการ",
      "description": "คำถามหารือ 3 ข้อ หลักฐานที่ควรตรวจ และสิ่งที่ยังสรุปไม่ได้ ตาม quadrant ของบริษัทและมุมมองผู้ใช้ "
-                    "(board = ประเมินบอร์ดตัวเอง, credit = ธนาคาร/สินเชื่อ, search = สรรหากรรมการ, investor = นักลงทุน). " + OUTPUT_ONLY,
+                    "(board = ประเมินบอร์ดตัวเอง, credit = UC1 ความสัมพันธ์กับลูกค้าขององค์กรนำร่อง (P2), search = สรรหากรรมการ, investor = ผู้ถือหุ้น). " + OUTPUT_ONLY,
      "inputSchema": {"type": "object", "required": ["ticker"], "properties": {
          "ticker": {"type": "string"},
          "usecase": {"type": "string", "enum": ["board", "credit", "search", "investor"], "default": "board"}}},

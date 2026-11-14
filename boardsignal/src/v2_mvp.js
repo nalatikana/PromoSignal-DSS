@@ -41,7 +41,7 @@ const S561 = {
   msg: "สารจากประธานกรรมการ / CEO (ภาษาอังกฤษ · ส่วนต้นของรายงาน)",
   att1: "เอกสารแนบ 1 · รายละเอียดกรรมการ ผู้บริหาร",
 };
-/** Data Dictionary — สรุปจาก Data Dictionary ของ REF-928 (JSM Model 3, edit6) และงานวิจัย §3.2 · ไม่มีค่าเฉลี่ย/จุดตัด/สัมประสิทธิ์
+/** Data Dictionary — สรุปจาก Data Dictionary ของ REF-928 (JSM Model 3, edit9) และงานวิจัย §3.2 · ไม่มีค่าเฉลี่ย/จุดตัด/สัมประสิทธิ์
  *  [ตัวแปร, บทบาท, นิยาม, ที่มาใน 56-1, หน่วย, การ coding, winsorise, ใช้ในคะแนน] */
 const DD_ROWS = [
   ["open_innov", "DV", "จำนวนรายการนวัตกรรม (สินค้า/บริการ/กระบวนการใหม่หรือปรับปรุงอย่างมีนัย) ที่พัฒนาร่วมกับภายนอก (collaborative open innovation) ในปีผลลัพธ์ t", "p1_1|p1_4", "รายการ/ปี", "นับจากรายงานปี t · 0 = ทบทวนแล้วไม่พบ", "ไม่ (ค่านับดิบ)", "val"],
@@ -154,11 +154,12 @@ function viewDatasets() {
     <div class="card"><div class="mv-dsh"><b>①</b> ชุดอ้างอิง REF-928 <span class="pill ok">freeze แล้ว</span></div>
       <div class="mv-big">928 <span>บริษัท-ปี</span></div>
       <ul class="mv-ul"><li>209 บริษัท · ปีตัวแปร 2019–2023 (ผลลัพธ์ 2020–2024) · SET นอกกลุ่มการเงิน 7 อุตสาหกรรม</li>
-        <li>รุ่น <code>${esc(OIS.version)}</code> · ใช้ fit แบบจำลองและเป็นฐานเปอร์เซ็นไทล์ — <b>ห้ามแก้ไข</b> (ขอบเขตงานข้อ 1)</li>
+        <li>รุ่น <code id="mvDsVer">${esc(M1A.ver())}</code> · ใช้ fit แบบจำลองและเป็นฐานเปอร์เซ็นไทล์ — <b>ห้ามแก้ไข</b> (ขอบเขตงานข้อ 1)</li>
         <li>รายอุตสาหกรรม: ${Object.keys(IND).map((k, i) => `${esc(IND[k])} ${nk[i] ?? "—"}`).join(" · ")}</li>
         <li>เบราว์เซอร์เห็นเฉพาะการกระจายแบบไม่ระบุชื่อ — ไม่มีชื่อบริษัท/กรรมการในชุดนี้</li></ul></div>
     <div class="card"><div class="mv-dsh"><b>②</b> ชุดให้คะแนน · บริษัทจดทะเบียน <span class="pill blue">ปีบัญชี ${FY_SHOWN + 543}</span></div>
       <div class="mv-big">${COMPS.length} <span>บริษัท</span></div>
+      <div class="m1a-chips">${M1A.fyChip(FY_SHOWN)}</div>
       <ul class="mv-ul"><li>ภาพตัดขวางปีบัญชี ${FY_SHOWN} ที่แสดงในทุกหน้า · ในกลุ่มอ้างอิง ${inD} บริษัท</li>
         <li>รายอุตสาหกรรม: ${Object.keys(IND).map(k => `${esc(IND[k])} ${indComps(+k).length}`).join(" · ")}</li>
         <li>คะแนนทุกบริษัทเทียบกับชุด ① (ไม่ใช่เทียบกันเอง) · ข้อมูลจาก 56-1 One Report / รายงานประจำปี</li></ul></div>
@@ -178,7 +179,7 @@ function viewDatasets() {
       <tr><td><b>DV</b> · open innovation</td><td>${src("p1_1|p1_4")}</td><td><span class="pill mute">งานวิจัย</span> นับด้วยมือตามคู่มือ coding · ใช้ตรวจ validity เท่านั้น</td></tr>
     </tbody></table></div>
     <div class="gx-row" style="margin-top:10px"><button class="btn p" data-goto="docs">ไปที่ Zone A · อัปโหลดรายงานประจำปี</button></div></div>`;
-  const dd = `<div class="card" style="margin-bottom:14px" id="mvDict"><h3>Data Dictionary · REF-928 (ตามงานวิจัย)</h3>
+  const dd = `<div class="card" style="margin-bottom:14px" id="mvDict"><h3>Data Dictionary · REF-928 (ตามงานวิจัย) · <code>${esc(M1A.ver())}</code></h3>
     <p class="desc">บทบาท: DV = ตัวแปรตาม · IV = ตัวแปรต้น · MV = ตัวแปรกำกับ (moderator) · CV = ตัวแปรควบคุม · winsorise ที่ percentile 5/95 ของ REF-928 ·
       ไม่แสดงค่าเฉลี่ย จุดตัด หรือสัมประสิทธิ์ (อยู่ใน parameter record) · รายละเอียดตัวแปรควบคุมเป็นไปตามงานวิจัย (Model 3)</p>
     <div class="tw"><table class="mv-dd"><thead><tr><th>ตัวแปร</th><th>บทบาท</th><th>นิยาม</th><th>ที่มาใน 56-1 One Report</th><th>หน่วย</th><th>การ coding</th><th>winsorise</th><th>ใช้ในคะแนน?</th></tr></thead>
@@ -256,7 +257,7 @@ function wireDatasets(h) {
   const ex = h.querySelector("#mvDsExport");
   if (ex) ex.onclick = () => mvDl(`openinnoscore_user_dataset_${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({
     dataset: "OpenInnoScore · ชุดข้อมูลผู้ใช้ (③)", note: "ค่าที่ผู้ใช้กรอก/นำเข้าในเครื่องนี้ · ไม่รวมชุดอ้างอิง REF-928 และไม่มีสัมประสิทธิ์",
-    exported_at: new Date().toISOString(), zoneA_overrides: S.ov || {}, user_fields: UF, imports: IMP,
+    exported_at: new Date().toISOString(), param_version: M1A.ver(), zoneA_overrides: S.ov || {}, user_fields: UF, imports: IMP,
     assessments: { company: c.t, rfq: mvSum("rfqSummary", c.t) || null, bod_set: mvSum("bodSetSummary", c.t, c.fy || FY_SHOWN) || null } }, null, 2), "application/json;charset=utf-8");
 }
 
@@ -273,56 +274,105 @@ const RULES8 = [
   ["R7", "ถ้อยคำเชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์", () => true],
   ["R8", "ติดป้าย Tier ไม่แน่นอนเมื่อช่วง 90% คร่อมมากกว่าหนึ่ง Tier", v => tierOf(v.band[0]) !== tierOf(v.band[1])],
 ];
-function evData(c) {
-  const v = verdictOf(c), L = typeof ucLens === "function" ? ucLens() : { lab: "—", audience: "—" };
-  const fy = c.fy || FY_SHOWN, oi = c.oisInd ?? oisIndOf(signalB(c.promo, c.amp), c.ind), bs = c.bsize;
-  /* แก้ไขรอบสุดท้าย: ป้าย "เอกสารที่ผู้ใช้อัปโหลด" เฉพาะเมื่อค่า CEO ที่ใช้อยู่มาจากไฟล์นั้นจริง (dp ตรงกับผลของไฟล์) — การแก้ค่าบอร์ดช่องอื่นไม่ทำให้ป้ายนี้ขึ้น */
-  const ceoFromDoc = !!(S.ceo && S.ceo.r && isEdited(c.t) && isFinite(S.ceo.r.dp) && Math.abs(+S.ceo.r.dp - +c.dp) < 0.5);
-  const ceo = ceoFromDoc ? { src: "วิเคราะห์จากเอกสารที่ผู้ใช้อัปโหลด" + (S.ceo.name ? ` (${S.ceo.name})` : ""), words: S.ceo.r.wc,
-      pro: S.ceo.r.pro && S.ceo.r.pro.n, pre: S.ceo.r.pre && S.ceo.r.pre.n }
-    : { src: c.pRaw !== undefined ? "ค่า LIWC-22 ที่ผู้ใช้กรอกใน Zone A" : "แผงข้อมูลวิจัย (LIWC-22 · สารถึงผู้ถือหุ้นภาษาอังกฤษ ปีบัญชีล่าสุด)" };
+/* MVP 1 · F8 — Evidence Pack ตามมุมมอง (lens-aware)
+   UC1 · Client relationship (P2): ป้ายข้อมูลประกอบที่หัวแฟ้มและท้าย PDF · ซ่อนแถวกรรมการครอบครัว/political ties (#7) ·
+     สูตร B_EG (D1) · B_T1 เป็นค่าเงา (shadow) พร้อมชิป CAUTION เท่านั้น · ผู้อ่าน "Relationship team"
+   UC3 · Board OI evaluation (P1): แถวบริบทครบ (R6) · เปลี่ยนเฉพาะป้ายเวอร์ชัน
+   ทุกมุมมอง: ชิปปีบัญชีพร้อมกติกานับปี · "Not yet validated" (FY > 2023) · "Outside the reference sample" เมื่อเป็นลูกค้านอก REF-928 ·
+   เวอร์ชัน PARAM_VERSION (edit9) · เลือกบริษัทจากรายชื่อลูกค้าในเบราว์เซอร์ (ois_clients_v1) ได้ */
+function evSubjectClient() {
+  const k = mvLoad(M1A.EV_KEY, null);
+  if (!k || !k.ticker) return null;
+  return M1A.clients().find(x => x.ticker === k.ticker && +x.fiscal_year === +k.fy && x.scored && +x.group <= 3) || null;
+}
+function evData(c, cl) {
+  const L = M1A.lens(), uc1 = !!L.uc1, en = M1A.isEN();
+  let fy, v, ois, oiInd = null, ceo, bc, t1 = null, outside = false, group = null, name, ticker, industry;
+  if (cl) {
+    const s = cl.scored, i = cl.inputs || {};
+    fy = +cl.fiscal_year; ticker = cl.ticker; name = cl.name || cl.ticker; industry = M1A.indName(cl.industry);
+    group = +cl.group; outside = group >= 2 && !byT[ticker]; ois = +s.ois;
+    const band = s.band90 || [NaN, NaN], tier = s.tier || tierOf(ois), quad = s.quad;
+    const chips = [];
+    if (s.tier_uncertain || tierOf(band[0]) !== tierOf(band[1])) chips.push({ k: "tier ไม่แน่นอน", t: "ช่วง 90% คร่อมมากกว่าหนึ่ง tier (R8)" });
+    if (outside) chips.push({ k: M1A.lab("outside"), t: T("Scored against the frozen REF-928; not added to it (DP6)", "ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ ไม่เพิ่มเข้า REF-928 (DP6)") });
+    if (M1A.fyCode(fy) === "NYV") chips.push({ k: M1A.lab("notval"), t: M1A.fyText(fy) });
+    v = { tier, quad, band, chips, inDomain: true, fy, st: t10Of(tier, quad), flag: false, uncertain: !!s.tier_uncertain || tierOf(band[0]) !== tierOf(band[1]) };
+    ceo = { promotion_value: i.promotion, src: i.promo_src === "letter" ? T("English letter (.txt) scored with the system dictionary", "จดหมายภาษาอังกฤษ (.txt) วัดด้วยพจนานุกรมของระบบ") : T("LIWC-22 value entered by the user", "ค่า LIWC-22 ที่ผู้ใช้กรอก"),
+      x_pct: s.X ?? null, words: i.letter_words || null };
+    bc = { board_size: i.board_size || null, female_ratio: i.female_share, female_count: i.women ?? null, family_ratio: i.family_share, political_ties: i.political_ties ? 1 : 0, avg_tenure_years: null };
+    if (s.t1) t1 = { openinnoscore: s.t1.ois ?? s.t1.OIS ?? null, band90: s.t1.band90 || null, quadrant: String(s.t1.quad || "").charAt(0) || null, tier: s.t1.tier ?? null, chip: "CAUTION" };
+  } else {
+    const vv = verdictOf(c); v = Object.assign({}, vv, { uncertain: tierOf(vv.band[0]) !== tierOf(vv.band[1]) });
+    fy = c.fy || FY_SHOWN; ticker = c.t; name = c.n; industry = IND[c.ind] || ""; ois = c.ois ?? c.ipi;
+    oiInd = c.oisInd ?? oisIndOf(signalB(c.promo, c.amp), c.ind);
+    const ceoFromDoc = !!(S.ceo && S.ceo.r && isEdited(c.t) && isFinite(S.ceo.r.dp) && Math.abs(+S.ceo.r.dp - +c.dp) < 0.5);
+    ceo = ceoFromDoc ? { src: "วิเคราะห์จากเอกสารที่ผู้ใช้อัปโหลด" + (S.ceo.name ? ` (${S.ceo.name})` : ""), words: S.ceo.r.wc, pro: S.ceo.r.pro && S.ceo.r.pro.n, pre: S.ceo.r.pre && S.ceo.r.pre.n }
+      : { src: c.pRaw !== undefined ? "ค่า LIWC-22 ที่ผู้ใช้กรอกใน Zone A" : "แผงข้อมูลวิจัย (LIWC-22 · สารถึงผู้ถือหุ้นภาษาอังกฤษ ปีบัญชีล่าสุด)" };
+    ceo.promotion_focus_percentile = c.dp;
+    const bs = c.bsize;
+    bc = { board_size: bs || null, female_ratio: c.fem, female_count: bs ? Math.round(c.fem * bs) : null, family_ratio: c.fam, political_ties: c.pol ? 1 : 0, avg_tenure_years: Math.round(c.ten * 10) / 10 };
+    try { const x = c.t1 || (typeof t1Of === "function" ? t1Of(c) : null); if (x && isFinite(+x.ois)) t1 = { openinnoscore: Math.round(x.ois * 10) / 10, band90: x.band || null, quadrant: x.quad || null, tier: x.tier || tierOf(x.ois), chip: "CAUTION" }; } catch (e) { }
+  }
+  /* UC1: ซ่อนแถวบริบท R6 (กรรมการครอบครัว · political ties) — ไม่ส่งออกในแฟ้ม/JSON ด้วย (#7, D1) */
+  if (uc1) { delete bc.family_ratio; delete bc.political_ties; }
+  bc.note = uc1 ? "UC1: family-director and political-ties rows hidden (D1, #7) · tenure is not in the formula" : "อ่านอย่างเดียว · ครอบครัว/political ties เป็นบริบท (R6) · อายุงานไม่เข้าสูตร";
+  const fs = M1A.fy(fy), fcode = M1A.fyCode(fy);
   return {
-    meta: { generated_at: new Date().toISOString(), prepared_by: S.user || "", plan: PLAN_LAB ? PLAN_LAB[S.plan] : S.plan },
-    case: { ticker: c.t, name: c.n, industry: IND[c.ind] || "", fiscal_year: fy, fiscal_year_be: fy + 543, use_case: L.lab, audience: L.audience, edited_inputs: isEdited(c.t) },
-    ceo_text: Object.assign({ promotion_focus_percentile: c.dp }, ceo),
-    board_context: { board_size: bs || null, board_size_assumed: !bs, female_ratio: c.fem, female_count: bs ? Math.round(c.fem * bs) : null,
-      family_ratio: c.fam, political_ties: c.pol ? 1 : 0, avg_tenure_years: Math.round(c.ten * 10) / 10, note: "อ่านอย่างเดียว · ครอบครัว/political ties เป็นบริบท (R6) · อายุงานไม่เข้าสูตร" },
-    score: { openinnoscore: Math.round((c.ois ?? c.ipi) * 10) / 10, band90: v.band, tier: v.tier, tier_uncertain: tierOf(v.band[0]) !== tierOf(v.band[1]),
-      ois_industry: Math.round(oi * 10) / 10, industry_quartile: "Q" + tierOf(oi), formula_shown: typeof useT1 === "function" && useT1() ? "B_T1 (shadow · Caution)" : "B_EG" },
-    quadrant: { code: v.quad, name: ZONES[v.quad].l, label: ZONES[v.quad].q, status_message: v.st.s, group_mean_oi: v.st.oi, group_n: v.st.n },
-    regime: { fiscal_year: fy, verdict: v.regime || "ยังไม่ validate" },
-    chips: v.chips.map(x => ({ label: x.k, why: x.t })), oi_flag: v.flag,
-    rules: RULES8.map(([k, d, f]) => ({ rule: k, text: d, triggered: !!f(v, c) })),
-    provenance: { reference: "REF-928 · 928 บริษัท-ปี · 209 บริษัท", reference_version: OIS.version, parameter_record: OIS.version,
-      data_dictionary: "REF-928 Data Dictionary (JSM Model 3, edit6)", build_date: null, build_note: "ต้นแบบไม่ได้ฝังเวลาสร้างไฟล์ — อ้างรุ่นด้วย reference_version", mode: typeof OIS_SRV !== "undefined" && OIS_SRV ? "เซิร์ฟเวอร์ (สูตรอยู่ฝั่งเซิร์ฟเวอร์)" : "ไฟล์ออฟไลน์" },
-    rfq: mvSum("rfqSummary", c.t) || null, bod_set: mvSum("bodSetSummary", c.t, fy) || null,
+    label: uc1 ? M1A.lab("supporting") : null,
+    meta: { generated_at: new Date().toISOString(), prepared_by: S.user || "", plan: typeof PLAN_LAB !== "undefined" && PLAN_LAB ? PLAN_LAB[S.plan] : S.plan, lens: L.code, param_version: M1A.ver() },
+    case: { ticker, name, industry, fiscal_year: fy, fiscal_year_be: fy + 543, use_case: L.lab, audience: L.readers, edited_inputs: cl ? false : isEdited(c.t),
+      client_group: group, outside_reference_sample: outside, source: cl ? "client" : "reference" },
+    ceo_text: ceo,
+    board_context: bc,
+    score: { openinnoscore: Math.round(ois * 10) / 10, band90: v.band, tier: v.tier, tier_uncertain: !!v.uncertain,
+      ois_industry: oiInd === null ? null : Math.round(oiInd * 10) / 10, industry_quartile: oiInd === null ? null : "Q" + tierOf(oiInd),
+      formula_shown: "B_EG", shadow_B_T1: uc1 ? t1 : null, x_pct: cl ? cl.scored.X ?? null : null, y_pct: cl ? cl.scored.Y ?? null : null },
+    quadrant: { code: v.quad, name: (ZONES[v.quad] || {}).l, label: (ZONES[v.quad] || {}).q, status_message: v.st.s, group_mean_oi: v.st.oi, group_n: v.st.n },
+    regime: { fiscal_year: fy, code: fcode, verdict: M1A.isEN() ? fs.label_en : (fs.label_th || fs.label_en), rule: M1A.fyText(fy, "EN"),
+      not_yet_validated: fcode === "NYV", what_if_allowed: fs.whatIfAllowed !== false && fcode !== "FAIL" },
+    labels: [outside ? M1A.lab("outside") : null, fcode === "NYV" ? M1A.lab("notval") : null].filter(Boolean),
+    chips: v.chips.map(x => ({ label: x.k, why: x.t })), oi_flag: !!v.flag,
+    rules: RULES8.map(([k, d, f]) => ({ rule: k, text: d, triggered: k === "R4" ? false : k === "R3" ? fcode === "FAIL" : k === "R8" ? !!v.uncertain : !!f(Object.assign({ regime: fcode === "FAIL" ? "FAIL" : null }, v), cl ? { ind: cl.industry } : c) })),
+    provenance: { reference: "REF-928 · 928 บริษัท-ปี · 209 บริษัท", reference_version: M1A.ver(), parameter_record: M1A.ver(),
+      data_dictionary: "REF-928 Data Dictionary (JSM Model 3, edit9)", frozen_reference_note: outside ? "Scored against the frozen REF-928; not added to REF-928 (DP6)" : null,
+      build_date: null, mode: typeof OIS_SRV !== "undefined" && OIS_SRV ? "เซิร์ฟเวอร์ (สูตรอยู่ฝั่งเซิร์ฟเวอร์)" : "ไฟล์ออฟไลน์" },
+    rfq: cl ? null : mvSum("rfqSummary", c.t) || null, bod_set: cl ? null : mvSum("bodSetSummary", c.t, fy) || null,
   };
 }
 function evHtml(d) {
-  const row = (k, v) => `<tr><th scope="row">${esc(k)}</th><td>${v}</td></tr>`;
-  const rc = d.regime.verdict === "PASS" ? "ok" : d.regime.verdict === "CAUTION" ? "warn" : d.regime.verdict === "FAIL" ? "crit" : "mute";
-  return `<article class="mv-ev" id="mvEvDoc">
+  const row = (k, v, attr) => `<tr${attr ? " " + attr : ""}><th scope="row">${esc(k)}</th><td>${v}</td></tr>`;
+  const uc1 = d.meta.lens === "UC1", bc = d.board_context, sh = d.score.shadow_B_T1;
+  const lbls = d.labels.map(l => `<span class="pill warn m1a-lbl">${esc(l)}</span>`).join(" ");
+  return `<article class="mv-ev" id="mvEvDoc" data-lens="${esc(d.meta.lens)}">
+    ${uc1 ? `<div class="m1a-supp" id="evSupTop" role="note"><b>${esc(d.label)}</b></div>` : ""}
     <header class="mv-evh"><div><div class="mv-evk">OpenInnoScore™ · Evidence Pack</div><h3>${esc(d.case.name)} (${esc(d.case.ticker)})</h3>
       <div class="mv-sub">ปีบัญชี พ.ศ. ${d.case.fiscal_year_be} · ${esc(d.case.industry)} · จัดทำ ${esc(new Date(d.meta.generated_at).toLocaleString("th-TH"))} · โดย ${esc(d.meta.prepared_by || "—")}</div></div>
-      <span class="pill ${rc}">Validity FY${d.regime.fiscal_year} · ${esc(d.regime.verdict)}</span></header>
+      <div class="m1a-chips">${M1A.fyChip(d.regime.fiscal_year, 'id="evFyChip"')} ${lbls}</div></header>
     <section><h4>1 · ข้อมูลกรณี (case setup)</h4><table class="mv-evt">
       ${row("บริษัท", `${esc(d.case.ticker)} · ${esc(d.case.name)}`)}${row("อุตสาหกรรม (SET)", esc(d.case.industry))}
-      ${row("ปีบัญชี", `${d.case.fiscal_year} (พ.ศ. ${d.case.fiscal_year_be})`)}${row("มุมมองการใช้งาน (Use case)", `${esc(d.case.use_case)} · ผู้อ่าน ${esc(d.case.audience)}`)}
-      ${row("ค่าป้อน", d.case.edited_inputs ? `<span class="pill warn">ผู้ใช้แก้ค่าใน Zone A</span>` : "ค่าจากฐานข้อมูลต้นแบบ")}</table></section>
+      ${row("ปีบัญชี", `${d.case.fiscal_year} (พ.ศ. ${d.case.fiscal_year_be}) · ${esc(M1A.fyText(d.regime.fiscal_year))}`)}
+      ${row("มุมมองการใช้งาน (Use case)", `<span id="evLens">${esc(d.case.use_case)}</span> · ${T("Readers", "ผู้อ่าน")} ${esc(d.case.audience)}`)}
+      ${d.case.source === "client" ? row(T("Client group", "กลุ่มลูกค้า"), `${d.case.client_group} · ${d.case.outside_reference_sample ? esc(M1A.lab("outside")) : ""}${d.case.outside_reference_sample ? " · " : ""}${T("scored against the frozen REF-928, not added to it (DP6)", "ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ ไม่เพิ่มเข้า REF-928 (DP6)")}`)
+        : row("ค่าป้อน", d.case.edited_inputs ? `<span class="pill warn">ผู้ใช้แก้ค่าใน Zone A</span>` : "ค่าจากฐานข้อมูลต้นแบบ")}</table></section>
     <section><h4>2 · หลักฐานภาษา CEO</h4><table class="mv-evt">
-      ${row("CEO Promotion Focus", `เปอร์เซ็นไทล์ ${fmt(d.ceo_text.promotion_focus_percentile, 0)} ของ REF-928`)}
+      ${d.ceo_text.promotion_focus_percentile !== undefined ? row("CEO Promotion Focus", `เปอร์เซ็นไทล์ ${fmt(d.ceo_text.promotion_focus_percentile, 0)} ของ REF-928`)
+        : row("CEO Promotion Focus", `${fmt(d.ceo_text.promotion_value, 3)}${d.ceo_text.x_pct != null ? ` · X P${fmt(d.ceo_text.x_pct, 1)}` : ""}`)}
       ${row("ที่มา", esc(d.ceo_text.src))}
-      ${d.ceo_text.words ? row("คำที่นับได้", `${fmt(d.ceo_text.words)} คำ · คำเชิงรุก (ไฮไลต์) ${fmt(d.ceo_text.pro || 0)} · คำเชิงป้องกัน ${fmt(d.ceo_text.pre || 0)}`) : ""}</table></section>
+      ${d.ceo_text.words ? row("คำที่นับได้", `${fmt(d.ceo_text.words)} คำ${d.ceo_text.pro !== undefined ? ` · คำเชิงรุก (ไฮไลต์) ${fmt(d.ceo_text.pro || 0)} · คำเชิงป้องกัน ${fmt(d.ceo_text.pre || 0)}` : ""}`) : ""}</table></section>
     <section><h4>3 · บริบทบอร์ดและบริษัท (อ่านอย่างเดียว)</h4><table class="mv-evt">
-      ${row("จำนวนกรรมการ", d.board_context.board_size ? `${d.board_context.board_size} คน` : "ไม่มีในฐานข้อมูล")}
-      ${row("กรรมการหญิง", `${pct1(d.board_context.female_ratio)}${d.board_context.female_count !== null ? ` (≈ ${d.board_context.female_count} คน${d.board_context.female_count < CRIT_N ? " · ต่ำกว่า critical mass" : ""})` : ""}`)}
-      ${row("กรรมการครอบครัว (บริบท R6)", pct1(d.board_context.family_ratio))}${row("political ties (บริบท R6)", d.board_context.political_ties ? "1 · มี" : "0 · ไม่มี")}
-      ${row("อายุงานเฉลี่ยของบอร์ด", `${fmt(d.board_context.avg_tenure_years, 1)} ปี · ไม่มีผลต่อคะแนนหลัก (δT = 0)`)}</table></section>
+      ${row("จำนวนกรรมการ", bc.board_size ? `${bc.board_size} คน` : "ไม่มีในฐานข้อมูล")}
+      ${row("กรรมการหญิง", `${pct1(bc.female_ratio)}${bc.female_count !== null && bc.female_count !== undefined ? ` (≈ ${bc.female_count} คน${bc.female_count < CRIT_N ? " · ต่ำกว่า critical mass" : ""})` : ""}`)}
+      ${uc1 ? "" : row("กรรมการครอบครัว (บริบท R6)", pct1(bc.family_ratio), 'data-evrow="family"') + row("political ties (บริบท R6)", bc.political_ties ? "1 · มี" : "0 · ไม่มี", 'data-evrow="political"')}
+      ${bc.avg_tenure_years !== null ? row("อายุงานเฉลี่ยของบอร์ด", `${fmt(bc.avg_tenure_years, 1)} ปี · ไม่มีผลต่อคะแนนหลัก (δT = 0)`) : ""}
+      ${uc1 ? row(T("Context rows", "แถวบริบท"), T("Family-director and political-ties rows are not shown in the UC1 lens (D1)", "มุมมอง UC1 ไม่แสดงแถวกรรมการครอบครัวและ political ties (D1)")) : ""}</table></section>
     <section><h4>4 · คะแนน ช่วง 90% Tier และ quadrant</h4><table class="mv-evt">
-      ${row("OpenInnoScore", `<b>${fmt(d.score.openinnoscore, 1)}</b> · ช่วง 90% ${fmt(d.score.band90[0], 1)}–${fmt(d.score.band90[1], 1)} · สูตรที่แสดง ${esc(d.score.formula_shown)}`)}
-      ${row("Tier (ทั้งฐาน)", `Tier ${d.score.tier}${d.score.tier_uncertain ? ` <span class="pill warn">tier ไม่แน่นอน (R8)</span>` : ""}`)}
-      ${row("Quartile ในอุตสาหกรรม", `${esc(d.score.industry_quartile)} · OIS ในอุตสาหกรรม ${fmt(d.score.ois_industry, 0)}`)}
-      ${row("quadrant", `${esc(d.quadrant.code)} · ${esc(d.quadrant.name)} (${esc(d.quadrant.label)})`)}
+      ${row("OpenInnoScore", `<b id="evOis">${fmt(d.score.openinnoscore, 1)}</b> · ช่วง 90% <span id="evBand">${fmt(d.score.band90[0], 1)}–${fmt(d.score.band90[1], 1)}</span> · ${T("formula", "สูตร")} <b id="evFormula">${esc(d.score.formula_shown)}</b>`)}
+      ${sh ? row(T("Shadow B_T1", "ค่าเงา B_T1"), `<span class="m1a-shadow" id="evShadow">${T("quadrant", "ช่อง")} ${esc(sh.quadrant || "—")} · OIS_T1 ${fmt(sh.openinnoscore, 1)}${sh.band90 ? ` [${fmt(sh.band90[0], 1)}, ${fmt(sh.band90[1], 1)}]` : ""}</span> <span class="pill warn">CAUTION</span>`) : ""}
+      ${d.score.x_pct != null ? row(T("Axes", "แกน"), `X P${fmt(d.score.x_pct, 1)} · Y P${fmt(d.score.y_pct, 1)}`) : ""}
+      ${row("Tier (ทั้งฐาน)", `Tier ${d.score.tier}${d.score.tier_uncertain ? ` <span class="pill warn" id="evR8">tier ไม่แน่นอน (R8)</span>` : ""}`)}
+      ${d.score.industry_quartile ? row("Quartile ในอุตสาหกรรม", `${esc(d.score.industry_quartile)} · OIS ในอุตสาหกรรม ${fmt(d.score.ois_industry, 0)}`) : ""}
+      ${row("quadrant", `<span id="evQuad">${esc(d.quadrant.code)}</span> · ${esc(d.quadrant.name)}${d.quadrant.label && !String(d.quadrant.name || "").includes(String(d.quadrant.label).replace(/^[A-D]\s*/, "")) ? ` (${esc(d.quadrant.label)})` : ""}`)}
       ${row("ข้อความสถานะ (ตารางที่ 10)", `${esc(d.quadrant.status_message)}<br><span class="mv-sub">ช่อง Tier × quadrant เดียวกันใน REF-928 มีกิจกรรม open innovation เฉลี่ย ${fmt(d.quadrant.group_mean_oi, 2)} รายการ/ปี (n = ${d.quadrant.group_n}) — ค่าเฉลี่ยกลุ่ม ไม่ใช่ค่าคาดหมายของบริษัทนี้</span>`)}
       ${row("ธงสัญญาณ OI", d.oi_flag ? "มี (ช่อง A · ขอบล่างช่วง 90% ≥ 50 · ปีไม่ FAIL)" : "ไม่มี")}
       ${row("ป้าย (chips)", d.chips.length ? d.chips.map(x => `<span class="chip" title="${esc(x.why)}">${esc(x.label)}</span>`).join(" ") : "—")}</table></section>
@@ -332,45 +382,59 @@ function evHtml(d) {
       ${d.rfq ? row("RFQ (CEO Regulatory Focus · self-report)", esc(d.rfq).replace(/\n/g, "<br>")) : ""}
       ${d.bod_set ? row("แบบประเมินตนเองของคณะกรรมการ (SET)", esc(d.bod_set).replace(/\n/g, "<br>")) : ""}</table></section>` : ""}
     <section><h4>${d.rfq || d.bod_set ? 7 : 6} · ที่มาของข้อมูล (provenance)</h4><table class="mv-evt">
-      ${row("ฐานอ้างอิง", esc(d.provenance.reference))}${row("รุ่นฐานอ้างอิง", `<code>${esc(d.provenance.reference_version)}</code>`)}
+      ${row("ฐานอ้างอิง", esc(d.provenance.reference))}${row("รุ่นฐานอ้างอิง", `<code id="evVer">${esc(d.provenance.reference_version)}</code>`)}
       ${row("parameter record", `<code>${esc(d.provenance.parameter_record)}</code> · ค่าสัมประสิทธิ์ไม่แสดง (DP6)`)}${row("Data Dictionary", esc(d.provenance.data_dictionary))}
-      ${row("วันที่ไฟล์ระบบ (build)", esc(d.provenance.build_date || (typeof b5T === "function" ? b5T("Not recorded — see reference_version", "ไม่ระบุ — อ้างรุ่นด้วย reference_version") : "ไม่ระบุ — อ้างรุ่นด้วย reference_version")))}${row("โหมด", esc(d.provenance.mode))}</table></section>
-    <footer class="mv-evf">เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช่ความน่าจะเป็น · ไม่ใช้ประเมินหรือคัดเลือกกรรมการรายบุคคล (PDPA ม.26) · ไม่ใช่คำแนะนำการลงทุนหรือการพิจารณาสินเชื่อ</footer>
+      ${d.provenance.frozen_reference_note ? row(T("Reference sample", "กลุ่มตัวอย่างอ้างอิง"), esc(d.provenance.frozen_reference_note)) : ""}
+      ${row("โหมด", esc(d.provenance.mode))}</table></section>
+    <footer class="mv-evf"><span>${T("Associational, not causal or a forecast · not a probability · not used to assess or select individual directors (PDPA s.26)", "เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช่ความน่าจะเป็น · ไม่ใช้ประเมินหรือคัดเลือกกรรมการรายบุคคล (PDPA ม.26)")}</span> · <span>${esc(d.provenance.reference_version)}</span> · <span>${esc(M1A.fyText(d.regime.fiscal_year))}</span>
+      ${uc1 ? `<div class="m1a-supp m1a-supp-foot" id="evSupFoot"><b>${esc(d.label)}</b></div>` : ""}</footer>
   </article>`;
 }
 function evMd(d) {
-  /* หัวข้อ/ป้ายแปลเมื่อ S.lang === "EN" (b5H → I18N.t) · ค่าข้อมูล (ชื่อบริษัท ตัวเลข ข้อความจากแบบประเมิน) คงเดิม */
-  const H = typeof b5H === "function" ? b5H : (x => x);
-  const L = [`# Evidence Pack · ${d.case.name} (${d.case.ticker})`, "", `- ${H("ปีบัญชี")}: ${d.case.fiscal_year} (${H("พ.ศ.")} ${d.case.fiscal_year_be}) · ${d.case.industry}`,
-    `- Use case: ${d.case.use_case} · ${H("ผู้อ่าน")} ${d.case.audience}`, `- ${H("จัดทำ")}: ${d.meta.generated_at} · ${d.meta.prepared_by}`, "",
-    "## " + H("หลักฐานภาษา CEO"), `- CEO Promotion Focus: ${H("เปอร์เซ็นไทล์")} ${d.ceo_text.promotion_focus_percentile} · ${H("ที่มา")} ${d.ceo_text.src}`,
-    ...(d.ceo_text.words ? [`- ${H("คำที่นับได้")} ${d.ceo_text.words} · ${H("เชิงรุก")} ${d.ceo_text.pro || 0} · ${H("เชิงป้องกัน")} ${d.ceo_text.pre || 0}`] : []), "",
-    "## " + H("บริบทบอร์ด (อ่านอย่างเดียว)"), `- ${H("กรรมการ")} ${d.board_context.board_size ?? "—"} ${H("คน")}${d.board_context.board_size_assumed ? ` (${H("ยังไม่มีจำนวนกรรมการ · What-if ใช้ขนาดบอร์ดสมมติ")} ${typeof BS_DEFAULT !== "undefined" ? BS_DEFAULT : 11} ${H("คน")})` : ""} · ${H("หญิง")} ${pct1(d.board_context.female_ratio)} · ${H("ครอบครัว")} ${pct1(d.board_context.family_ratio)} (${H("บริบท R6")}) · political ties ${d.board_context.political_ties} (${H("บริบท R6")}) · ${H("อายุงาน")} ${d.board_context.avg_tenure_years} ${H("ปี")} (${H("ไม่เข้าสูตร")})`, "",
-    "## " + H("คะแนน"), `- OpenInnoScore ${d.score.openinnoscore} · ${H("ช่วง 90%")} ${d.score.band90.join("–")} · Tier ${d.score.tier}${d.score.tier_uncertain ? ` (${H("ไม่แน่นอน")} R8)` : ""} · ${H("Quartile ในอุตสาหกรรม")} ${d.score.industry_quartile}`,
-    `- quadrant ${d.quadrant.code} ${d.quadrant.name} · ${d.quadrant.status_message}`, `- Validity FY${d.regime.fiscal_year}: ${d.regime.verdict} · ${H("ธงสัญญาณ OI")}: ${d.oi_flag ? H("มี") : H("ไม่มี")}`,
+  const H = typeof b5H === "function" ? b5H : (x => x), bc = d.board_context, sh = d.score.shadow_B_T1;
+  const L = [...(d.label ? [`> ${d.label}`, ""] : []), `# Evidence Pack · ${d.case.name} (${d.case.ticker})`, "",
+    `- ${H("ปีบัญชี")}: ${d.case.fiscal_year} (${H("พ.ศ.")} ${d.case.fiscal_year_be}) · ${d.case.industry} · ${M1A.fyText(d.regime.fiscal_year)}`,
+    ...(d.labels.length ? [`- ${d.labels.join(" · ")}`] : []),
+    `- Use case: ${d.case.use_case} · ${M1A.T("Readers", "ผู้อ่าน")} ${d.case.audience}`, `- ${H("จัดทำ")}: ${d.meta.generated_at} · ${d.meta.prepared_by}`, "",
+    "## " + H("หลักฐานภาษา CEO"), `- CEO Promotion Focus: ${d.ceo_text.promotion_focus_percentile !== undefined ? H("เปอร์เซ็นไทล์") + " " + d.ceo_text.promotion_focus_percentile : d.ceo_text.promotion_value} · ${H("ที่มา")} ${d.ceo_text.src}`, "",
+    "## " + H("บริบทบอร์ด (อ่านอย่างเดียว)"), `- ${H("กรรมการ")} ${bc.board_size ?? "—"} ${H("คน")} · ${H("หญิง")} ${pct1(bc.female_ratio)}` +
+      (d.meta.lens === "UC1" ? "" : ` · ${H("ครอบครัว")} ${pct1(bc.family_ratio)} (${H("บริบท R6")}) · political ties ${bc.political_ties} (${H("บริบท R6")})`), "",
+    "## " + H("คะแนน"), `- OpenInnoScore ${d.score.openinnoscore} · ${H("ช่วง 90%")} ${d.score.band90.join("–")} · Tier ${d.score.tier}${d.score.tier_uncertain ? ` (${H("ไม่แน่นอน")} R8)` : ""} · formula ${d.score.formula_shown}`,
+    ...(sh ? [`- Shadow B_T1 (CAUTION): quadrant ${sh.quadrant} · OIS_T1 ${sh.openinnoscore}${sh.band90 ? ` [${sh.band90.join(", ")}]` : ""}`] : []),
+    `- quadrant ${d.quadrant.code} ${d.quadrant.name} · ${d.quadrant.status_message}`, `- ${M1A.fyText(d.regime.fiscal_year)}`,
     `- ${H("ป้าย")}: ${d.chips.map(x => x.label).join(" · ") || "—"}`, "", "## " + H("กติกา R1–R8"), ...d.rules.map(r => `- ${r.rule} ${r.text} — ${r.triggered ? H("เกิดขึ้น/ใช้แล้ว") : H("ไม่เข้าเงื่อนไข")}`), "",
     ...(d.rfq ? ["## " + H("RFQ (ไม่เข้าคะแนน)"), d.rfq, ""] : []), ...(d.bod_set ? ["## " + H("แบบประเมินตนเองของคณะกรรมการ (SET)"), d.bod_set, ""] : []),
-    "## " + H("ที่มาของข้อมูล"), `- ${d.provenance.reference} · ${H("รุ่น")} ${d.provenance.reference_version} · parameter record ${d.provenance.parameter_record}`, `- build ${d.provenance.build_date || H("ไม่ระบุ (อ้างรุ่นด้วย reference_version)")} · ${d.provenance.mode}`, "",
-    "_" + H("เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช้ประเมินกรรมการรายบุคคล") + "_"];
+    "## " + H("ที่มาของข้อมูล"), `- ${d.provenance.reference} · ${H("รุ่น")} ${d.provenance.reference_version} · parameter record ${d.provenance.parameter_record}`, `- ${d.provenance.mode}`, "",
+    "_" + H("เชิงความสัมพันธ์ ไม่ใช่เหตุ-ผลหรือการพยากรณ์ · ไม่ใช้ประเมินกรรมการรายบุคคล") + "_", ...(d.label ? ["", `> ${d.label}`] : [])];
   return L.join("\n");
 }
+function evPicker(c, cl) {
+  const list = M1A.clients().filter(x => x.scored && +x.group <= 3);
+  if (!list.length) return "";
+  return `<label class="m1a-lab rp-noprint">${T("Company", "บริษัท")} <select class="sel" id="evSubj">
+    <option value="">${esc(c.t)} · ${T("selected company", "บริษัทที่เลือกอยู่")}</option>
+    ${list.map(x => `<option value="${esc(x.ticker)}|${+x.fiscal_year}"${cl && cl.ticker === x.ticker && +cl.fiscal_year === +x.fiscal_year ? " selected" : ""}>${esc(x.ticker)} · FY${+x.fiscal_year} · ${T("client", "ลูกค้า")}</option>`).join("")}</select></label>`;
+}
 function viewEvidence() {
-  const c = cur(), r = mvRank();
+  const c = cur(), r = mvRank(), cl = evSubjectClient();
   const head = pageHead("รายงาน", "Evidence Pack · แฟ้มหลักฐานประกอบการตัดสินใจ",
     "รวมทุกอย่างที่ระบบแสดงของบริษัทหนึ่งไว้ในหน้าเดียวสำหรับแฟ้มการตัดสินใจ (งานวิจัย §4.7): ข้อมูลกรณี · ภาษา CEO · บริบทบอร์ด · คะแนนพร้อมช่วง 90% · Tier/quadrant · สถานะ validity · ป้าย · กติกา R1–R8 · ที่มาของข้อมูล");
-  if (!mvCanSee(c.t)) return typeof trCoGate === "function" ? trCoGate() : head;
-  /* ระดับ Basic: ไม่สร้างแฟ้มหลักฐานใน DOM เลย (ภาคผนวก ง ข้อ 10) */
+  if (!cl && !mvCanSee(c.t)) return typeof trCoGate === "function" ? trCoGate() : head;
   if (r < 1) return head + (typeof trWall === "function" ? trWall("", "Evidence Pack", "ระดับ Pro ขึ้นไปประกอบแฟ้มหลักฐานรายบริษัท พิมพ์ และส่งออก .md / JSON ได้", "pro") : "");
-  const d = evData(c), doc = evHtml(d);
-  return head + `<div class="gx-row mv-evtools rp-noprint"><button class="btn p" id="evPrint">พิมพ์ / บันทึก PDF</button><button class="btn s" id="evMd">ดาวน์โหลด .md</button>
-      <button class="btn s" id="evJson">ดาวน์โหลด JSON</button><span class="gx-sm">ไม่มีค่าสัมประสิทธิ์ในแฟ้ม · ข้อความเชิงความสัมพันธ์ทั้งหมด</span></div>` + doc;
+  const d = evData(c, cl), doc = evHtml(d);
+  return head + `<div class="gx-row mv-evtools rp-noprint">${evPicker(c, cl)}<button class="btn p" id="evPrint">พิมพ์ / บันทึก PDF</button><button class="btn s" id="evMd">ดาวน์โหลด .md</button>
+      <button class="btn s" id="evJson">ดาวน์โหลด JSON</button><span class="gx-sm">ไม่มีค่าสัมประสิทธิ์ในแฟ้ม · ข้อความเชิงความสัมพันธ์ทั้งหมด · ${esc(M1A.ver())}</span></div>` + doc;
 }
 function wireEvidence(h) {
-  if (mvRank() < 1 || !mvCanSee(S.t)) return;
-  const c = cur(), base = `EvidencePack_${c.t}_${(c.fy || FY_SHOWN) + 543}`;
+  const sel = h.querySelector("#evSubj");
+  if (sel) sel.onchange = () => { const [t, y] = sel.value.split("|"); mvStore(M1A.EV_KEY, t ? { ticker: t, fy: +y } : null); render(); };
+  const cl = evSubjectClient(), c = cur();
+  if (mvRank() < 1 || (!cl && !mvCanSee(S.t))) return;
+  const sub = cl ? { t: cl.ticker, fy: +cl.fiscal_year } : { t: c.t, fy: c.fy || FY_SHOWN };
+  const base = `EvidencePack_${sub.t}_FY${sub.fy}_${M1A.lens().code}`;
   const p = h.querySelector("#evPrint"); if (p) p.onclick = () => mvPrint("mv-print-ev");
-  const m = h.querySelector("#evMd"); if (m) m.onclick = () => mvDl(base + ".md", evMd(evData(c)), "text/markdown;charset=utf-8");
-  const j = h.querySelector("#evJson"); if (j) j.onclick = () => mvDl(base + ".json", JSON.stringify(evData(c), null, 2), "application/json;charset=utf-8");
+  const m = h.querySelector("#evMd"); if (m) m.onclick = () => mvDl(base + ".md", evMd(evData(c, cl)), "text/markdown;charset=utf-8");
+  const j = h.querySelector("#evJson"); if (j) j.onclick = () => mvDl(base + ".json", JSON.stringify(evData(c, cl), null, 2), "application/json;charset=utf-8");
 }
 
 /* ============================================================================

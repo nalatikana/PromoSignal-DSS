@@ -21,6 +21,8 @@
 (function () {
   "use strict";
   const DICT = /*__I18NDICT__*/{};
+  /* MVP1: คำแปลที่ไฟล์ก่อนหน้าฝากไว้ใน window.__I18N_Q (ก่อนชั้นแปลโหลด) — รวมก่อนแปลรอบแรก */
+  try { (window.__I18N_Q || []).forEach(d => Object.assign(DICT, d || {})); } catch (e) { }
   const TH = /[\u0E00-\u0E3E\u0E40-\u0E7F]/;   // ไทย ยกเว้น ฿ (U+0E3F)
   const isEN = () => typeof S !== "undefined" && S.lang === "EN";
   const norm = s => s.replace(/[\s ]+/g, " ").trim();

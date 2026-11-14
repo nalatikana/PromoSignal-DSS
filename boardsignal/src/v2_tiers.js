@@ -41,7 +41,7 @@ const PERM = [
   ["ข้อสั่งการบอร์ด / Compliance", "✕", "✕", "✓"],
   ["สรุปผล RFQ ทุกชุดในเครื่อง (สำหรับผู้ดูแล)", "✕", "✕", "✓ (หรือผู้ดูแลระบบบนเซิร์ฟเวอร์)"],
   /* แก้ไขรอบสุดท้าย — 2 แถวที่บังคับจริงแต่เดิมไม่อยู่ในตาราง (TR_PAID "port" · aiCharge/aiDebit ใน v2_ai.js) */
-  ["พอร์ตลงทุน · โหมดที่ประชุม (IC)", "โหมดที่ประชุมเฉพาะบริษัทตนเอง · พอร์ต ✕", "พอร์ต: ปลดครั้งเดียว 3 เครดิต · เฉพาะบริษัทที่ดูได้ (ตนเอง + ที่ปลดล็อก)", "ทุกบริษัท · รวมใน Subscription (ไม่ตัดเครดิต)"],
+  ["Portfolio Matrix · โหมดที่ประชุม (IC)", "โหมดที่ประชุมเฉพาะบริษัทตนเอง · พอร์ต ✕", "พอร์ต: ปลดครั้งเดียว 3 เครดิต · เฉพาะบริษัทที่ดูได้ (ตนเอง + ที่ปลดล็อก)", "ทุกบริษัท · รวมใน Subscription (ไม่ตัดเครดิต)"],
   ["AI Report Studio", "✕", "1 เครดิต ต่อ 1 รายงาน (บางเทมเพลตเป็นสิทธิ์ Pro Max)", "รวมใน Subscription (ไม่ตัดเครดิต)"],
 ];
 const TARIFF = [
@@ -50,12 +50,12 @@ const TARIFF = [
   ["เทียบคู่แข่ง 3 ราย (Pro)", "1", "เปลี่ยนคู่แข่งได้ไม่จำกัดหลังปลดล็อก"],
   ["What-if Studio (Pro)", "1", "รวมการวัดภาษา CEO จากไฟล์ .txt"],
   ["ภาพรวมทั้งอุตสาหกรรม + บริษัทคะแนนใกล้เคียง", "—", "รวมใน Subscription ของ Pro Max"],
-  ["พอร์ตลงทุน (Pro)", "3", "ปลดครั้งเดียวต่อบัญชี · เฉพาะบริษัทที่ดูได้ · Basic ✕ · Pro Max ไม่ตัดเครดิต"],
+  ["Portfolio Matrix (Pro)", "3", "ปลดครั้งเดียวต่อบัญชี · เฉพาะบริษัทที่ดูได้ · Basic ✕ · Pro Max ไม่ตัดเครดิต"],
   ["AI Report Studio (Pro)", "1", "ต่อ 1 รายงาน · Basic ✕ · Pro Max ไม่ตัดเครดิต"],
 ];
 /** ชื่อรายการในประวัติการใช้เครดิต — ไม่แสดงคีย์ภายในดิบ (เช่น "aireport") */
 const TR_LOG_LAB = { report: "รายงานวินิจฉัย / ข้อมูลบริษัท", peer: "เทียบคู่แข่ง", studio: "What-if Studio + ตรวจภาษา CEO", sector: "ภาพรวมอุตสาหกรรม + CSV",
-  ceotext: "ตรวจข้อความ CEO", port: "พอร์ตลงทุน", topup: "เติมเครดิต", aireport: "AI Report Studio · สร้างรายงาน" };
+  ceotext: "ตรวจข้อความ CEO", port: "Portfolio Matrix", topup: "เติมเครดิต", aireport: "AI Report Studio · สร้างรายงาน" };
 const trLogLab = k => TR_LOG_LAB[k] || (/^ai/i.test(String(k)) ? "AI Report Studio" : "รายการอื่น");
 
 /* ---------------------------------------------------------------- 2 · ตรรกะสิทธิ์ */
@@ -440,7 +440,7 @@ function t561Values(c, lang) {
     "การดำเนินการที่เสร็จและมีมติ": done.length ? done.map((r, i) => `${i + 1}. ${r.issue} — action taken per resolution: ${r.dec}`).join("\n")
       : "[No completed actions with board resolutions yet — this part lists only actions that actually took place and were approved]",
     "ผล RFQ": mvSummaryText("rfqSummary", c.t, "EN") || "[No RFQ results yet — available on the RFQ page · a CEO self-report measure, separate from the score]",
-    "ผลประเมิน BOD": mvSummaryText("bodSetSummary", c.t, c.fy || FY_SHOWN, "EN") || (bod.done.length
+    "ผลประเมิน BOD": (typeof m1aBodResult === "function" ? m1aBodResult(c, c.fy || FY_SHOWN, "EN") : "") || (bod.done.length
       ? `Board-level self-assessment results: items the board considers largely or systematically in place: ${ids(bod.hi)}`
         + ` · items set as development priorities for the next year: ${ids(bod.lo)} · results are a board-level overview; no individual director is assessed or scored`
       : "[No board self-evaluation results yet — available on the Board Self-Evaluation (SET) page or BOD Self-Assessment OI-1…6]"),
@@ -452,7 +452,7 @@ function t561Values(c, lang) {
     "การดำเนินการที่เสร็จและมีมติ": done.length ? done.map((r, i) => `${i + 1}. ${r.issue} — การดำเนินการตามมติ: ${r.dec}`).join("\n")
       : "[ยังไม่มีรายการที่ดำเนินการแล้วเสร็จและมีมติ — ส่วนนี้แสดงเฉพาะการดำเนินการที่เกิดขึ้นจริงและผ่านการอนุมัติ]",
     "ผล RFQ": mvSummaryText("rfqSummary", c.t, "TH") || "[ยังไม่มีผลแบบประเมิน RFQ — ทำได้ที่หน้า RFQ · เป็นแบบวัดตนเองของ CEO แยกจากคะแนน]",
-    "ผลประเมิน BOD": mvSummaryText("bodSetSummary", c.t, c.fy || FY_SHOWN, "TH") || (bod.done.length
+    "ผลประเมิน BOD": (typeof m1aBodResult === "function" ? m1aBodResult(c, c.fy || FY_SHOWN, "TH") : "") || (bod.done.length
       ? `ผลการประเมินตนเองระดับคณะ: ประเด็นที่คณะกรรมการเห็นว่ามีการดำเนินการเป็นส่วนใหญ่หรืออย่างเป็นระบบแล้ว ได้แก่ ${ids(bod.hi)}`
         + ` · ประเด็นที่กำหนดเป็นแนวทางพัฒนาในปีถัดไป ได้แก่ ${ids(bod.lo)} · ผลเป็นภาพรวมระดับคณะ ไม่มีการประเมินหรือให้คะแนนกรรมการรายบุคคล`
       : "[ยังไม่มีผลประเมินตนเองของคณะกรรมการ — ทำได้ที่หน้าแบบประเมินตนเองของคณะกรรมการ (SET) หรือ BOD Self-Assessment OI-1…6]"),
@@ -784,11 +784,11 @@ WIRES2.t561 = function (h) { if (!canSeeCo(S.t) || tierRank() < 1) return; wireT
 (() => { const v = VIEWS.t561; VIEWS.t561 = function () { return canSeeCo(S.t) ? v() : trCoGate(); }; })();
 
 /* ---------------------------------------------------------------- 8 · คู่มือการใช้งาน (ในหน้าระบบ) */
-const MAN_SECS = [["man-start", "เริ่มต้น"], ["man-plans", "ระดับสิทธิ์และเครดิต"], ["man-flow", "เส้นทางการทำงาน"], ["man-t561", "ร่าง 56-1"],
-  ["man-read", "อ่านผลอย่างไร"], ["man-whatif", "What-if (กรรมการหญิง + อายุงาน)"], ["man-uc", "Use Case"], ["man-rules", "กติกาสำคัญ"], ["man-pilot", "หน้า Pilot"],
+const MAN_SECS = [["man-mvp1", "MVP 1 · ฉบับนำร่อง (Pilot build)", 1], ["man-start", "เริ่มต้น"], ["man-plans", "ระดับสิทธิ์และเครดิต"], ["man-flow", "เส้นทางการทำงาน"], ["man-t561", "ร่าง 56-1"],
+  ["man-read", "อ่านผลอย่างไร"], ["man-whatif", "What-if (กรรมการหญิง · G1–G6)"], ["man-uc", "Use Case"], ["man-rules", "กติกาสำคัญ"], ["man-pilot", "หน้า Pilot"],
   ["man-assess", "RFQ · Dictionary · ประเมินตนเองของบอร์ด"], ["man-data", "ชุดข้อมูล · Evidence Pack · Structured Data"], ["man-rcpt", "ใบเสร็จตัวอย่าง"], ["man-faq", "คำถามที่พบบ่อย"],
   /* แก้ไขรอบสุดท้าย — ส่วนของหน้าใหม่ (เลข 14–19 ต่อท้าย เพื่อไม่เปลี่ยนเลขส่วนเดิม) */
-  ["man-tiers", "Basic · Pro · Pro Max โดยย่อ"], ["man-port", "พอร์ตลงทุน · โหมดที่ประชุม"], ["man-ai", "AI Report Studio"],
+  ["man-tiers", "Basic · Pro · Pro Max โดยย่อ"], ["man-port", "Portfolio Matrix · โหมดที่ประชุม"], ["man-ai", "AI Report Studio"],
   ["man-upload", "นำเข้าข้อมูลปีใหม่และการอนุมัติ"], ["man-valid", "Validity · คำนวณใหม่เมื่อข้อมูลเปลี่ยน"], ["man-lang", "สลับภาษา ไทย / English"]];
 const MAN_HELP = { profile: "man-v-profile", docs: "man-v-docs", fit: "man-v-fit", zonec: "man-v-zonec", matrix: "man-v-matrix", compass: "man-v-compass",
   peer: "man-v-peer", studio: "man-whatif", followup: "man-v-followup", t561: "man-t561", sector: "man-tiers", billing: "man-plans", port: "man-port", ic: "man-port",
@@ -800,23 +800,23 @@ const MAN_CHIPS = [
   ["Caution: ปีนี้ไม่ผ่านเกณฑ์ validity", "ปีบัญชีนั้นตกเกณฑ์อย่างน้อยหนึ่งข้อในตาราง validity — อ่านผลอย่างระมัดระวัง"],
   ["ยังไม่ได้ validate", "ยังไม่มีข้อมูลปีถัดไปให้ตรวจ"],
   ["หลักฐานอ่อนในอุตสาหกรรมนี้", "ความสัมพันธ์ระหว่างคะแนนกับกิจกรรม open innovation ในอุตสาหกรรมนี้ยังไม่ต่างจากศูนย์อย่างมีนัย"],
-  ["กรรมการหญิง … คน — ต่ำกว่าเกณฑ์ critical mass", "เกณฑ์คือกรรมการหญิงอย่างน้อย 3 คน — เป็นเกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008) ไม่ได้มาจากตารางผลของบทความ"],
+  ["กรรมการหญิง … คน — ต่ำกว่าเกณฑ์ critical mass", "เกณฑ์คือกรรมการหญิงอย่างน้อย 3 คน — เป็นเกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Torchia, Calabrò & Huse, 2011) ไม่ได้มาจากตารางผลของบทความ"],
   ["amp ≤ 0", "บอร์ดอยู่ในรูปแบบที่ภาษาเชิงรุกของ CEO ไม่สัมพันธ์กับ open innovation ที่สูงขึ้น"],
   ["ค่าป้อนถูก clip", "ค่าอยู่นอกช่วงของฐานอ้างอิง จึงถูกปรับเข้าขอบช่วงก่อนเข้าสูตร"],
-  ["นอกกลุ่มอ้างอิง", "ธนาคาร/การเงิน หรือไม่มีสารภาษาอังกฤษ — ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid"],
+  ["นอกกลุ่มอ้างอิง", "กลุ่มธุรกิจการเงิน หรือไม่มีจดหมายภาษาอังกฤษ — ใช้ Board Profile เท่านั้น ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid"], ["นอกโดเมน (Outside the reference sample)", "บริษัทจดทะเบียนที่ไม่อยู่ใน 209 บริษัทของ REF-928 — แสดงตำแหน่งบน 2×2 ได้ แต่ไม่นำเปอร์เซ็นไทล์ไปเทียบกับบริษัทอื่น และไม่เพิ่มเข้า REF-928 (DP6)"], ["ยังไม่ได้ตรวจความเที่ยงตรง (Not yet validated)", "ปีบัญชีหลัง 2023 ยังไม่มีผลลัพธ์ปีถัดไปให้ตรวจ"],
   ["ธงสัญญาณ OI", "อยู่ช่อง A (ช่องมุมขวาบน) และขอบล่างของช่วง 90% ≥ 50 ในปีที่ผ่าน validity — เป็นธงเชิงความสัมพันธ์ ไม่ใช่การรับรอง"],
 ];
 const MAN_FAQ = [
   ["คะแนน OpenInnoScore คือความน่าจะเป็นที่บริษัทจะทำนวัตกรรมใช่ไหม", "ไม่ใช่ — เป็นเปอร์เซ็นไทล์ของสัญญาณเทียบฐานอ้างอิง REF-928 (928 บริษัท-ปี) อ่านเชิงความสัมพันธ์ ไม่ใช่การพยากรณ์และไม่ใช่เหตุ-ผล"],
   ["ทำไมระดับ Basic เปิดบริษัทอื่นไม่ได้ แม้มีเครดิต", "Basic ออกแบบให้ “ตรวจสอบก่อนจ่าย” กับบริษัทของตนเอง · เครดิต 3 หน่วยที่ได้ตอนสมัครใช้ได้ทันทีเมื่อเปลี่ยนเป็น Pro (Pay-Per-Use ไม่มีค่ารายเดือน)"],
   ["ปลดล็อกแล้วต้องจ่ายซ้ำไหม", "ไม่ต้อง — ปลดล็อกครั้งเดียวดูได้ตลอดสำหรับบริษัท/อุตสาหกรรมนั้น · Pro Max ไม่ตัดเครดิตกับรายการในตาราง"],
-  ["ทำไม What-if ไม่มีตัวปรับกรรมการครอบครัวและ political ties", "ตามที่ประชุมตกลง What-if จำลองได้ 2 ตัวแปร (จำนวนกรรมการหญิงและอายุงาน) · สองตัวแปรบริบทนี้ความสัมพันธ์ไม่ทนต่อการวิเคราะห์ fixed-effects และกติกา R6 ของงานวิจัยกำหนดให้เป็นข้อมูลอ่านอย่างเดียว ไม่ใช้เป็นเหตุผลเชิงบวก"],
-  ["ทำไมปรับอายุงานแล้วคะแนนหลักไม่เปลี่ยน", "คะแนนหลัก (B_EG) ตัดอายุงานออกด้วย evidence gate (DP1) เพราะงานวิจัยไม่พบหลักฐานที่ทนต่อการวิเคราะห์ · ผลของอายุงานจึงแสดงแยกเป็น “การวิเคราะห์ความไว (B_FULL)” ซึ่งในงานวิจัยให้ผลความแม่นใกล้เคียงกับคะแนนหลัก"],
-  ["ระบบบอกไหมว่าทางเลือกใดดีกว่า", "ไม่ — ทางเลือกสำหรับการพิจารณาเรียงลำดับคงที่ แต่ละข้อแสดงความสัมพันธ์ตามสูตรคู่กับข้อแลกเปลี่ยน ผู้ใช้วิเคราะห์และตัดสินใจเอง · คำอธิบายอ้างอิงบทความวิจัยและฐานความรู้ของผู้ว่าจ้าง"],
+  ["ทำไม What-if ไม่มีตัวปรับกรรมการครอบครัวและ political ties", "ฉบับนำร่อง What-if ปรับได้เฉพาะสัดส่วนกรรมการหญิง (เพิ่มขึ้นเท่านั้น) · สองตัวแปรบริบทนี้ความสัมพันธ์ไม่ทนต่อการวิเคราะห์ fixed-effects และกติกา R6 ของงานวิจัยกำหนดให้เป็นข้อมูลอ่านอย่างเดียว ไม่ใช้เป็นเหตุผลเชิงบวก"],
+  ["ทำไมไม่มีตัวปรับอายุงานใน What-if", "คะแนนหลัก (B_EG) ตัดอายุงานออกด้วย evidence gate (DP1) เพราะงานวิจัยไม่พบหลักฐานที่ทนต่อการวิเคราะห์ · ฉบับนำร่องจึงซ่อนตัวปรับอายุงานและการ์ด B_FULL (G1, #18)"],
+  ["ระบบบอกไหมว่าทางเลือกใดดีกว่า", "ไม่ — ทางเลือกสำหรับการพิจารณาเรียงลำดับคงที่ แต่ละข้อแสดงความสัมพันธ์ตามสูตรคู่กับข้อแลกเปลี่ยน ผู้ใช้วิเคราะห์และตัดสินใจเอง · คำอธิบายอ้างอิงบทความวิจัยและฐานความรู้ของโครงการ"],
   ["จุดอ้างอิงบน Grid คือเป้าหมายที่ควรไปใช่ไหม", "ไม่ใช่ — เป็นค่ามัธยฐานของบริษัทช่อง Deliver ในอุตสาหกรรมเดียวกัน ใช้เทียบระยะห่างเท่านั้น และปิดไว้เป็นค่าเริ่มต้น"],
   ["ร่าง 56-1 เอาคะแนนไปใส่ได้ไหม", "ไม่ได้ — ร่างใช้เฉพาะกระบวนการประเมิน ประเด็นพัฒนา และการดำเนินการที่เกิดขึ้นจริงและผ่านมติ ระบบจะเตือนและบล็อกการส่งออกถ้าพบคำอ้างคะแนน"],
   ["ข้อมูลที่อัปโหลดถูกส่งไปที่ไหน", "ต้นแบบนี้อ่านเอกสารในเบราว์เซอร์เท่านั้น ไม่ส่งออก · ข้อมูลอยู่ใน localStorage ของเครื่องนี้"],
-  ["ทำไมธนาคารไม่มีจุดบน Grid", "ธนาคารอยู่นอกฐานอ้างอิง REF-928 (อุตสาหกรรม 1–7 นอกกลุ่มการเงิน) — ใช้ BOD Self-Assessment และโหมดนอกกลุ่มอ้างอิงแทน"],
+  ["ทำไมบริษัทกลุ่มธุรกิจการเงินไม่มีจุดบน Grid", "REF-928 มีเฉพาะอุตสาหกรรม 1–7 นอกกลุ่มธุรกิจการเงิน — บริษัทกลุ่มนี้ใช้ Board Profile (นอกกลุ่มอ้างอิง) และ BOD Self-Assessment แทน ไม่มีตำแหน่งบนเมทริกซ์ คะแนน tier หรือ What-if (D2)"],
 ];
 /** ส่วนคู่มือของหน้าใหม่ (แก้ไขรอบสุดท้าย) — มีข้อความอังกฤษในตัว (T) เพราะเป็นข้อความใหม่ที่พจนานุกรมยังไม่มี */
 function manNewSecs() {
@@ -825,17 +825,17 @@ function manNewSecs() {
       <ul class="tr-ol"><li>${T("<b>Basic (Level 1)</b> — your own company only: report, analysis and options for consideration (Zone A–C · Compass · 2×2 position). Other companies' scores are not shown, the company picker is sorted by ticker, and starter credits cannot unlock anything until you switch to Pro.",
           "<b>Basic (Level 1)</b> — เฉพาะบริษัทของคุณเอง: รายงาน การวิเคราะห์ และทางเลือกสำหรับการพิจารณา (Zone A–C · Compass · ตำแหน่งบน 2×2) · ไม่แสดงคะแนนของบริษัทอื่น ตัวเลือกบริษัทเรียงตามตัวย่อ และเครดิตเริ่มต้นใช้ปลดล็อกไม่ได้จนกว่าจะเปลี่ยนเป็น Pro")}</li>
         <li>${T("<b>Pro (Level 2 · Pay-Per-Use)</b> — head-to-head with 3 companies in the same industry, What-if (female directors + tenure), unlock other companies one at a time, portfolio (3 credits once), AI Report Studio (1 credit per report).",
-          "<b>Pro (Level 2 · Pay-Per-Use)</b> — เทียบตัวต่อตัวกับ 3 บริษัทในอุตสาหกรรมเดียวกัน · What-if (กรรมการหญิง + อายุงาน) · ปลดล็อกบริษัทอื่นทีละบริษัท · พอร์ตลงทุน (3 เครดิต ครั้งเดียว) · AI Report Studio (1 เครดิตต่อรายงาน)")}</li>
+          "<b>Pro (Level 2 · Pay-Per-Use)</b> — เทียบตัวต่อตัวกับ 3 บริษัทในอุตสาหกรรมเดียวกัน · What-if (กรรมการหญิง + อายุงาน) · ปลดล็อกบริษัทอื่นทีละบริษัท · Portfolio Matrix (3 เครดิต ครั้งเดียว) · AI Report Studio (1 เครดิตต่อรายงาน)")}</li>
         <li>${T("<b>Pro Max (Level 3 · Subscription)</b> — whole industry, neighbouring-score companies, cross-industry peers, downside scenarios, directives/compliance and approval; no credits are charged for items in the table.",
           "<b>Pro Max (Level 3 · Subscription)</b> — ทั้งอุตสาหกรรม · บริษัทคะแนนใกล้เคียง · เทียบข้ามอุตสาหกรรม · ฉากทัศน์ขาลง · ข้อสั่งการ/Compliance และขั้นอนุมัติ · ไม่ตัดเครดิตกับรายการในตาราง")}</li>
         <li>${T(`Full permission table: ${L("billing", "Credits and plans")} (${PERM.length} rows).`, `ตารางสิทธิ์ฉบับเต็ม: ${L("billing", "เครดิตและแผนการใช้งาน")} (${PERM.length} แถว)`)}</li></ul></section>
-    <section class="card b5-man" id="man-port"><h3>${T("15 · Portfolio · Investment-committee mode", "15 · พอร์ตลงทุน · โหมดที่ประชุม")}</h3>
-      <ul class="tr-ol"><li>${T("Portfolio: Basic ✕ · Pro unlocks once (3 credits) and lists only companies you can see (your own + unlocked) · Pro Max includes all companies with no credit charge.",
-          "พอร์ตลงทุน: Basic ✕ · Pro ปลดครั้งเดียว (3 เครดิต) และใส่ได้เฉพาะบริษัทที่ดูได้ (บริษัทตนเอง + ที่ปลดล็อก) · Pro Max ทุกบริษัท ไม่ตัดเครดิต")}</li>
-        <li>${T("Committee mode shows the same numbers as the diagnostic report. Wording is descriptive (\"points that may be considered first\") — the committee decides.",
-          "โหมดที่ประชุมใช้ตัวเลขชุดเดียวกับรายงานวินิจฉัย · ถ้อยคำเป็นการบรรยาย (“ประเด็นที่อาจพิจารณาก่อน”) ไม่ใช่ข้อเสนอ — ที่ประชุมตัดสินใจเอง")}</li>
-        <li>${T("The index used to sort the portfolio combines formula gap, CEO language and distance to the group leader; it is a sort key, not a recommendation.",
-          "ดัชนีลำดับพิจารณารวมช่องว่างตามสูตร ภาษาผู้นำ และระยะห่างจากผู้นำกลุ่ม — ใช้เรียงข้อมูล ไม่ใช่คำแนะนำ")}</li></ul></section>
+    <section class="card b5-man" id="man-port"><h3>${T("15 · Portfolio Matrix · client list", "15 · Portfolio Matrix · โหมดที่ประชุม")}</h3>
+      <ul class="tr-ol"><li>${T("Portfolio Matrix: the pilot organisation's client companies on the same 2×2 as the Strategy Grid (X = CEO-drive percentile, Y = board-amplification percentile). Clients outside REF-928 appear as hollow markers labelled “Outside the reference sample”. The client list stays in this browser.",
+          "Portfolio Matrix: ตำแหน่งของบริษัทลูกค้าขององค์กรนำร่องบน 2×2 ชุดเดียวกับ Strategy Grid (แกนนอน = เปอร์เซ็นไทล์ CEO drive · แกนตั้ง = เปอร์เซ็นไทล์ board amplification) · ลูกค้านอก REF-928 เป็นจุดกลวงพร้อมป้าย “นอกโดเมน” · รายชื่อลูกค้าเก็บในเบราว์เซอร์นี้เท่านั้น")}</li>
+        <li>${T("Meeting mode is hidden in the pilot build (#2, #13).",
+          "โหมดที่ประชุมซ่อนในฉบับนำร่อง (#2, #13)")}</li>
+        <li>${T("Clients are sorted by quadrant, then ticker. This is a map of client positions for relationship programmes — not a stock-selection tool.",
+          "เรียงตามช่อง แล้วตามชื่อย่อ · เป็นแผนที่ตำแหน่งลูกค้าสำหรับโปรแกรมความสัมพันธ์ ไม่ใช่ระบบเลือกหุ้นเข้าพอร์ต")}</li></ul></section>
     <section class="card b5-man" id="man-ai"><h3>${T("16 · AI Report Studio", "16 · AI Report Studio")}</h3>
       <ul class="tr-ol"><li>${T(`${L("aireport", "Open AI Report Studio")} — choose a template, review the data sent to the AI (payload) and the full prompt, then generate. The report language follows the screen language.`,
           `${L("aireport", "เปิด AI Report Studio")} — เลือกเทมเพลต ตรวจข้อมูลที่ส่งให้ AI (payload) และคำสั่งฉบับเต็ม แล้วจึงสร้างรายงาน · ภาษาของรายงานตามภาษาหน้าจอ`)}</li>
@@ -855,16 +855,42 @@ function manNewSecs() {
     <section class="card b5-man" id="man-lang"><h3>${T("19 · Language switch (ไทย / English)", "19 · สลับภาษา ไทย / English")}</h3>
       <ul class="tr-ol"><li>${T("Use the TH / EN switch at the top. Screens, exports (CSV/MD column headers) and AI reports follow the selected language; data values are not translated.",
           "ใช้ปุ่ม TH / EN ด้านบน · หน้าจอ หัวคอลัมน์ไฟล์ส่งออก (CSV/MD) และรายงาน AI ตามภาษาที่เลือก · ค่าข้อมูลไม่ถูกแปล")}</li>
-        <li>${T("What-if simulates two variables only: number of female directors (board size is the denominator) and average board tenure (shown as a B_FULL sensitivity).",
-          "What-if จำลอง 2 ตัวแปรเท่านั้น: จำนวนกรรมการหญิง (ขนาดบอร์ดเป็นตัวหาร) และอายุงานเฉลี่ยของบอร์ด (แสดงเป็นความไว B_FULL)")}</li></ul></section>`;
+        <li>${T("What-if in the pilot build moves one variable only: the number of women directors (increase-only, actual board size required).",
+          "What-if ในฉบับนำร่องปรับได้ตัวแปรเดียว: จำนวนกรรมการหญิง (เพิ่มขึ้นเท่านั้น ต้องกรอกจำนวนกรรมการจริง)")}</li></ul></section>`;
+}
+/** MVP 1 · ส่วนคู่มือของฉบับนำร่อง (14 พ.ย. 2569) — ฟีเจอร์หลัก 2 อย่าง · consent · กลุ่มลูกค้า · สถานะปีบัญชี · Board Profile · สิ่งที่ซ่อนและเหตุผล */
+function manMvp1() {
+  const L = (id, l) => `<button class="lnk" data-mango2="${id}">${esc(l)}</button>`;
+  const hid = PILOT_HIDDEN_INFO.map(([id, en, th]) => `<li><b>${esc((NAV_ALL_LAB[id] || id))}</b> — ${T(en, th)}</li>`).join("");
+  return `<section class="card b5-man m1a-man" id="man-mvp1"><h3>${T("★ MVP 1 · pilot build (UC1 and UC3)", "★ MVP 1 · ฉบับนำร่อง (UC1 และ UC3)")}</h3>
+    <p class="desc">${T("Only the two workflows that passed C1–C3 are in this build: UC1 · Client relationship (P2) and UC3 · Board OI evaluation (P1), plus Board Profile for boards outside the reference group. The switch window.PILOT_BUILD restores the hidden screens later.",
+      "ฉบับนี้มีเฉพาะสองงานที่ผ่านเกณฑ์ C1–C3: UC1 · ความสัมพันธ์ลูกค้า (P2) และ UC3 · ประเมิน OI ของคณะกรรมการ (P1) พร้อม Board Profile สำหรับคณะกรรมการนอกกลุ่มอ้างอิง · สวิตช์ window.PILOT_BUILD คืนหน้าที่ซ่อนได้ภายหลัง")}</p>
+    <ol class="tr-ol">
+      <li>${T(`<b>Two core features</b> — ${L("matrix", "Strategy Matrix 2×2")} (X = CEO-drive percentile, Y = board-amplification percentile, dividers P53.8 / P36.0) and ${L("studio", "What-if Studio")} (women-director share only, guardrails G1–G6).`,
+        `<b>ฟีเจอร์หลัก 2 อย่าง</b> — ${L("matrix", "Strategy Matrix 2×2")} (แกนนอน = เปอร์เซ็นไทล์ CEO drive · แกนตั้ง = เปอร์เซ็นไทล์ board amplification · เส้นแบ่ง P53.8 / P36.0) และ ${L("studio", "What-if Studio")} (ปรับเฉพาะสัดส่วนกรรมการหญิง · กติกา G1–G6)`)}</li>
+      <li>${T("<b>Consent</b> — on first sign-in the participant information and consent text (REC protocol v10) is shown; the system is used only after consent is given.",
+        "<b>การยินยอม (Consent)</b> — เข้าสู่ระบบครั้งแรกจะแสดงเอกสารชี้แจงและข้อความยินยอม (โปรโตคอล v10) · ใช้ระบบได้หลังให้ความยินยอมแล้วเท่านั้น")}</li>
+      <li>${T(`<b>Client groups (six-group check)</b> — on ${L("dataupload", "Import data · new client")} every new company is checked before scoring: 1 in REF-928 (FY2019–2023) · 2 listed, non-financial, English letter + board table, not one of the 209 → 2×2, OIS, tier, 90% band + “Outside the reference sample” · 3 fiscal year after 2023 → as 2 + “Not yet validated” · 4 no English letter → Board Profile · 5 Financials → Board Profile (D2) · 6 not listed → not applicable. New companies are scored against the frozen REF-928 and never added to it (DP6); the client list stays in this browser.`,
+        `<b>กลุ่มลูกค้า (ตรวจ 6 กลุ่ม)</b> — ที่หน้า ${L("dataupload", "นำเข้าข้อมูล · ลูกค้าใหม่")} ทุกบริษัทใหม่ถูกตรวจก่อนให้คะแนน: 1 อยู่ใน REF-928 (ปี 2019–2023) · 2 จดทะเบียน ไม่ใช่กลุ่มธุรกิจการเงิน มีจดหมายภาษาอังกฤษ + ตารางกรรมการ ไม่อยู่ใน 209 บริษัท → 2×2, OIS, tier, ช่วง 90% + “นอกโดเมน” · 3 ปีบัญชีหลัง 2023 → เหมือนกลุ่ม 2 + “Not yet validated” · 4 ไม่มีจดหมายภาษาอังกฤษ → Board Profile · 5 กลุ่มธุรกิจการเงิน → Board Profile (D2) · 6 ไม่ได้จดทะเบียน → ใช้ไม่ได้ · บริษัทใหม่ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ และไม่ถูกเพิ่มเข้า REF-928 (DP6) · รายชื่อลูกค้าเก็บในเบราว์เซอร์นี้เท่านั้น`)}</li>
+      <li>${T("<b>FY status</b> — every screen and export carries one chip from the validity table, with the counting rule (“FY2023 letter → outcome 2024 · PASS”): PASS · CAUTION (FY2020) · FAIL (FY2022: usual reading withheld, What-if suspended) · Not yet validated (FY after 2023).",
+        "<b>สถานะปีบัญชี</b> — ทุกหน้าจอและไฟล์ส่งออกมีชิปจากตาราง validity พร้อมกติกานับปี (“จดหมาย FY2023 → ผลลัพธ์ 2024 · PASS”): PASS · CAUTION (FY2020) · FAIL (FY2022: งดการอ่านผลตามปกติและงด What-if) · Not yet validated (ปีหลัง 2023)")}</li>
+      <li>${T(`<b>Board Profile (outside the reference group)</b> — ${L("outdomain", "descriptive profile")} for client groups 4–5 and for the pilot organisation's own board: no tier, OIS or What-if (R4). Critical mass = three or more women directors (Torchia, Calabrò & Huse, 2011).`,
+        `<b>Board Profile (นอกกลุ่มอ้างอิง)</b> — ${L("outdomain", "โปรไฟล์เชิงพรรณนา")} สำหรับลูกค้ากลุ่ม 4–5 และคณะกรรมการขององค์กรนำร่องเอง: ไม่มี tier, OIS หรือ What-if (R4) · critical mass = กรรมการหญิงตั้งแต่ 3 คน (Torchia, Calabrò & Huse, 2011)`)}</li>
+      <li>${T(`<b>UC1 outputs</b> carry the label “${esc(M1A.lab("supporting", "EN"))}” on screen, at the end of the PDF and in the first row of every CSV. ${L("boardreport", "Board OI Governance report")} (UC3) joins SET (0–4) and OI-1…6 (1–5) side by side — never one combined score (#11 = MVP 2).`,
+        `<b>ผลลัพธ์ของ UC1</b> ติดป้าย “${esc(M1A.lab("supporting", "TH"))}” บนหน้าจอ ท้าย PDF และแถวแรกของ CSV ทุกไฟล์ · ${L("boardreport", "รายงานการกำกับดูแล OI ของคณะกรรมการ")} (UC3) แสดง SET (0–4) และ OI-1…6 (1–5) คู่กัน — ไม่รวมเป็นคะแนนเดียว (#11 = MVP 2)`)}</li>
+    </ol>
+    <div class="tr-k" style="margin-top:8px">${T("Hidden in the pilot build — and why", "ซ่อนในฉบับนำร่อง — และเหตุผล")}</div>
+    <ul class="tr-ol">${hid}</ul>
+    <p class="gx-sm">${T(`Version label: ${esc(M1A.ver())} on every screen and export.`, `ป้ายเวอร์ชัน: ${esc(M1A.ver())} ในทุกหน้าจอและไฟล์ส่งออก`)}</p></section>`;
 }
 function viewManual() {
   const step = (id, n, h, p) => `<li id="man-v-${id}"><b>${n}. ${esc(h)}</b> <button class="lnk" data-goto="${id}">เปิดหน้า →</button><div>${p}</div></li>`;
   return pageHead("คู่มือ", "คู่มือการใช้งาน OpenInnoScore",
     "คู่มือย่อในหน้าระบบ — เริ่มต้น เส้นทางการทำงาน วิธีอ่านผล และกติกาสำคัญ · กด “?” บนหัวของแต่ละหน้าเพื่อกลับมาที่หัวข้อที่เกี่ยวข้อง")
     + `<div class="tr-man">
-    <nav class="tr-toc" aria-label="สารบัญคู่มือ">${MAN_SECS.map(([id, l], i) => `<button data-mango="${id}">${i + 1}. ${esc(l)}</button>`).join("")}</nav>
+    <nav class="tr-toc" aria-label="สารบัญคู่มือ">${MAN_SECS.map(([id, l, star], i) => `<button data-mango="${id}">${star ? "★" : i + "."} ${esc(l)}</button>`).join("")}</nav>
     <div class="tr-mbody">
+    ${manMvp1()}
     <section class="card" id="man-start"><h3>1 · เริ่มต้น</h3>
       <ol class="tr-ol"><li>หน้าเข้าสู่ระบบ: เลือกระดับผู้ใช้ (Basic · Pro · Pro Max) เลือก “บริษัทของคุณ” แล้วกดเข้าสู่ระบบ — ไฟล์ HTML ออฟไลน์จำลองการล็อกอิน · ในเวอร์ชันเว็บ (เซิร์ฟเวอร์) ใช้ Google Sign-in จริง</li>
         <li>บริษัทของคุณ = บริษัทที่ดูรายงาน การวิเคราะห์ และทางเลือกสำหรับการพิจารณาได้ครบทุกระดับ · Basic รับ ${PLAN_TOKENS.free} เครดิตทันที (ใช้ได้เมื่อเปลี่ยนเป็น Pro)</li>
@@ -905,26 +931,27 @@ function viewManual() {
       <div class="tr-k" style="margin-top:10px">ป้าย (chips) บนแถบสถานะ</div>
       <dl class="tr-dl">${MAN_CHIPS.map(([k, d]) => `<dt><span class="chip">${esc(k)}</span></dt><dd>${esc(d)}</dd>`).join("")}</dl></section>
     <section class="card" id="man-whatif"><h3>6 · What-if Studio</h3>
-      <ul class="tr-ol"><li><b>จำลองได้ 2 ตัวแปร</b> ตามที่ประชุมตกลง: (1) จำนวนกรรมการหญิง (ปุ่ม − / +) โดยมีขนาดบอร์ดเป็นตัวหาร (2) อายุงานเฉลี่ยของบอร์ด (ปี) · ถ้าฐานข้อมูลไม่มีจำนวนกรรมการ ระบบตั้งต้นที่ 11 คน (กรอกจำนวนจริงได้ใน Zone A)</li>
-        <li><b>อายุงานไม่ขยับคะแนนหลัก</b> — คะแนนหลัก (B_EG) ตัดอายุงานออก (δT = 0 · DP1) เมื่อปรับอายุงาน ระบบแสดงผลแยกในการ์ด “การวิเคราะห์ความไว (B_FULL: รวมอายุงาน)” · ถ้าชั้นคำนวณ B_FULL ยังไม่พร้อม การ์ดจะแจ้ง “ยังไม่พร้อม”</li>
-        <li>กรรมการครอบครัวและ political ties ไม่มีตัวปรับ — แสดงเป็นข้อมูลบริบทอ่านอย่างเดียว (R6) · ภาษา CEO ใช้ค่าจริงหรือค่าที่วัดจากไฟล์สาร CEO (.txt ≥ 2,000 คำ)</li>
-        <li>ผลลัพธ์หลักคือ <b>Quartile ในอุตสาหกรรม</b> (Q1 = บนสุด 25% ของบริษัท-ปีในอุตสาหกรรมเดียวกันของ REF-928) คู่กับ Tier ทั้งฐานและช่อง 2×2 — เป็นการจำลองตำแหน่ง ไม่ใช่การพยากรณ์</li>
-        <li>ตารางเปรียบเทียบการเปลี่ยนแปลงเรียงตามชื่อตัวแปร ไม่จัดอันดับและไม่ไฮไลต์ “ดีที่สุด”</li>
-        <li>Basic ทดลอง 1 ตัวแปร (จำนวนกรรมการหญิง) · Pro ปลดล็อกรายบริษัท 1 เครดิต: 2 ตัวแปร + วัดภาษา CEO · Pro Max เพิ่มฉากทัศน์ขาลง (กรรมการหญิงลาออก · อายุงานเปลี่ยน)</li>
-        <li>การคำนวณรายไตรมาสต้องใช้ข้อมูลรายไตรมาสซึ่งงานวิจัยยังไม่มี — เตรียมไว้สำหรับเฟสถัดไป</li></ul></section>
+      <ul class="tr-ol"><li>${T("<b>One lever only — the share of women directors</b>, increase-only from the current number and capped at 50% (G2, G4). Tenure, the B_FULL card and every downside row are hidden in the pilot lenses (G1, #3, #18).", "<b>ปรับได้ตัวแปรเดียว — สัดส่วนกรรมการหญิง</b> เพิ่มขึ้นจากจำนวนปัจจุบันเท่านั้น และไม่เกิน 50% (G2, G4) · อายุงาน การ์ด B_FULL และแถวขาลงทุกแถวซ่อนในเลนส์นำร่อง (G1, #3, #18)")}</li>
+        <li>${T("<b>Actual board size first (D4)</b> — enter the real number of directors before any What-if; there is no default of 11. The W* headcount and G4 use the number entered.", "<b>ต้องกรอกจำนวนกรรมการจริงก่อน (D4)</b> — ไม่มีค่าตั้งต้น 11 คน · จำนวนคนของ W* และ G4 ใช้ตัวเลขที่กรอก")}</li>
+        <li>${T("<b>JN gate (G3)</b> — when CEO promotion focus is below 0.686 (P65.7), score differences are withheld: “Score change withheld (G3) — board-amplification movement only”.", "<b>ประตู JN (G3)</b> — เมื่อ CEO promotion focus ต่ำกว่า 0.686 (P65.7) ระบบไม่แสดงผลต่างของคะแนน: “Score change withheld (G3) — แสดงเฉพาะการเคลื่อนของ board amplification”")}</li>
+        <li>${T("<b>Result</b> — simulated OIS with its 90% band (Krinsky–Robb), the multiplier e^ΔB with its 90% band, the relational G6 sentence, and W* (the share at which the board-amplification sign turns) in percent and headcount.", "<b>ผลลัพธ์</b> — OIS จำลองพร้อมช่วง 90% (Krinsky–Robb) · ตัวคูณ e^ΔB พร้อมช่วง 90% · ประโยคเชิงความสัมพันธ์ (G6) · W* (สัดส่วนที่เครื่องหมายของ board amplification เปลี่ยน) เป็นร้อยละและจำนวนคน")}</li>
+        <li>${T("<b>FY status (G5)</b> — What-if is suspended in FAIL years (FY2022). Fiscal years after 2023 carry “Not yet validated”.", "<b>สถานะปีบัญชี (G5)</b> — ปี FAIL (FY2022) งด What-if · ปีบัญชีหลัง 2023 ติดป้าย “Not yet validated”")}</li>
+        <li>${T("Family directors and political ties have no control — read-only context (R6). Critical mass = three or more women directors (Torchia, Calabrò & Huse, 2011).", "กรรมการครอบครัวและ political ties ไม่มีตัวปรับ — ข้อมูลบริบทอ่านอย่างเดียว (R6) · critical mass = กรรมการหญิงตั้งแต่ 3 คน (Torchia, Calabrò & Huse, 2011)")}</li></ul></section>
     <section class="card" id="man-uc"><h3>7 · มุมมอง Use Case</h3>
-      <p class="desc">เลือกมุมมองที่หน้า Strategy Grid — เนื้อหาฐานชุดเดียวกัน แต่ถ้อยคำและผู้อ่านต่างกัน · ${esc(typeof PRIMARY_UC_NOTE !== "undefined" ? PRIMARY_UC_NOTE : "")}</p>
-      <ul class="tr-ol">${(typeof USECASES !== "undefined" ? USECASES : []).map(u => `<li>${typeof PRIMARY_UC !== "undefined" && PRIMARY_UC.includes(u.id) ? "★ " : ""}<b>${esc(u.lab)}</b> — ผู้อ่าน: ${esc(u.audience)}</li>`).join("")}</ul>
-      <p class="gx-sm">มุมมองธนาคาร (ลูกค้าสินเชื่อ / บอร์ดธนาคาร) ซ่อนชั้นจุดอ้างอิงตามแนวทาง Pilot · ตัวแปรบริบทอ่านอย่างเดียวในทุกมุมมอง</p></section>
+      <p class="desc">เลือกมุมมองที่หน้า Strategy Grid — เนื้อหาฐานชุดเดียวกัน แต่ถ้อยคำและผู้อ่านต่างกัน${window.PILOT_BUILD ? "" : " · " + esc(typeof PRIMARY_UC_NOTE !== "undefined" ? PRIMARY_UC_NOTE : "")}</p>
+      <ul class="tr-ol" id="manUcList">${window.PILOT_BUILD
+        ? ["credit", "board", "bankbod"].map(id => { const L = M1A.lens(id); return `<li data-uc="${id}"><b>${esc(L.lab)}</b> — ${T("readers", "ผู้อ่าน")}: ${esc(L.readers)}</li>`; }).join("")
+        : (typeof USECASES !== "undefined" ? USECASES : []).map(u => `<li data-uc="${esc(u.id)}">${typeof PRIMARY_UC !== "undefined" && PRIMARY_UC.includes(u.id) ? "★ " : ""}<b>${esc(u.lab)}</b> — ผู้อ่าน: ${esc(u.audience)}</li>`).join("")}</ul>
+      <p class="gx-sm">ฉบับนำร่องแสดง 3 มุมมอง: UC1 · ความสัมพันธ์ลูกค้า (P2) · UC3 · ประเมิน OI ของคณะกรรมการ (P1) · Board Profile (นอกกลุ่มอ้างอิง) — ชั้นจุดอ้างอิงและเส้นทางย้ายช่องปิดเป็นค่าเริ่มต้น (G6) · มุมมอง UC1 ใช้สูตร B_EG และซ่อนแถวกรรมการครอบครัว/political ties (D1) · ตัวแปรบริบทอ่านอย่างเดียวในทุกมุมมอง</p></section>
     <section class="card" id="man-rules"><h3>8 · กติกาสำคัญ</h3>
       <ul class="tr-ol"><li><b>ไม่ใช่เชิงสาเหตุ</b> — ทุกตัวเลขเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การรับประกันผล</li>
         <li><b>ไม่ให้คะแนนบุคคล</b> — ผลเป็นระดับคณะ ห้ามใช้ประเมินหรือคัดเลือกกรรมการรายบุคคล (ข้อมูลอ่อนไหว พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล ม.26)</li>
         <li><b>political ties</b> — ข้อมูลบริบท ไม่ใช้เป็นเหตุผลเชิงบวก ไม่ใช่เป้าการสรรหา (R6)</li>
-        <li><b>นอกกลุ่มอ้างอิง</b> — ธนาคาร/การเงิน ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid (R4)</li>
+        <li><b>นอกกลุ่มอ้างอิง</b> — กลุ่มธุรกิจการเงิน หรือไม่มีจดหมายภาษาอังกฤษ: Board Profile เท่านั้น ไม่แสดง tier เปอร์เซ็นไทล์ หรือตำแหน่งบน Grid (R4, D2)</li>
         <li><b>ไม่แสดงค่าสัมประสิทธิ์</b> — สูตรและพารามิเตอร์เป็นความลับทางการค้า ประมวลผลหลังบ้านในระบบจริง</li></ul></section>
     <section class="card" id="man-pilot"><h3>9 · หน้า Pilot</h3>
       <ul class="tr-ol"><li><button class="lnk" data-goto="bod">BOD Self-Assessment (OI-1…6)</button> — ประเมินตนเองระดับคณะ · ผลนำไปใช้ใน {{ผลประเมิน BOD}} ของร่าง 56-1</li>
-        <li><button class="lnk" data-goto="outdomain">โหมดนอกกลุ่มอ้างอิง (ธนาคาร)</button> — โปรไฟล์เชิงพรรณนาสำหรับบริษัทนอกฐาน</li>
+        <li><button class="lnk" data-goto="outdomain">Board Profile (นอกกลุ่มอ้างอิง)</button> — โปรไฟล์เชิงพรรณนาสำหรับบริษัทนอกฐาน ไม่มี tier คะแนน หรือ What-if (R4)</li>
         <li><button class="lnk" data-goto="directives">ข้อสั่งการบอร์ด / Compliance</button> — สิทธิ์ Pro Max</li>
         <li><button class="lnk" data-goto="survey">แบบสอบถามทดสอบการยอมรับ</button> · <button class="lnk" data-goto="syslog">System log</button> · <button class="lnk" data-goto="integr">การเชื่อมต่อ (Phase ถัดไป)</button></li></ul></section>
     <section class="card" id="man-assess"><h3>10 · RFQ · Dictionary ของผู้ใช้ · แบบประเมินตนเองของคณะกรรมการ</h3>
@@ -972,6 +999,38 @@ WIRES2.manual = wireManual;
     const it = { id: "manual", g: 3, ico: "?", lab: "คู่มือการใช้งาน" };
     if (i >= 0) NAV.splice(i, 0, it); else NAV.push(it);
   }
+})();
+
+/* ---------------------------------------------------------------- 9ข · ขอบเขตฉบับนำร่อง (MVP 1 · X) — สวิตช์เดียว
+   window.PILOT_BUILD = true (ค่าเริ่มต้น) ซ่อนหน้าที่ไม่อยู่ใน UC1 / UC3 / Board Profile จากเมนู ลิงก์ตรง และ go()
+   โค้ดของหน้าที่ซ่อนยังอยู่ครบ — ตั้ง window.PILOT_BUILD = false ก่อนโหลด (หรือ localStorage "ois_pilot_build" = "0") เพื่อคืนทุกหน้า */
+if (typeof window.PILOT_BUILD !== "boolean") {
+  let off = false; try { off = localStorage.getItem("ois_pilot_build") === "0"; } catch (e) { }
+  window.PILOT_BUILD = !off;
+}
+/** [view, เหตุผล EN, เหตุผล TH] */
+const PILOT_HIDDEN_INFO = [
+  ["rfq", "individual-level CEO questionnaire; neither UC1 nor UC3 uses it", "แบบวัดระดับบุคคลของ CEO — UC1 และ UC3 ไม่ได้ใช้"],
+  ["ic", "meeting-mode decisions belong to the investment use (UC8), which did not pass (#2, #13)", "การตัดสินใจในโหมดที่ประชุมเป็นของการใช้งาน UC8 ซึ่งไม่ผ่านเกณฑ์ (#2, #13)"],
+  ["billing", "credits and plans are not part of the pilot", "เครดิตและแผนการใช้งานไม่อยู่ในการนำร่อง"],
+  ["integr", "connections are a later phase (not in the pilot)", "การเชื่อมต่อเป็นเฟสถัดไป (ไม่อยู่ในการนำร่อง)"],
+];
+const PILOT_HIDDEN = new Set(PILOT_HIDDEN_INFO.map(x => x[0]));
+const NAV_ALL_LAB = { rfq: "CEO Regulatory Focus (RFQ)", ic: "Meeting mode", billing: "Credits and plans", integr: "Connections" };
+const pilotHidden = v => !!window.PILOT_BUILD && PILOT_HIDDEN.has(v);
+window.pilotHidden = pilotHidden;
+(() => {
+  const _bn = buildNav;
+  buildNav = function () {
+    _bn.apply(this, arguments);
+    if (!window.PILOT_BUILD) return;
+    $$(".nav button").forEach(b => { if (PILOT_HIDDEN.has(b.dataset.v)) b.remove(); });
+  };
+  const _go = go;
+  go = function (v) {
+    if (pilotHidden(v)) { toast(T("This screen is not part of the pilot build", "หน้านี้ไม่อยู่ในฉบับนำร่อง")); return; }
+    return _go.apply(this, arguments);
+  };
 })();
 const CO_LOCK_VIEWS = ["profile", "docs", "fit", "zonec", "matrix", "compass", "ic"];
 function navBadge(id) {
@@ -1068,12 +1127,45 @@ render = function () {
   }
 };
 
+
+/* ---------------------------------------------------------------- 11ข · ฉบับนำร่อง: ลิงก์ไปหน้าที่ซ่อน · อีเมลแจ้งเตือน (หลังจบโครงการ) · ชิปปีบัญชี */
+(() => {
+  const _r = render;
+  render = function () {
+    if (pilotHidden(S.view)) { S.view = "profile"; $$(".view").forEach(s => s.classList.toggle("on", s.id === "v-profile")); }
+    _r.apply(this, arguments);
+    if (!window.PILOT_BUILD) return;
+    const host = $("#v-" + S.view); if (!host) return;
+    PILOT_HIDDEN.forEach(id => host.querySelectorAll(`[data-goto="${id}"],[data-mango2="${id}"],[data-mvgo="${id}"],[data-b4go="${id}"],[data-go="${id}"]`).forEach(b => {
+      if (b.closest("#man-mvp1")) return;
+      const card = b.closest(".card"); if (id === "rfq" && card && !card.classList.contains("view") && card.querySelectorAll("button").length <= 2 && card.textContent.length < 600) card.style.display = "none";
+      b.style.display = "none"; b.setAttribute("aria-hidden", "true");
+    }));
+    if (S.view === "directives") {
+      const m = host.querySelector("#plDirMail");
+      if (m && !host.querySelector("#m1aMailOff")) {
+        const w = m.closest("span") && m.closest("span") !== host ? m.closest("span") : m;
+        w.insertAdjacentHTML("afterend", `<span class="pill mute m1a-after" id="m1aMailOff">${T("Email Issue Alerts — after the project (no e-mail is sent in the pilot build)", "อีเมลแจ้งเตือน Issues — หลังจบโครงการ (ฉบับนำร่องไม่ส่งอีเมล)")}</span>`);
+        w.remove();
+      }
+      [...host.querySelectorAll(".card")].filter(c => /ตัวอย่างอีเมลแจ้งเตือน|Sample alert e-?mail/i.test((c.querySelector("h3") || {}).textContent || "")).forEach(c => {
+        if (c.dataset.m1a) return; c.dataset.m1a = "1";
+        c.innerHTML = `<h3>${T("E-mail alerts", "อีเมลแจ้งเตือน")} <span class="pill mute">${T("after the project", "หลังจบโครงการ")}</span></h3>
+          <p class="desc">${T("The yearly trail and e-mail alerts come after the project, when multi-year data exist (F9). The pilot build sends no e-mail; the alert content will stay limited to title, due date and status.", "เส้นทางรายปีและอีเมลแจ้งเตือนทำหลังจบโครงการ เมื่อมีข้อมูลหลายปี (F9) · ฉบับนำร่องไม่ส่งอีเมล · เนื้อหาการแจ้งเตือนจะมีเฉพาะหัวข้อ กำหนดส่ง และสถานะ")}</p>`;
+      });
+    }
+    if (S.view === "manual") {
+      ["man-plans", "man-rcpt", "man-tiers"].forEach(id => { const e = host.querySelector("#" + id); if (e) e.style.display = "none";
+        const b = host.querySelector(`[data-mango="${id}"]`); if (b) b.style.display = "none"; });
+    }
+  };
+})();
 /* ---------------------------------------------------------------- 12 · เริ่มระบบ */
 (() => {
   if (!S.user) return;
   try {
     const o = JSON.parse(localStorage.getItem(LS) || "null"), vw = o && o.vw;
-    if (vw && VIEWS[vw] && S.view !== vw) { S.view = vw; $$(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + vw)); }
+    if (vw && VIEWS[vw] && S.view !== vw && !pilotHidden(vw)) { S.view = vw; $$(".view").forEach(s => s.classList.toggle("on", s.id === "v-" + vw)); }
   } catch (e) { }
   syncChrome(); render();
 })();
@@ -1082,20 +1174,20 @@ render = function () {
    ข้อความคงที่ที่เพิ่ม/เปลี่ยนในไฟล์ของกลุ่มนี้ยังไม่อยู่ใน src/i18n/en.json — ลงทะเบียนผ่าน I18N.load ตอนเริ่มระบบ
    (ข้อความที่มีตัวเลขเปลี่ยนได้ใช้ b5T/T ในโค้ดแทน) */
 const B5_EN = {
-  "พอร์ตลงทุน · โหมดที่ประชุม (IC)": "Investment portfolio · committee mode (IC)",
+  "Portfolio Matrix · โหมดที่ประชุม (IC)": "Portfolio Matrix · meeting mode (IC)",
   "โหมดที่ประชุมเฉพาะบริษัทตนเอง · พอร์ต ✕": "Committee mode for your own company · portfolio ✕",
   "พอร์ต: ปลดครั้งเดียว 3 เครดิต · เฉพาะบริษัทที่ดูได้ (ตนเอง + ที่ปลดล็อก)": "Portfolio: unlock once for 3 credits · only companies you can view (own + unlocked)",
   "ทุกบริษัท · รวมใน Subscription (ไม่ตัดเครดิต)": "All companies · included in the subscription (no credits charged)",
   "1 เครดิต ต่อ 1 รายงาน (บางเทมเพลตเป็นสิทธิ์ Pro Max)": "1 credit per report (some templates are Pro Max)",
   "รวมใน Subscription (ไม่ตัดเครดิต)": "Included in the subscription (no credits charged)",
-  "พอร์ตลงทุน (Pro)": "Investment portfolio (Pro)",
+  "Portfolio Matrix (Pro)": "Portfolio Matrix (Pro)",
   "ปลดครั้งเดียวต่อบัญชี · เฉพาะบริษัทที่ดูได้ · Basic ✕ · Pro Max ไม่ตัดเครดิต": "Unlock once per account · only companies you can view · Basic ✕ · Pro Max not charged",
   "ต่อ 1 รายงาน · Basic ✕ · Pro Max ไม่ตัดเครดิต": "Per report · Basic ✕ · Pro Max not charged",
   "AI Report Studio · สร้างรายงาน": "AI Report Studio · report generated",
   "รายการอื่น": "Other item",
-  "What-if (กรรมการหญิง + อายุงาน)": "What-if (female directors + tenure)",
+  "What-if (กรรมการหญิง · G1–G6)": "What-if (women directors · G1–G6)",
   "Basic · Pro · Pro Max โดยย่อ": "Basic · Pro · Pro Max at a glance",
-  "พอร์ตลงทุน · โหมดที่ประชุม": "Portfolio · committee mode",
+  "Portfolio Matrix · โหมดที่ประชุม": "Portfolio · committee mode",
   "นำเข้าข้อมูลปีใหม่และการอนุมัติ": "New-year data upload and approval",
   "Validity · คำนวณใหม่เมื่อข้อมูลเปลี่ยน": "Validity · recomputed when data changes",
   "สลับภาษา ไทย / English": "Language switch (Thai / English)",

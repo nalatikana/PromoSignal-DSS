@@ -39,7 +39,7 @@ const ZONE_CFG = window.ZONE_CFG = {
   B: { name: "Discipline", paper: (OIS.quadName || {}).B || "Constrained drive", th: "เติบโตอย่างมีหลักเกณฑ์",
        desc: "ภาษาของ CEO เน้นโอกาสสูง แต่องค์ประกอบบอร์ดไม่อยู่ในรูปแบบที่สัมพันธ์กับการหนุน — ประเด็นสำหรับหารือคือเกณฑ์อนุมัติ ทบทวน และหยุดโครงการ",
        head: "เติบโตอย่างมีหลักเกณฑ์",
-       sub: "ตรวจการกำกับความเสี่ยงของการเติบโต",
+       sub: "ตรวจการกำกับดูแลการเติบโต",
        shows: "ข้อความ CEO มีสัญญาณเน้นโอกาสสูง ขณะที่สัญญาณโครงสร้างบอร์ดอยู่ต่ำกว่าเกณฑ์แบ่งของฐานที่ระบุ (amp ≤ 0) — องค์ประกอบบอร์ดไม่อยู่ในรูปแบบที่สัมพันธ์กับการหนุนในฐานอ้างอิง",
        cannot: "ยังสรุปไม่ได้ว่าบอร์ดกำกับนวัตกรรมไม่เพียงพอ — ข้อมูลที่ใช้คำนวณเป็นองค์ประกอบของบอร์ด ไม่ใช่กระบวนการทำงานของบอร์ด",
        qs: ["บอร์ดใช้ข้อมูลและเกณฑ์ใดพิจารณาความเสี่ยงของโครงการร่วมพัฒนากับพันธมิตร?",
@@ -80,31 +80,25 @@ const ZONE_CFG = window.ZONE_CFG = {
    เนื้อหาฐานชุดเดียว (COMPASS) → adapt(base, c, k) คืน { qs[3], ev[], ask, askLabel, audience, note }
    ถ้อยคำเชิงความสัมพันธ์ (R7) · ไม่ให้คะแนนรายบุคคล · political ties ไม่ใช่เหตุผลเชิงบวก (R6) */
 const UC_TEXT = {
+  /* MVP 1 (F3 · #14): มุมมอง UC1 = โปรแกรมความสัมพันธ์กับลูกค้า — คำถามด้านความสัมพันธ์/นวัตกรรมเท่านั้น
+     ไม่อ้างถึงคำขอใด ๆ ของลูกค้า และไม่มีคำถามเรื่องแผนชำระคืน (ตัดข้อ 3 เดิม) · ถ้อยคำผ่านกติกาห้ามใช้คำของที่ปรึกษา 14 พ.ย. */
   credit: {
-    A: { qs: ["ขอให้ลูกค้าอธิบายเกณฑ์คัดเลือกพันธมิตร การจัดสรรทรัพยากร และการติดตามผลที่รองรับแผนเติบโตซึ่งใช้ประกอบคำขอสินเชื่อ",
-              "ลูกค้าสื่อสารการเติบโตผ่านพันธมิตรชัดเจน — ขอให้อธิบายว่าคณะกรรมการติดตามการคัดเลือกพันธมิตร การเรียนรู้ และเกณฑ์หยุดโครงการอย่างไร",
-              "ขอให้ลูกค้าแสดงว่ากระแสเงินสดของโครงการร่วมพัฒนาแยกจากธุรกิจหลักอย่างไร และหากโครงการหยุดกลางทาง แผนชำระหนี้มีสมมติฐานรองรับอย่างไร"],
-         ev: ["เอกสารเสนออนุมัติโครงการร่วมพัฒนาต่อคณะกรรมการ (ฉบับที่อนุมัติแล้ว)",
-              "ประมาณการกระแสเงินสดแยกรายโครงการ พร้อมสมมติฐานหลัก",
-              "รายงานติดตามโครงการล่าสุดที่เสนอคณะกรรมการ"] },
-    B: { qs: ["ขอให้ลูกค้าอธิบายว่าคณะกรรมการใช้ข้อมูลและเกณฑ์ใดพิจารณาความเสี่ยงของโครงการร่วมพัฒนากับพันธมิตร",
-              "ขอดูตัวอย่างวาระจริงว่าข้อมูลที่ฝ่ายจัดการเสนอคณะกรรมการเพียงพอให้ท้าทายสมมติฐานการเติบโตที่ใช้ในประมาณการหรือไม่",
-              "ขอให้ลูกค้าแสดงเกณฑ์อนุมัติ ทบทวน และหยุดโครงการที่เป็นลายลักษณ์อักษร และกรณีที่เคยใช้เกณฑ์นั้นหยุดโครงการ"],
-         ev: ["เอกสารเสนออนุมัติโครงการ เกณฑ์เลือกพันธมิตร รายงานความเสี่ยง และผลติดตามโครงการ",
-              "ประมาณการทางการเงินของโครงการเติบโตพร้อมกรณีอ่อนไหว (sensitivity)",
-              "นโยบายอำนาจอนุมัติ (DOA) ที่ใช้กับการลงทุนใหม่"] },
-    C: { qs: ["ขอให้ลูกค้าอธิบายว่าแนวทางระมัดระวังในปัจจุบันสอดคล้องกับช่วงธุรกิจและวัตถุประสงค์การใช้เงินกู้อย่างไร",
-              "สอบถามกิจกรรมความร่วมมือหรือการพัฒนาธุรกิจที่ลูกค้าทำอยู่แต่ยังไม่ปรากฏในรายงานประจำปี",
-              "สอบถามว่าคณะกรรมการทบทวนความรู้และกระบวนการของตนครั้งล่าสุดเมื่อใด และพบประเด็นใดที่เกี่ยวกับแผนธุรกิจ"],
-         ev: ["แผนธุรกิจ 3 ปีและวัตถุประสงค์การใช้เงินกู้",
-              "รายการสัญญาความร่วมมือหรือ MOU ที่มีผลอยู่",
-              "สรุปผลประเมินตนเองของคณะกรรมการ (ระดับคณะ)"] },
-    D: { qs: ["ขอให้ลูกค้าอธิบายโอกาสร่วมพัฒนากับภายนอกที่ศึกษาไว้แต่ยังไม่ได้ดำเนินการ และเหตุผลที่ยังไม่ดำเนินการ",
-              "สอบถามว่าข้อความของผู้บริหารในรายงานประจำปีสอดคล้องกับแผนธุรกิจที่ใช้ประกอบคำขอสินเชื่อเพียงใด",
-              "หากมีโครงการใหม่ในช่วงอายุสินเชื่อ ขอให้ลูกค้าอธิบายขั้นตอนนำเสนอและติดตามผ่านคณะกรรมการ"],
-         ev: ["แผนกลยุทธ์ที่คณะกรรมการอนุมัติ และสารจาก CEO ฉบับล่าสุด",
-              "บันทึกการพิจารณาทางเลือกความร่วมมือ (ถ้ามี)",
-              "แผนการลงทุนในช่วงอายุสินเชื่อ"] },
+    A: { qs: ["ชวนลูกค้าเล่าว่าเลือกพันธมิตรด้านนวัตกรรมอย่างไร และอยากขยายเครือข่ายความร่วมมือไปทางใดในปีถัดไป",
+              "ลูกค้าสื่อสารการเติบโตผ่านพันธมิตรชัดเจน — ชวนคุยว่าคณะกรรมการติดตามการคัดเลือกพันธมิตร การเรียนรู้ และเกณฑ์หยุดโครงการอย่างไร"],
+         ev: ["ตัวอย่างโครงการร่วมพัฒนาที่ลูกค้าเปิดเผยต่อสาธารณะ (รายงานประจำปี / ข่าวประกาศ)",
+              "บันทึกการพบลูกค้าครั้งล่าสุดขององค์กรนำร่อง"] },
+    B: { qs: ["ชวนลูกค้าเล่าว่าคณะกรรมการมีส่วนร่วมกับแผนนวัตกรรมหรือความร่วมมือกับภายนอกอย่างไร และอยากได้มุมมองแบบใดเพิ่ม",
+              "ชวนคุยเรื่องการพัฒนาคณะกรรมการและการกำกับดูแล — มีหัวข้อใดที่ลูกค้าอยากแลกเปลี่ยนกับเครือข่ายขององค์กรนำร่อง"],
+         ev: ["ส่วนการกำกับดูแลกิจการและองค์ประกอบคณะกรรมการใน 56-1 One Report",
+              "บันทึกการพบลูกค้าครั้งล่าสุดขององค์กรนำร่อง"] },
+    C: { qs: ["ชวนลูกค้าเล่าว่าช่วงนี้ให้ความสำคัญกับเรื่องใด และมีกิจกรรมความร่วมมือที่ทำอยู่แต่ยังไม่ปรากฏในรายงานประจำปีหรือไม่",
+              "สอบถามว่าบริการพื้นฐานที่องค์กรนำร่องให้อยู่ตอบโจทย์ลูกค้าเพียงใด และควรนัดติดตามรอบถัดไปเมื่อใด"],
+         ev: ["สารจาก CEO และแผนธุรกิจที่เปิดเผยในรายงานประจำปี",
+              "บันทึกการพบลูกค้าครั้งล่าสุดขององค์กรนำร่อง"] },
+    D: { qs: ["ชวนประธานกรรมการหรือผู้บริหารเล่าถึงโอกาสร่วมพัฒนากับภายนอกที่สนใจ และสิ่งที่ยังทำให้ไม่ได้เริ่ม",
+              "สอบถามความสนใจเข้าร่วมเวิร์กช็อปด้านนวัตกรรมหรือการแลกเปลี่ยนกับเครือข่ายขององค์กรนำร่อง"],
+         ev: ["สารจาก CEO ฉบับล่าสุดและแผนกลยุทธ์ที่เปิดเผย",
+              "บันทึกการพบลูกค้าครั้งล่าสุดขององค์กรนำร่อง"] },
   },
   search: {
     A: { qs: ["skill matrix ของคณะกรรมการมีทักษะด้านการกำกับความร่วมมือภายนอกและการคัดเลือกพันธมิตรครบถ้วนหรือไม่ และยังขาดทักษะใด?",
@@ -181,33 +175,271 @@ function zoneName(k, short) {
 });
 /** ชื่อช่องทั้งหมด (ทั้งชื่อลูกค้าและชื่อตามบทความ) — ใช้ตรวจคำอ้างตำแหน่งก่อนส่งออกร่าง 56-1 */
 window.zoneNamesAll = () => ["A", "B", "C", "D"].flatMap(k => [ZONE_CFG[k].name, ZONE_CFG[k].paper]).filter(Boolean);
-/** มุมมองหลักที่ลูกค้าจะใช้จริง (~3 จาก 5) — รอผู้วิจัยยืนยัน */
-const PRIMARY_UC = window.PRIMARY_UC = ["board", "credit", "investor"];
-const PRIMARY_UC_NOTE = "มุมมองหลักที่จะใช้จริง 3 จาก 5 มุมมอง (★) — รอผู้วิจัยยืนยัน · อีก 2 มุมมองคงไว้สำหรับสาธิต";
+/* MVP 1 · ขอบเขตฉบับนำร่อง (X #8 #13 #19) — แท็บมุมมองแสดงเฉพาะ UC1 · UC3 · Board Profile
+   มุมมอง Executive Search และ Investor ยังอยู่ในโค้ด แต่ซ่อนด้วยค่าตั้งนี้ (ไม่ลบ เพื่อเปิดคืนได้เมื่อมีงานวิจัยรองรับ) */
+const GX_PILOT = window.GX_PILOT = { hiddenLenses: ["search", "investor"], order: ["credit", "board", "bankbod"] };
+const PRIMARY_UC = window.PRIMARY_UC = ["credit", "board", "bankbod"];
+const PRIMARY_UC_NOTE = "ฉบับนำร่อง MVP 1 แสดงเฉพาะมุมมอง UC1 · UC3 และ Board Profile (นอกกลุ่มอ้างอิง)";
+const m1SupTH = "ข้อมูลประกอบ — ไม่ใช่ข้อมูลเข้าแบบจำลองการตัดสินใจขององค์กรนำร่อง";
+const m1SupEN = "Supporting information — not an input to the pilot organisation's decision models";
 const USECASES = [
-  { id: "board", lab: "ประเมินบอร์ดตัวเอง (BOD Evaluation)", short: "BOD Evaluation", audience: "เลขานุการบริษัท / คณะกรรมการ", placeable: true,
+  { id: "board", lab: "UC3 · ประเมิน OI ของคณะกรรมการ (P1)", en: "UC3 · Board OI evaluation (P1)", short: "UC3 · Board OI evaluation", audience: "เลขานุการบริษัท / คณะกรรมการ", placeable: true,
     adapt: (b) => ({ qs: b.qs.slice(0, 3), ev: b.ev.slice(), ask: b.ask, askLabel: "เรื่องที่ให้บอร์ดพิจารณา",
       audience: "เลขานุการบริษัท / คณะกรรมการ",
       note: "ใช้ประกอบการประเมินตนเองของคณะกรรมการ (BOD Evaluation) ระดับคณะ — ไม่ประเมินกรรมการรายบุคคล" }) },
-  { id: "credit", lab: "ธนาคาร · ลูกค้าสินเชื่อ (Pilot Use case 2)", short: "ลูกค้าสินเชื่อ", audience: "RM / ฝ่ายสินเชื่อ", placeable: true,
+  { id: "credit", lab: "UC1 · โปรแกรมความสัมพันธ์กับลูกค้า (P2)", en: "UC1 · Client relationship (P2)", short: "UC1 · Client relationship", audience: "RM / ทีมดูแลความสัมพันธ์ลูกค้า", placeable: true,
     adapt: (b, c, k) => ({ qs: UC_TEXT.credit[k].qs, ev: UC_TEXT.credit[k].ev,
-      ask: "ข้อมูลประกอบสำหรับ RM — ไม่ใช่ข้อเสนออนุมัติหรือปฏิเสธสินเชื่อ · บันทึกคำตอบของลูกค้าและเอกสารที่ได้รับไว้ในรายงานเยี่ยมลูกค้า",
-      askLabel: "ข้อมูลประกอบสำหรับ RM", audience: "RM / ฝ่ายสินเชื่อ",
-      note: "แนวทาง Pilot Use case 2: แสดงสูตร B_T1 คู่กับป้าย Caution เสมอ · political ties และความเป็นกิจการครอบครัวไม่ใช้เป็นเหตุผลในการพิจารณาสินเชื่อ ไม่ว่าทางบวกหรือทางลบ · คำถามด้านบนใช้หารือกับลูกค้า ไม่ใช่เกณฑ์ให้คะแนนสินเชื่อ" }) },
+      ask: "ข้อมูลประกอบสำหรับ RM — ไม่ใช่ข้อเสนอแนะ · บันทึกคำตอบของลูกค้าและเอกสารที่ได้รับไว้ในรายงานเยี่ยมลูกค้า",
+      askLabel: "ข้อมูลประกอบ — ไม่ใช่ข้อเสนอแนะ", audience: "RM / ทีมดูแลความสัมพันธ์ลูกค้า",
+      note: "political ties และความเป็นกิจการครอบครัวไม่ใช้เป็นเหตุผลในการตัดสินใจใด ๆ ขององค์กรนำร่อง ไม่ว่าทางบวกหรือทางลบ (R6) · คำถามด้านบนใช้ชวนลูกค้าคุยเรื่องความสัมพันธ์และนวัตกรรม ไม่ใช่เกณฑ์ให้คะแนนลูกค้า" }) },
   { id: "search", lab: "Executive Search / Nomination", short: "Nomination", audience: "ที่ปรึกษาสรรหา / คณะกรรมการสรรหา", placeable: true,
     adapt: (b, c, k) => ({ qs: UC_TEXT.search[k].qs, ev: UC_TEXT.search[k].ev,
       ask: "ประเด็นสำหรับ nomination brief — ทักษะและมุมมองที่คณะกรรมการต้องการในระดับคณะ ไม่ใช่การประเมินหรือจัดอันดับกรรมการรายบุคคล",
       askLabel: "ประเด็นสำหรับ nomination brief", audience: "ที่ปรึกษาสรรหา / คณะกรรมการสรรหา",
       note: "ใช้ข้อมูลระดับคณะเท่านั้น · ไม่ให้คะแนนกรรมการรายบุคคล · political ties ไม่ใช่คุณสมบัติเป้าหมายในการสรรหา (R6) · ความสัมพันธ์ในโมเดลเป็นความสัมพันธ์เชิงสถิติ ไม่ใช่เหตุและผล" }) },
-  { id: "investor", lab: "นักลงทุน / Engagement", short: "Engagement", audience: "ผู้จัดการกองทุน", placeable: true,
+  { id: "investor", lab: "Engagement", short: "Engagement", audience: "ผู้จัดการกองทุน", placeable: true,
     adapt: (b, c, k) => ({ qs: UC_TEXT.investor[k].qs, ev: UC_TEXT.investor[k].ev,
-      ask: "ประเด็นสำหรับการประชุม engagement กับฝ่ายจัดการและคณะกรรมการ — ไม่ใช่ข้อเสนอการลงทุน",
+      ask: "ประเด็นสำหรับการประชุม engagement กับฝ่ายจัดการและคณะกรรมการ",
       askLabel: "ประเด็นสำหรับการประชุม engagement", audience: "ผู้จัดการกองทุน",
-      note: "ไม่ใช่ข้อเสนอการลงทุน · ตำแหน่งเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์ผลตอบแทนหรือราคาหุ้น" }) },
-  { id: "bankbod", lab: "บอร์ดธนาคาร (Pilot Use case 1 · นอกกลุ่มอ้างอิง)", short: "บอร์ดธนาคาร", audience: "เลขานุการบริษัท / คณะกรรมการธนาคาร", placeable: false,
+      note: "ตำแหน่งเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่การพยากรณ์ผลตอบแทนหรือราคาหุ้น" }) },
+  { id: "bankbod", lab: "Board Profile (นอกกลุ่มอ้างอิง)", en: "Board Profile (outside the reference group)", short: "Board Profile", audience: "เลขานุการบริษัท / คณะกรรมการ", placeable: false,
     adapt: () => null },
 ];
-function ucLens() { return USECASES.find(u => u.id === (S.uc || "board")) || USECASES[0]; }
+const gxLensHidden = id => (GX_PILOT.hiddenLenses || []).includes(id);
+const gxLensesShown = () => GX_PILOT.order.map(id => USECASES.find(u => u.id === id)).filter(u => u && !gxLensHidden(u.id));
+const ucLab = u => (typeof S === "object" && S.lang === "EN" && u.en) ? u.en : u.lab;
+function ucLens() {
+  const id = gxLensHidden(S.uc) ? "board" : (S.uc || "board");   // มุมมองที่ซ่อนเข้าถึงไม่ได้แม้ผ่านค่าที่จำไว้/ลิงก์ตรง
+  return USECASES.find(u => u.id === id) || USECASES[0];
+}
+/* ============================================================================
+   MVP 1 · ส่วนกลางของ W2b (Strategy Grid · Portfolio Matrix · What-if Studio)
+   อ่านค่าจากชั้นโมเดลของ W1 (window.PARAM_VERSION · PILOT_LABELS · FY_STATUS · CLIENT_GROUP · SCORE_FIRM · MVP_WHATIF)
+   เมื่อยังไม่มี API ใช้ค่าสำรองจากโมเดลในไฟล์ (ไม่แสดงสัมประสิทธิ์) — ถ้อยคำทุกจุดผ่านกติกาห้ามใช้คำ (ที่ปรึกษา 14 พ.ย. 2569)
+   ============================================================================ */
+const m1EN = () => typeof S === "object" && S.lang === "EN";
+const m1T = (en, th) => m1EN() ? en : th;
+/** ลงทะเบียนคำแปลของไฟล์นี้ — ชั้นแปลโหลดท้ายสุด จึงรอจนพร้อม */
+function m1I18n(d) {
+  const go = () => { try { if (window.I18N && typeof window.I18N.load === "function") { window.I18N.load(d); return true; } } catch (e) { } return false; };
+  if (!go()) document.addEventListener("DOMContentLoaded", go, { once: true });
+}
+window.m1I18n = m1I18n;
+/** ป้ายจาก PILOT_LABELS (W1) — คีย์ <k>_en / <k>_th หรือ { en, th } · ไม่มีค่า → ข้อความสำรอง */
+function m1Lab(k, en, th) {
+  const L = window.PILOT_LABELS || {};
+  const o = L[k], e = L[k + "_en"], t = L[k + "_th"];
+  if (o && typeof o === "object") return m1EN() ? (o.en || en) : (o.th || th);
+  if (e || t) return m1EN() ? (e || en) : (t || th);
+  if (typeof o === "string") return o;
+  return m1EN() ? en : th;
+}
+const m1Supporting = () => m1Lab("supporting", m1SupEN, m1SupTH);
+const m1Ver = () => window.PARAM_VERSION || (typeof OIS === "object" && OIS.version) || "REF928-edit9-20261013";
+/** สถานะปีบัญชี (F9 · R3 · G5) — FY_STATUS ของ W1 หรือค่าสำรองจากตาราง validity */
+function m1FY(fy) {
+  fy = +fy || FY_SHOWN;
+  if (typeof window.FY_STATUS === "function") { try { const r = window.FY_STATUS(fy); if (r && r.code) return r; } catch (e) { } }
+  const reg = fy > 2023 ? "NYV" : (REGIME[fy] || (fy < 2019 ? "NYV" : "PASS"));
+  const lab = { PASS: ["PASS", "PASS"], CAUTION: ["CAUTION", "CAUTION"], FAIL: ["FAIL", "FAIL"], NYV: ["Not yet validated", "ยังไม่ผ่านการตรวจความแม่น"] }[reg] || [reg, reg];
+  return { code: reg, label_en: lab[0], label_th: lab[1], rule_en: reg === "FAIL" ? "Normal reading withheld · What-if suspended (R3, G5)" : reg === "NYV" ? "Fiscal year after 2023 — not yet validated" : "",
+    whatIfAllowed: reg !== "FAIL", readingAllowed: reg !== "FAIL" };
+}
+const m1FYCls = st => ({ PASS: "ok", CAUTION: "warn", FAIL: "crit" })[st.code] || "mute";
+function m1FYChip(fy, extra) {
+  const st = m1FY(fy);
+  return `<span class="pill ${m1FYCls(st)} m1b-fy" data-fy="${+fy || FY_SHOWN}" data-fycode="${esc(st.code)}" title="${esc(st.rule_en || "")}">FY${+fy || FY_SHOWN} · ${esc(m1EN() ? st.label_en : (st.label_th || st.label_en))}</span>${extra || ""}`;
+}
+/** ป้ายนอกกลุ่มอ้างอิง / ยังไม่ตรวจความแม่น */
+const m1OutLab = () => m1T("Outside the reference sample", "นอกกลุ่มอ้างอิง (Outside the reference sample)");
+const m1NyvLab = () => m1T("Not yet validated", "ยังไม่ผ่านการตรวจความแม่น (Not yet validated)");
+/** ประตู JN (G3) — promotion ≥ 0.6858 (P65.7) */
+const M1_JN = 0.6858;
+/** ข้อมูลนำเข้าของบริษัทใน REF / ชุดแสดงผล → รูปแบบเดียวกับกรณีทดสอบ */
+/** ค่าป้อนของ SCORE_FIRM / MVP_WHATIF (คีย์ตามสัญญา API ของ W1 เท่านั้น) — บริษัทในชุดแสดงผลส่ง ticker + ค่าที่ใช้อยู่ (รวมค่าที่ผู้ใช้แก้ใน Zone A) */
+const M1_IN_KEYS = ["promotion", "family_share", "political_ties", "female_share", "industry", "fiscal_year", "board_size", "women"];
+function m1Pick(inp) { const o = {}; M1_IN_KEYS.forEach(k => { const v = inp[k]; if (v !== undefined && v !== null && v !== "") o[k] = v; }); return o; }
+function m1InpOf(c) {
+  if (c._client) return m1Pick(c._inp || {});
+  return { ticker: c.t, promotion: c.promo, family_share: c.fam, political_ties: c.pol ? 1 : 0, female_share: c.fem };
+}
+/** ค่าของบริษัทบน Grid (B_EG) — SCORE_FIRM ของ W1 หรือค่าสำรองของบริษัทในชุดแสดงผล */
+function m1ScoreOf(c) {
+  if (typeof window.SCORE_FIRM === "function" && !c._noScore) {
+    try { const r = window.SCORE_FIRM(m1InpOf(c)); if (r && isFinite(r.X) && isFinite(r.Y)) return r; } catch (e) { }
+  }
+  if (c._scored && isFinite(c._scored.X)) return c._scored;
+  const v = typeof verdictOf === "function" && byT[c.t] ? verdictOf(c) : null;
+  const ois = c.ois ?? c.ipi, band = (v && v.band) || c.band || null, tier = tierOf(ois);
+  const quad = c.quad || zoneOf(c.promo, c.amp);
+  const tu = !!band && tierOf(band[0]) !== tierOf(band[1]);
+  let t1 = null;
+  try { const a = t1Of(c); if (a && isFinite(a.ois)) t1 = { quad: a.quad, ois: a.ois, tier: a.tier, Y: NaN, band90: null }; } catch (e) { }
+  return { X: c.dp ?? promoPct(c.promo), Y: c.ap ?? ampPct(c.amp), quad, ois, band90: band, tier, tier_uncertain: tu, t1, _fallback: true };
+}
+/** เส้นแบ่งของ Grid (เปอร์เซ็นไทล์) — จากชั้นโมเดล (cP = 0 · amp = 0) */
+const m1Div = () => ({ x: isFinite(Z_CP) ? Z_CP : 53.8, y: isFinite(Z_AMP) ? Z_AMP : 36.0 });
+/** จุดพื้นหลัง REF-928 บนสเกลเปอร์เซ็นไทล์ (ไม่ระบุชื่อ) */
+let _m1Bg = null;
+function m1BgPts() {
+  if (_m1Bg) return _m1Bg;
+  const srv = typeof OIS_SRV !== "undefined" && OIS_SRV;
+  _m1Bg = REF_PTS.map(p => srv ? { x: +p[0], y: +p[1] + (isFinite(Z_AMP) ? Z_AMP : 0), q: p[2], ind: p[4] }
+    : { x: Math.round(midRank(REF_PROMO, q8(p[0])) * 10) / 10, y: Math.round(midRank(REF_AMP, q8(p[1])) * 10) / 10, q: p[2], ind: p[4] });
+  return _m1Bg;
+}
+/** ลูกค้าที่นำเข้าจากหน้า Import (W2a) — localStorage "ois_clients_v1" (ข้อมูลอยู่ในเบราว์เซอร์นี้เท่านั้น) */
+function m1Clients() {
+  try { const a = JSON.parse(localStorage.getItem("ois_clients_v1") || "[]"); return Array.isArray(a) ? a.filter(x => x && x.ticker) : []; } catch (e) { return []; }
+}
+window.m1Clients = m1Clients;
+/** กลุ่มลูกค้า 1–6 (slide 16) — CLIENT_GROUP ของ W1 หรือกติกาสำรอง */
+function m1GroupOf(cl) {
+  const inp = Object.assign({ ticker: cl.ticker, name: cl.name, industry: cl.industry, financial: cl.financial, english_letter: cl.english_letter,
+    board_table: cl.board_table, fiscal_year: cl.fiscal_year }, cl.inputs || {});
+  if (typeof window.CLIENT_GROUP === "function") { try { const g = window.CLIENT_GROUP(inp); if (g && g.group) return g; } catch (e) { } }
+  const fy = +(inp.fiscal_year || 0), inRef = !!inp.in_REF928;
+  const g = inp.listed === false ? 6 : (inp.financial === true || inp.financial === "yes" || +inp.industry === 8) ? 5
+    : (inp.english_letter === false || inp.english_letter === "no") ? 4 : fy > 2023 ? 3 : inRef ? 1 : 2;
+  return { group: g, label_en: ["", "In REF-928", "Outside the reference sample", "Outside the reference sample · Not yet validated", "Board Profile only", "Board Profile only", "Not applicable"][g],
+    labels: g === 2 ? ["Outside the reference sample"] : g === 3 ? (inRef ? ["Not yet validated"] : ["Outside the reference sample", "Not yet validated"]) : [] };
+}
+/** ลูกค้าที่นำเข้า → รูปแบบบริษัท (สำหรับ Grid / Portfolio / Studio) */
+function m1ClientCo(cl) {
+  const inp = Object.assign({ ticker: cl.ticker, name: cl.name, industry: cl.industry, fiscal_year: cl.fiscal_year,
+    financial: cl.financial, english_letter: cl.english_letter, board_table: cl.board_table, listed: true }, cl.inputs || {});
+  const g = m1GroupOf(cl);
+  const promo = +(inp.promotion ?? inp.promo), n = +(inp.board_size || 0), w = +(inp.women ?? NaN);
+  const fem = isFinite(+inp.female_share) ? +inp.female_share : (n > 0 && isFinite(w) ? w / n : NaN);
+  const co = { t: cl.ticker, n: cl.name || cl.ticker, ind: +inp.industry || 0, promo, fem, fam: +(inp.family_share ?? 0), pol: +(inp.political_ties ?? 0) ? 1 : 0,
+    ten: +(inp.tenure ?? NaN), bsize: n > 0 ? n : null, fy: +(inp.fiscal_year || cl.fiscal_year || FY_SHOWN), _client: true, _group: g, _inp: inp, _scored: cl.scored || null };
+  if (isFinite(promo) && isFinite(fem)) { try { co.amp = ampOf(co.fam, co.pol, fem, co.ten); co.dp = promoPct(promo); co.ap = ampPct(co.amp);
+    co.quad = zoneOf(promo, co.amp); co.ois = oisOf(signalB(promo, co.amp)); co.ipi = Math.round(co.ois); } catch (e) { } }
+  return co;
+}
+window.m1ClientCo = m1ClientCo;
+/* ---------------------------------------------------------------- Playbook UC1 (F3) */
+const PLAYBOOK_UC1 = window.PLAYBOOK_UC1 = {
+  order: ["A", "B", "D", "C"],
+  A: { name: ["Growth partner", "พันธมิตรการเติบโต"], body: ["Senior team, innovation network, expansion services", "ทีมผู้บริหารระดับสูง เครือข่ายนวัตกรรม และบริการเพื่อการขยายธุรกิจ"],
+       wi: ["What-if is not the main point", "What-if ไม่ใช่ประเด็นหลัก"], nums: true },
+  B: { name: ["Unlock", "ปลดล็อก"], body: ["Governance and board-development conversation", "การสนทนาด้านการกำกับดูแลและการพัฒนาคณะกรรมการ"],
+       wi: ["What-if only when promotion ≥ 0.686 (G3)", "What-if เฉพาะเมื่อ promotion ≥ 0.686 (G3)"], nums: true, gate: true },
+  D: { name: ["Activate", "กระตุ้น"], body: ["Chair-level conversation, innovation workshop", "การสนทนาระดับประธานกรรมการ และเวิร์กช็อปด้านนวัตกรรม"],
+       wi: ["No numbers (G3)", "ไม่แสดงตัวเลข (G3)"], nums: false },
+  C: { name: ["Maintain", "ดูแลต่อเนื่อง"], body: ["Core efficiency services, yearly follow-up", "บริการด้านประสิทธิภาพพื้นฐาน และติดตามรายปี"],
+       wi: ["No numbers (G3)", "ไม่แสดงตัวเลข (G3)"], nums: false },
+};
+/** ตัวอย่างถ้อยคำที่ใช้ได้ / ห้ามใช้ (G6) — ตัวอย่างห้ามใช้เขียนใหม่ให้ไม่มีคำต้องห้าม */
+function m1Wording() {
+  return `<div class="m1b-words" role="note">
+    <div class="m1b-word ok"><b>${m1T("Allowed (G6)", "ใช้ได้ (G6)")}</b><p>${m1T(
+      "In the reference data, a board with 30% women and this level of CEO drive is associated with about 23% more expected open-innovation activity (90% range 16%–31%), other factors held constant.",
+      "ในข้อมูลอ้างอิง คณะกรรมการที่มีกรรมการหญิง 30% และระดับแรงขับของ CEO ระดับนี้ สัมพันธ์กับกิจกรรม open innovation ที่คาดหมายสูงขึ้นราว 23% (ช่วง 90% 16%–31%) เมื่อปัจจัยอื่นคงที่")}</p></div>
+    <div class="m1b-word no"><b>${m1T("Do not use", "ห้ามใช้")}</b><p>${m1T(
+      "“Adding two women will raise innovation by 23% and will improve the client's terms with the pilot organisation.” — causal wording, and a link to the pilot organisation's decisions",
+      "“เพิ่มกรรมการหญิงสองคนแล้วนวัตกรรมจะเพิ่ม 23% และเงื่อนไขของลูกค้ากับองค์กรนำร่องจะดีขึ้น” — ถ้อยคำเชิงเหตุ-ผล และโยงไปการตัดสินใจขององค์กรนำร่อง")}</p></div></div>`;
+}
+/** การ์ด Playbook ของช่อง q (UC1) — selected = ช่องที่เลือกอยู่ */
+function m1PlaybookCard(q, opt) {
+  opt = opt || {};
+  const P = PLAYBOOK_UC1[q]; if (!P) return "";
+  const z = ZONES[q];
+  return `<div class="m1b-pb${opt.sel ? " sel" : ""}" style="--zc:${z.c}" data-pbq="${q}">
+    <div class="m1b-pbh"><span class="m1b-pbq">${q}</span><b>${esc(ZONE_CFG[q].name)} · ${esc(m1T(P.name[0], P.name[1]))}</b></div>
+    <p>${esc(m1T(P.body[0], P.body[1]))}</p>
+    <span class="pill ${P.nums ? (P.gate ? "warn" : "mute") : "mute"}">${esc(m1T(P.wi[0], P.wi[1]))}</span></div>`;
+}
+function m1PlaybookAll(selQ) {
+  return `<div class="m1b-pbgrid">${PLAYBOOK_UC1.order.map(q => m1PlaybookCard(q, { sel: q === selQ })).join("")}</div>`;
+}
+window.m1PlaybookCard = m1PlaybookCard; window.m1PlaybookAll = m1PlaybookAll; window.m1Wording = m1Wording;
+/** หัวข้อ "ข้อมูลประกอบ" ของมุมมอง UC1 */
+const m1SupBadge = () => `<div class="m1b-sup" role="note"><b>${esc(m1Supporting())}</b></div>`;
+/* ---------------------------------------------------------------- Grid 2×2 บนสเกลเปอร์เซ็นไทล์ (ใช้ร่วม Strategy Grid · Portfolio Matrix)
+   X = เปอร์เซ็นไทล์ CEO Promotion Focus · Y = เปอร์เซ็นไทล์ Board Amplification · เส้นแบ่ง P53.8 / P36.0 (B_EG)
+   pts: { x, y, q, t, n, hollow, num, me, sub, data } · shadow: { x0,y0,x,y,label } (B_T1 · CAUTION) · ref: { x, y } (ไม่ใช่เป้าหมาย) */
+function m1GridSvg(o) {
+  o = o || {};
+  const W = o.W || 760, H = o.H || 480, L = 46, R = 16, T = 18, B = 46;
+  const X = v => L + clamp(v, 0, 100) / 100 * (W - L - R), Y = v => H - B - clamp(v, 0, 100) / 100 * (H - T - B);
+  const dv = m1Div(), cx = X(dv.x), cy = Y(dv.y);
+  const sk = `paint-order="stroke" stroke="var(--panel)" stroke-width="3.5" stroke-linejoin="round"`;
+  const zk = o.zk || null, selQ = o.selQ || null;
+  const rect = (x0, y0, x1, y1, k) => `<rect class="gx-q${k === selQ ? " sel" : ""}" data-q="${k}" x="${Math.min(x0, x1).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}"
+      width="${Math.abs(x1 - x0).toFixed(1)}" height="${Math.abs(y1 - y0).toFixed(1)}" fill="${ZONES[k].c}"
+      fill-opacity="${k === selQ ? .13 : k === zk ? .08 : .035}"><title>${esc(ZONES[k].l)}</title></rect>`;
+  const dotCol = q => ZONES[q] ? ZONES[q].c : "var(--ink-3)";
+  const bg = (o.bg || []).map(p => `<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="2.1" fill="${dotCol(p.q)}" fill-opacity=".26"/>`).join("");
+  const corner = (k, x, y, anc) => `<g class="gx-cl" data-q="${k}"><text x="${x}" y="${y}" font-size="12" font-weight="600" fill="${ZONES[k].c}" text-anchor="${anc}" ${sk}>${esc(ZONES[k].l)}</text>
+      ${o.cornerSub ? `<text x="${x}" y="${y + 13}" font-size="9.8" fill="var(--ink-3)" text-anchor="${anc}" ${sk}>${esc(o.cornerSub(k))}</text>` : ""}</g>`;
+  const mk = p => {
+    const col = p.col || dotCol(p.q), r = p.me ? 11 : p.num ? 8.5 : 6.5;
+    const shape = p.hollow
+      ? `<circle r="${r}" fill="var(--panel)" stroke="${col}" stroke-width="2.6"/>`
+      : `<circle r="${r}" fill="${col}" stroke="var(--panel)" stroke-width="1.5"/>`;
+    const num = p.num ? `<text y="${p.me ? 4 : 3.5}" text-anchor="middle" font-size="${p.me ? 12 : 10}" font-weight="600" fill="${p.hollow ? col : "var(--panel)"}">${p.num}</text>` : "";
+    return `<g class="mk m1b-mk${p.me ? " me" : ""}${p.hollow ? " hollow" : ""}" tabindex="0" role="button" transform="translate(${X(p.x).toFixed(1)},${Y(p.y).toFixed(1)})"
+      data-t="${esc(p.t)}" data-n="${esc(p.n || "")}" data-i="${esc(p.i ?? "")}" data-z="${esc(ZONES[p.q] ? ZONES[p.q].l : "")}" data-q="${p.q || ""}" data-sub="${esc(p.sub || "")}"
+      data-hollow="${p.hollow ? 1 : 0}" data-client="${p.client ? 1 : 0}" aria-label="${esc(p.t)}${p.hollow ? " — " + esc(m1OutLab()) : ""}">
+      <circle r="${r + 7}" fill="transparent"/>${shape}${num}
+      ${p.label ? (() => { const flip = X(p.x) + r + 8 + p.label.length * 6.2 > W - R;      // ป้ายชิดขอบขวา → วางด้านซ้ายของจุด
+        return `<text x="${flip ? -(r + 5) : r + 5}" y="4" font-size="11" font-weight="600" fill="var(--ink)" text-anchor="${flip ? "end" : "start"}" ${sk} pointer-events="none">${esc(p.label)}</text>`; })() : ""}</g>`;
+  };
+  const sh = o.shadow && isFinite(o.shadow.y) ? (() => { const s = o.shadow, x0 = X(s.x0), y0 = Y(s.y0), x1 = X(s.x), y1 = Y(s.y);
+    return `<g class="m1b-shadow" pointer-events="none"><line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="var(--ink-3)" stroke-width="1.6" stroke-dasharray="3 3"/>
+      <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="7" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="2 2"/>
+      <text x="${(x1 + 11).toFixed(1)}" y="${(y1 + 4).toFixed(1)}" font-size="10" fill="var(--ink-3)" ${sk}>${esc(s.label || "B_T1 · CAUTION")}</text></g>`; })() : "";
+  const ref = o.ref && isFinite(o.ref.x) && isFinite(o.ref.y) ? `<g class="tr-path m1b-ref" pointer-events="none">
+      ${o.ref.from ? `<line x1="${X(o.ref.from.x).toFixed(1)}" y1="${Y(o.ref.from.y).toFixed(1)}" x2="${X(o.ref.x).toFixed(1)}" y2="${Y(o.ref.y).toFixed(1)}" stroke="var(--brand)" stroke-width="1.4" stroke-dasharray="2 5"/>` : ""}
+      <circle cx="${X(o.ref.x).toFixed(1)}" cy="${Y(o.ref.y).toFixed(1)}" r="7" fill="var(--panel)" stroke="var(--brand)" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="${(X(o.ref.x) + 11).toFixed(1)}" y="${(Y(o.ref.y) - 6).toFixed(1)}" font-size="10" fill="var(--brand)" ${sk}>${esc(m1T("Comparison point · not a target", "จุดเปรียบเทียบ · ไม่ใช่เป้าหมาย"))}</text></g>` : "";
+  const xl = o.xLabel || m1T("CEO Promotion Focus · percentile in REF-928 →", "CEO Promotion Focus · เปอร์เซ็นไทล์ใน REF-928 →");
+  const yl = o.yLabel || m1T("Board amplification · percentile in REF-928 →", "Board amplification · เปอร์เซ็นไทล์ใน REF-928 →");
+  const ticks = [0, 25, 50, 75, 100].map(v => `<text x="${X(v).toFixed(1)}" y="${H - B + 14}" font-size="9" fill="var(--ink-3)" text-anchor="middle">${v}</text>
+      <text x="${L - 6}" y="${(Y(v) + 3).toFixed(1)}" font-size="9" fill="var(--ink-3)" text-anchor="end">${v}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="gx-svg m1b-grid" role="img" aria-label="${esc(m1T("2×2 grid — X CEO Promotion Focus percentile, Y board amplification percentile", "Grid 2×2 — แกนนอนเปอร์เซ็นไทล์ CEO Promotion Focus แกนตั้งเปอร์เซ็นไทล์ Board amplification"))}">
+    ${rect(cx, T, W - R, cy, "A")}${rect(cx, cy, W - R, H - B, "B")}${rect(L, T, cx, cy, "D")}${rect(L, cy, cx, H - B, "C")}
+    <g pointer-events="none">${bg}
+      <line class="m1b-divx" x1="${cx.toFixed(1)}" y1="${T}" x2="${cx.toFixed(1)}" y2="${H - B}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
+      <line class="m1b-divy" x1="${L}" y1="${cy.toFixed(1)}" x2="${W - R}" y2="${cy.toFixed(1)}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
+      <text x="${(cx + 5).toFixed(1)}" y="${H - B - 6}" font-size="9.5" fill="var(--ink-3)" ${sk}>P${fmt(dv.x, 1)}</text>
+      <text x="${W - R - 4}" y="${(cy - 5).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" text-anchor="end" ${sk}>P${fmt(dv.y, 1)}</text>
+      ${ticks}</g>
+    ${corner("A", cx + 9, T + 15, "start")}${corner("D", cx - 9, T + 15, "end")}
+    ${corner("B", cx + 9, H - B - 22, "start")}${corner("C", cx - 9, H - B - 22, "end")}
+    ${ref}${sh}
+    ${(o.pts || []).filter(p => isFinite(p.x) && isFinite(p.y)).sort((a, b) => (a.me ? 1 : 0) - (b.me ? 1 : 0)).map(mk).join("")}
+    <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 10}" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">${esc(xl)}</text>
+    <text transform="translate(13,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="11" fill="var(--ink-2)" text-anchor="middle">${esc(yl)}</text>
+  </svg>`;
+}
+window.m1GridSvg = m1GridSvg;
+m1I18n({
+  "UC1 · โปรแกรมความสัมพันธ์กับลูกค้า (P2)": "UC1 · Client relationship (P2)",
+  "UC3 · ประเมิน OI ของคณะกรรมการ (P1)": "UC3 · Board OI evaluation (P1)",
+  "Board Profile (นอกกลุ่มอ้างอิง)": "Board Profile (outside the reference group)",
+  "RM / ทีมดูแลความสัมพันธ์ลูกค้า": "RM / client relationship team",
+  [m1SupTH]: m1SupEN,
+  "ข้อมูลประกอบ — ไม่ใช่ข้อเสนอแนะ": "Supporting information — not a recommendation",
+  "ข้อมูลประกอบสำหรับ RM — ไม่ใช่ข้อเสนอแนะ · บันทึกคำตอบของลูกค้าและเอกสารที่ได้รับไว้ในรายงานเยี่ยมลูกค้า": "Supporting information for the RM — not a recommendation · record the client's answers and the documents received in the client visit report",
+  "political ties และความเป็นกิจการครอบครัวไม่ใช้เป็นเหตุผลในการตัดสินใจใด ๆ ขององค์กรนำร่อง ไม่ว่าทางบวกหรือทางลบ (R6) · คำถามด้านบนใช้ชวนลูกค้าคุยเรื่องความสัมพันธ์และนวัตกรรม ไม่ใช่เกณฑ์ให้คะแนนลูกค้า": "Political ties and family-business status are never used as reasons in any decision of the pilot organisation, positive or negative (R6) · the questions above open a relationship and innovation conversation with the client; they are not criteria for scoring the client",
+  "ชวนลูกค้าเล่าว่าเลือกพันธมิตรด้านนวัตกรรมอย่างไร และอยากขยายเครือข่ายความร่วมมือไปทางใดในปีถัดไป": "Invite the client to describe how it chooses innovation partners and where it would like to extend its collaboration network next year",
+  "ลูกค้าสื่อสารการเติบโตผ่านพันธมิตรชัดเจน — ชวนคุยว่าคณะกรรมการติดตามการคัดเลือกพันธมิตร การเรียนรู้ และเกณฑ์หยุดโครงการอย่างไร": "The client communicates growth through partners clearly — talk about how the board tracks partner selection, learning and project stop criteria",
+  "ตัวอย่างโครงการร่วมพัฒนาที่ลูกค้าเปิดเผยต่อสาธารณะ (รายงานประจำปี / ข่าวประกาศ)": "Examples of joint-development projects the client has disclosed publicly (annual report / announcements)",
+  "บันทึกการพบลูกค้าครั้งล่าสุดขององค์กรนำร่อง": "The pilot organisation's latest client visit note",
+  "ชวนลูกค้าเล่าว่าคณะกรรมการมีส่วนร่วมกับแผนนวัตกรรมหรือความร่วมมือกับภายนอกอย่างไร และอยากได้มุมมองแบบใดเพิ่ม": "Invite the client to describe how the board takes part in innovation plans or external collaboration, and which perspectives it would like to add",
+  "ชวนคุยเรื่องการพัฒนาคณะกรรมการและการกำกับดูแล — มีหัวข้อใดที่ลูกค้าอยากแลกเปลี่ยนกับเครือข่ายขององค์กรนำร่อง": "Talk about board development and governance — which topics would the client like to exchange with the pilot organisation's network?",
+  "ส่วนการกำกับดูแลกิจการและองค์ประกอบคณะกรรมการใน 56-1 One Report": "Corporate governance and board composition sections of the 56-1 One Report",
+  "ชวนลูกค้าเล่าว่าช่วงนี้ให้ความสำคัญกับเรื่องใด และมีกิจกรรมความร่วมมือที่ทำอยู่แต่ยังไม่ปรากฏในรายงานประจำปีหรือไม่": "Invite the client to share its current priorities and any collaboration activities not yet visible in the annual report",
+  "สอบถามว่าบริการพื้นฐานที่องค์กรนำร่องให้อยู่ตอบโจทย์ลูกค้าเพียงใด และควรนัดติดตามรอบถัดไปเมื่อใด": "Ask how well the core services of the pilot organisation meet the client's needs, and when the next yearly follow-up should be",
+  "สารจาก CEO และแผนธุรกิจที่เปิดเผยในรายงานประจำปี": "CEO statement and business plan disclosed in the annual report",
+  "ชวนประธานกรรมการหรือผู้บริหารเล่าถึงโอกาสร่วมพัฒนากับภายนอกที่สนใจ และสิ่งที่ยังทำให้ไม่ได้เริ่ม": "Invite the chair or senior management to talk about external co-development opportunities of interest and what has kept them from starting",
+  "สอบถามความสนใจเข้าร่วมเวิร์กช็อปด้านนวัตกรรมหรือการแลกเปลี่ยนกับเครือข่ายขององค์กรนำร่อง": "Ask about interest in an innovation workshop or an exchange with the pilot organisation's network",
+  "สารจาก CEO ฉบับล่าสุดและแผนกลยุทธ์ที่เปิดเผย": "Latest CEO statement and the disclosed strategic plan",
+  [PRIMARY_UC_NOTE]: "The MVP 1 pilot build shows only the UC1, UC3 and Board Profile (outside the reference group) lenses",
+});
+
 /** เนื้อหาของช่อง k ตามมุมมองที่เลือก — คืน null เมื่อมุมมองนั้นวางบน Grid ไม่ได้ */
 function gxContent(k, c, lens) {
   lens = lens || ucLens();
@@ -238,7 +470,7 @@ const LS_GX = LS + "_gx";
   try { const o = JSON.parse(localStorage.getItem(LS_GX) || "null") || {};
     if (S.uc === undefined) S.uc = USECASES.some(u => u.id === o.uc) ? o.uc : "board";
     if (S.gxTable === undefined) S.gxTable = !!o.tb;
-    if (S.gxPath === undefined) S.gxPath = !!o.pa;
+    S.gxPath = false;            /* F9 · G6: ชั้นจุดอ้างอิงปิดทุกครั้งที่เปิดแอป (ไม่จำค่า) */
     if (S.gxIndCmp === undefined) S.gxIndCmp = !!o.ic;
     if (S.gxMode === undefined) S.gxMode = ["self", "peers", "industry"].includes(o.md) ? o.md : (o.ic ? "industry" : "self");
   } catch (e) { S.uc = S.uc || "board"; S.gxTable = !!S.gxTable; S.gxPath = !!S.gxPath; S.gxIndCmp = !!S.gxIndCmp; S.gxMode = S.gxMode || "self"; }
@@ -250,7 +482,9 @@ save = function () {
 };
 
 /* ---------------------------------------------------------------- ส่วนประกอบร่วมของสองหน้า */
-const GX_SPLIT = "เกณฑ์แบ่งสูง–ต่ำ: แกนนอนแบ่งที่ค่าเฉลี่ยฐานอ้างอิง (cP = 0) · แกนตั้งแบ่งที่ amp = 0 (ความชันของ promotion focus เป็นบวก/ไม่เป็นบวก)";
+const GX_SPLIT = "เกณฑ์แบ่งสูง–ต่ำ: แกนนอนแบ่งที่เปอร์เซ็นไทล์ P53.8 (cP = 0 ค่าเฉลี่ยฐานอ้างอิง) · แกนตั้งแบ่งที่เปอร์เซ็นไทล์ P36.0 (amp = 0 · B_EG) — ทั้งสองแกนเป็นเปอร์เซ็นไทล์ใน REF-928";
+m1I18n({ "ตรวจการกำกับดูแลการเติบโต": "Check board oversight of growth", [GX_SPLIT]: "High–low split: the horizontal axis splits at percentile P53.8 (cP = 0, the reference-base mean) · the vertical axis at percentile P36.0 (amp = 0 · B_EG) — both axes are percentiles in REF-928",
+  [GX_SPLIT.replace(/^เกณฑ์แบ่งสูง–ต่ำ: /, "")]: "the horizontal axis splits at percentile P53.8 (cP = 0, the reference-base mean) · the vertical axis at percentile P36.0 (amp = 0 · B_EG) — both axes are percentiles in REF-928" });
 const GX_X = "CEO Promotion Focus (สัญญาณจากข้อความ) ต่ำ → สูง";
 const GX_Y = "สัญญาณบทบาทของโครงสร้างบอร์ดตามโมเดล (Board Amplification Signal) ต่ำ → สูง";
 const GX_DISC = "คำถามเหล่านี้เป็นแนวทางสำหรับตรวจสอบต่อ ไม่ใช่ข้อสรุปว่าบริษัทในช่องนั้นมีปัญหาตามที่ถาม · สี่ช่องนี้คือ quadrant ไม่ใช่ควอไทล์อันดับอุตสาหกรรม · ตำแหน่งบน Grid เพียงอย่างเดียวยังไม่ใช่หลักฐานว่าบอร์ดพัฒนาประสิทธิผลสำเร็จ";
@@ -265,10 +499,10 @@ function gxProv(c, v) {
   return `<dl class="gx-prov">
     <div><dt>แหล่งข้อมูล</dt><dd>${ed ? `<span class="pill warn">ค่าที่ผู้ใช้แก้ใน Zone A</span> ไม่ใช่ค่าจากฐานข้อมูล`
       : "56-1 One Report / รายงานประจำปี (สารจาก CEO) + องค์ประกอบคณะกรรมการ"}</dd></div>
-    <div><dt>ปีบัญชี</dt><dd>พ.ศ. ${fy + 543} (FY${fy})</dd></div>
+    <div><dt>ปีบัญชี</dt><dd>พ.ศ. ${fy + 543} (FY${fy}) ${m1FYChip(fy)}</dd></div>
     <div><dt>กลุ่มเปรียบเทียบ</dt><dd>ฐานอ้างอิง REF-928 · 928 บริษัท-ปี · 209 บริษัท · SET นอกกลุ่มการเงิน · ปีบัญชี 2562–2566
-      <span class="gx-ver">${esc(OIS.version)}</span></dd></div>
-    <div><dt>สถานะตรวจคุณภาพ</dt><dd><span class="pill ${rc}" title="verdict รายปีจากตารางที่ 6 (R3)">${reg ? "FY" + fy + " · " + reg : "ยังไม่ validate"}</span>
+      <span class="gx-ver m1b-ver">${esc(m1Ver())}</span></dd></div>
+    <div><dt>สถานะตรวจคุณภาพ</dt><dd>${m1FYChip(fy)}
       ${!v.inDomain ? `<span class="pill crit">นอกกลุ่มอ้างอิง</span>` : ""}
       ${chips.filter(x => !/^นอกกลุ่ม/.test(x.k)).map(x => `<span class="chip" title="${esc(x.t)}">${esc(x.k)}</span>`).join("")}</dd></div>
     <div><dt>เกณฑ์แบ่งสูง–ต่ำ</dt><dd>${esc(GX_SPLIT.replace(/^เกณฑ์แบ่งสูง–ต่ำ: /, ""))}</dd></div>
@@ -280,8 +514,8 @@ function gxLensBar() {
   const L = ucLens();
   return `<div class="gx-lens"><div class="gx-lens-h"><span class="seglab">มุมมองการใช้งาน (Use case)</span>
       <span class="gx-aud">ผู้อ่าน: <b>${esc(L.audience)}</b></span></div>
-    <div class="seg gx-seg" role="tablist">${USECASES.map(u =>
-      `<button role="tab" data-uc="${u.id}" aria-selected="${u.id === L.id}"${PRIMARY_UC.includes(u.id) ? ' data-primary="1" title="มุมมองหลัก (รอผู้วิจัยยืนยัน)"' : ""}>${PRIMARY_UC.includes(u.id) ? "★ " : ""}${esc(u.lab)}</button>`).join("")}</div>
+    <div class="seg gx-seg m1b-lens" role="tablist">${gxLensesShown().map(u =>
+      `<button role="tab" data-uc="${u.id}" aria-selected="${u.id === L.id}">${esc(ucLab(u))}</button>`).join("")}</div>
     <p class="gx-sm b4-ucnote">${esc(PRIMARY_UC_NOTE)}</p></div>`;
 }
 
@@ -320,7 +554,7 @@ const gxPeersOf = (c, show) => show && gxMode() === "peers"
 /** บริษัทอื่นในอุตสาหกรรมเดียวกัน (ชุดแสดงผล) — โหมด "เทียบทั้งอุตสาหกรรม" */
 const gxIndCos = (c, show) => show && gxMode() === "industry" ? indComps(c.ind).filter(x => x.t !== c.t && inDomainOf(x.ind)) : [];
 /** ชั้นจุดอ้างอิงใช้ได้กับ Pro ขึ้นไป และไม่แสดงในมุมมองธนาคาร (credit / bankbod) */
-const gxPathAllowed = L => !["credit", "bankbod"].includes(L.id);
+const gxPathAllowed = L => !["credit", "bankbod"].includes(L.id);   // UC1 / Board Profile: ไม่มีชั้นนี้ · UC3: ปิดเป็นค่าเริ่มต้น
 const gxPathOn = (L, show) => show && gxPathAllowed(L) && gxRank() >= 1 && !!S.gxPath;
 const gxIndOn = show => show && gxMode() === "industry";
 const gxMed = a => { const b = a.slice().sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
@@ -347,83 +581,36 @@ function gxIndShares(ind) {
 }
 function gxSvg(c, v, show, selQ, opt) {
   opt = opt || {};
-  const mP = OM.P, pw = x => wins(x.promo, "P");
+  const L = ucLens(), uc1 = L.id === "credit";
   const peers = gxPeersOf(c, show), others = gxIndCos(c, show);
-  const marked = show ? [c, ...peers, ...others] : [];
-  const ref = opt.ref || null;
-  const bg = opt.ind ? REF_PTS.filter(p => p[4] === c.ind) : REF_PTS;
-  const px = REF_PTS.map(p => p[0]).concat(ref ? [ref.P] : []), ax = REF_PTS.map(p => p[1]).concat(ref ? [ref.A] : []);
-  const xr = [Math.min(...px, ...marked.map(pw), mP), Math.max(...px, ...marked.map(pw), mP)];
-  const yr = [Math.min(...ax, ...marked.map(x => x.amp), 0), Math.max(...ax, ...marked.map(x => x.amp), 0)];
-  const padx = (xr[1] - xr[0]) * .06 || .1, pady = (yr[1] - yr[0]) * .06 || .1;
-  const W = 760, H = 480, L = 40, R = 16, T = 18, B = 44;
-  const X = x => L + (x - (xr[0] - padx)) / ((xr[1] + padx) - (xr[0] - padx)) * (W - L - R);
-  const Y = y => H - B - (y - (yr[0] - pady)) / ((yr[1] + pady) - (yr[0] - pady)) * (H - T - B);
-  const cx = X(mP), cy = Y(0), zk = show ? v.quad : null;
-  const sk = `paint-order="stroke" stroke="var(--panel)" stroke-width="3.5" stroke-linejoin="round"`;
-  const rect = (x0, y0, x1, y1, k) => `<rect class="gx-q${k === selQ ? " sel" : ""}" data-q="${k}" x="${Math.min(x0, x1).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}"
-      width="${Math.abs(x1 - x0).toFixed(1)}" height="${Math.abs(y1 - y0).toFixed(1)}" fill="${ZONES[k].c}"
-      fill-opacity="${k === selQ ? .13 : k === zk ? .08 : .035}"><title>${esc(ZONES[k].l)} · ${esc(COMPASS[k].sub)} — คลิกเพื่อดูคำถามประจำช่อง</title></rect>`;
-  const dotCol = q => q === "A" ? "var(--ok)" : q === "C" ? "var(--serious)" : "var(--ink-3)";
-  const dots = bg.map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="2.2" fill="${dotCol(p[2])}" fill-opacity=".3"/>`).join("");
-  const corner = (k, x, y, anc) => {
-    const q = QN[k] || [0, 0];
-    const sub = opt.ind ? (() => { const n = bg.filter(p => p[2] === k).length;
-      return `อุตสาหกรรมนี้ n = ${n} (${fmt(bg.length ? n / bg.length * 100 : 0, 0)}%) · ทั้งฐาน ${fmt(q[1] / REF_PTS.length * 100, 0)}%`; })()
-      : `n = ${q[1]} บริษัท-ปี · OI เฉลี่ย ${fmt(q[0], 2)}`;
-    return `<g class="gx-cl" data-q="${k}"><text x="${x}" y="${y}" font-size="12" font-weight="600" fill="${ZONES[k].c}" text-anchor="${anc}" ${sk}>${esc(ZONES[k].l)}</text>
-      <text x="${x}" y="${y + 13}" font-size="10" fill="var(--ink-2)" text-anchor="${anc}" ${sk}>${esc(COMPASS[k].sub)}</text>
-      <text x="${x}" y="${y + 26}" font-size="9.6" fill="var(--ink-3)" text-anchor="${anc}" ${sk}>${sub}</text></g>`;
-  };
-  const num = (x, i) => {
-    const r = i === 0 ? 11 : 8.5, col = i === 0 ? "var(--ink)" : SER[i - 1];
-    return `<g class="mk${i === 0 ? " me" : ""}" tabindex="0" role="button" transform="translate(${X(pw(x)).toFixed(1)},${Y(x.amp).toFixed(1)})"
-        data-t="${esc(x.t)}" data-n="${esc(x.n)}" data-i="${x.ipi}" data-z="${esc(ZONES[x.quad || zoneOf(x.promo, x.amp)].l)}"
-        aria-label="${esc(x.t)} ${i === 0 ? "— เปิดประเด็นสำหรับบอร์ด" : "— คู่เทียบ"}">
-      <circle r="${r + 7}" fill="transparent"/><circle r="${r + 2.5}" fill="var(--panel)"/>
-      <circle r="${r}" fill="${col}" stroke="var(--panel)" stroke-width="1.5"/>
-      <text y="${i === 0 ? 4 : 3.5}" text-anchor="middle" font-size="${i === 0 ? 12 : 10}" font-weight="600" fill="var(--panel)">${i + 1}</text></g>`;
-  };
-  const lab = show ? (() => { const mx = X(pw(c)), flip = mx > W - 160;
-    // เมื่อเปิดชั้นจุดอ้างอิงและเส้นประพาดไปฝั่งเดียวกับป้าย — ยกป้ายบริษัทขึ้นเหนือจุดแทน
-    const rx = ref ? X(ref.P) : null, up = ref && (flip ? rx < mx - 12 : rx > mx + 12);
-    if (up) return `<text x="${mx.toFixed(1)}" y="${(Y(c.amp) - 18).toFixed(1)}" font-size="12" font-weight="600"
-      text-anchor="${mx > W - 120 ? "end" : mx < L + 120 ? "start" : "middle"}" fill="var(--ink)" ${sk} pointer-events="none">${esc(c.t)} · คลิกเพื่อเปิดประเด็น</text>`;
-    return `<text x="${(flip ? mx - 17 : mx + 17).toFixed(1)}" y="${(Y(c.amp) + 4).toFixed(1)}" font-size="12" font-weight="600"
-      text-anchor="${flip ? "end" : "start"}" fill="var(--ink)" ${sk} pointer-events="none">${esc(c.t)} · คลิกเพื่อเปิดประเด็น</text>`; })() : "";
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" class="gx-svg" role="img" aria-label="Strategy Grid 2 คูณ 2 — ${esc(GX_X)} และ ${esc(GX_Y)}">
-    ${rect(cx, T, W - R, cy, "A")}${rect(cx, cy, W - R, H - B, "B")}${rect(L, T, cx, cy, "D")}${rect(L, cy, cx, H - B, "C")}
-    <g pointer-events="none">${dots}
-      <line x1="${cx.toFixed(1)}" y1="${T}" x2="${cx.toFixed(1)}" y2="${H - B}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
-      <line x1="${L}" y1="${cy.toFixed(1)}" x2="${W - R}" y2="${cy.toFixed(1)}" stroke="var(--ink-3)" stroke-dasharray="5 4"/>
-      <text x="${(cx + 5).toFixed(1)}" y="${(cy + 14).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" ${sk}>cP = 0 (ค่าเฉลี่ยฐานอ้างอิง)</text>
-      <text x="${(W - R - 4)}" y="${(cy - 5).toFixed(1)}" font-size="9.5" fill="var(--ink-3)" text-anchor="end" ${sk}>amp = 0</text></g>
-    ${corner("A", cx + 9, T + 15, "start")}${corner("D", cx - 9, T + 15, "end")}
-    ${corner("B", cx + 9, H - B - 38, "start")}${corner("C", cx - 9, H - B - 38, "end")}
-    ${ref && show ? (() => {
-      const x0 = X(pw(c)), y0 = Y(c.amp), x1 = X(ref.P), y1 = Y(ref.A), dx = x1 - x0, dy = y1 - y0, dd = Math.hypot(dx, dy) || 1;
-      const sx = x0 + dx / dd * 14, sy = y0 + dy / dd * 14, ex = x1 - dx / dd * 9, ey = y1 - dy / dd * 9;
-      // ป้ายอยู่ฝั่งตรงข้ามกับบริษัท ไม่ให้ทับป้ายของบริษัท · ชิดขอบกราฟแล้วกลับด้าน
-      let flip = x0 > x1; if (!flip && x1 > W - 250) flip = true; if (flip && x1 < L + 250) flip = false;
-      const ly = dd < 70 ? (y0 <= y1 ? y1 + 22 : y1 - 22) : y1 - 4;
-      return `<g class="tr-path" pointer-events="none">
-        <defs><marker id="trArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0L10 5L0 10z" fill="var(--brand)"/></marker></defs>
-        ${dd > 24 ? `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="var(--brand)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#trArrow)"/>` : ""}
-        <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="8" fill="var(--panel)" stroke="var(--brand)" stroke-width="2.2" stroke-dasharray="3 2"/>
-        <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="2.6" fill="var(--brand)"/>
-        <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${ly.toFixed(1)}" font-size="10.8" font-weight="600" fill="var(--brand)" text-anchor="${flip ? "end" : "start"}" ${sk}>จุดอ้างอิงเชิงเปรียบเทียบ</text>
-        <text x="${(flip ? x1 - 13 : x1 + 13).toFixed(1)}" y="${(ly + 13).toFixed(1)}" font-size="9.4" fill="var(--ink-2)" text-anchor="${flip ? "end" : "start"}" ${sk}>มัธยฐานช่อง ${esc(ZONE_CFG.A.name)} ${ref.scope === "ind" ? "ในอุตสาหกรรมเดียวกัน" : "ทั้งฐาน"} · ไม่ใช่เป้าหมาย</text></g>`;
-    })() : ""}
-    ${others.map(x => `<g class="mk mv-indmk" tabindex="0" role="button" transform="translate(${X(pw(x)).toFixed(1)},${Y(x.amp).toFixed(1)})"
-        data-t="${esc(x.t)}" data-n="${esc(x.n)}" data-i="${x.ipi}" data-z="${esc(ZONES[x.quad || zoneOf(x.promo, x.amp)].l)}" aria-label="${esc(x.t)} — บริษัทในอุตสาหกรรมเดียวกัน">
-      <circle r="9" fill="transparent"/><circle r="4.6" fill="var(--panel)" stroke="var(--s2)" stroke-width="2"/></g>`).join("")}
-    ${peers.map((p, i) => num(p, i + 1)).join("")}${show ? num(c, 0) : ""}${lab}
-    <text x="${(L + (W - L - R) / 2).toFixed(0)}" y="${H - 12}" font-size="11.5" fill="var(--ink-2)" text-anchor="middle">${esc(GX_X)}</text>
-    <text transform="translate(14,${(T + (H - T - B) / 2).toFixed(0)}) rotate(-90)" font-size="11" fill="var(--ink-2)" text-anchor="middle">${esc(GX_Y)}</text>
-  </svg>`;
+  const sc = show ? m1ScoreOf(c) : null;
+  const bg = m1BgPts().filter(p => !opt.ind || p.ind === c.ind);
+  const pts = [];
+  others.forEach(x => { const s = m1ScoreOf(x); pts.push({ x: s.X, y: s.Y, q: s.quad, t: x.t, n: x.n, i: fmt(s.ois, 0), col: "var(--s2)", sub: m1T("same industry", "อุตสาหกรรมเดียวกัน") }); });
+  peers.forEach((x, i) => { const s = m1ScoreOf(x); pts.push({ x: s.X, y: s.Y, q: s.quad, t: x.t, n: x.n, i: fmt(s.ois, 0), num: i + 2, col: SER[i] }); });
+  /* UC1: ลูกค้านอก REF-928 (กลุ่ม 2–3) เป็นวงกลมโปร่ง พร้อมป้าย "Outside the reference sample" */
+  if (show && uc1) gxClientPts().forEach(p => pts.push(p));
+  if (sc) pts.push({ x: sc.X, y: sc.Y, q: sc.quad, t: c.t, n: c.n, i: fmt(sc.ois, 0), num: 1, me: true, col: "var(--ink)",
+    label: c.t + m1T(" · click to open the points", " · คลิกเพื่อเปิดประเด็น") });
+  /* D1: B_T1 เป็นเงาสีเทา + CAUTION เฉพาะมุมมอง UC1 */
+  const shadow = sc && uc1 && sc.t1 && isFinite(sc.t1.Y) ? { x0: sc.X, y0: sc.Y, x: isFinite(sc.t1.X) ? sc.t1.X : sc.X, y: sc.t1.Y, label: "B_T1 · CAUTION" } : null;
+  let ref = null;
+  if (opt.ref && sc) { const r = opt.ref; ref = r.srv ? { x: r.dp, y: r.ap } : { x: promoPct(r.P), y: ampPct(r.A) }; ref.from = { x: sc.X, y: sc.Y }; }
+  return m1GridSvg({ bg, pts, selQ, zk: sc ? sc.quad : null, shadow, ref,
+    cornerSub: k => { const q = QN[k] || [0, 0];
+      if (opt.ind) { const n = bg.filter(p => p.q === k).length; return m1T(`this industry n = ${n} · whole base ${fmt(q[1] / REF_PTS.length * 100, 0)}%`, `อุตสาหกรรมนี้ n = ${n} · ทั้งฐาน ${fmt(q[1] / REF_PTS.length * 100, 0)}%`); }
+      return m1T(`n = ${q[1]} firm-years · mean OI ${fmt(q[0], 2)}`, `n = ${q[1]} บริษัท-ปี · OI เฉลี่ย ${fmt(q[0], 2)}`); } });
 }
-
+/** ลูกค้าที่นำเข้า (ois_clients_v1) ที่วางบน Grid ได้ — กลุ่ม 2–3 เป็นวงกลมโปร่ง · กลุ่ม 1 ทึบ · กลุ่ม 4–6 ไม่วาง */
+function gxClientPts() {
+  return m1Clients().map(cl => { const co = m1ClientCo(cl), g = co._group.group;
+    if (g > 3) return null;
+    const s = m1ScoreOf(co); if (!s || !isFinite(s.X) || !isFinite(s.Y)) return null;
+    const labs = (co._group.labels || []).length ? co._group.labels : g >= 2 ? ["Outside the reference sample"] : [];
+    return { x: s.X, y: s.Y, q: s.quad, t: co.t, n: co.n, i: fmt(s.ois, 0), hollow: g >= 2, sub: labs.join(" · "), client: true,
+      label: co.t + (labs.length ? " · " + labs.join(" · ") : "") };
+  }).filter(Boolean);
+}
 /** มุมมองตาราง (Speier 2006) — สี่ช่องของ REF-928 + แถวของบริษัทนี้ */
 function gxTable(c, v, show) {
   const N = REF_PTS.length;
@@ -482,20 +669,23 @@ function gxPanel(c, v, show, sel) {
   }
   const addB = (txt, lab) => `<button class="btn g gx-add" data-gxadd="${esc(txt)}" title="${esc(txt)}">+ เพิ่มประเด็นเข้าสู่แผนพัฒนาบอร์ด${lab ? " · " + lab : ""}</button>`;
   const inPlan = t => (u.plan || []).some(x => x.t === t);
+  const uc1 = L.id === "credit";
+  const pTitle = uc1 ? m1T(`Relationship programme · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[0]}`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[1]}`)
+    : m1T(`Points for the board · ${c.t}`, `ประเด็นสำหรับบอร์ด · ${c.t}`);
   return `<div class="gx-panel" id="gxPanel" style="--zc:${z.c}">
-    <div class="gx-ph"><span class="gx-exlab on">ประเด็นสำหรับบอร์ด · ${esc(c.t)}</span>
+    <div class="gx-ph"><span class="gx-exlab on m1b-ptitle">${esc(pTitle)}</span>
       <h3><span style="color:${z.c}">${z.l}</span> · ${esc(ct.sub)}</h3>
-      <span class="gx-sm">มุมมอง: ${esc(L.lab)} · ผู้อ่าน: ${esc(ct.audience)}</span></div>
-    ${L.id === "credit" ? gxCreditNote(c) : ""}
+      <span class="gx-sm">${m1T("Lens", "มุมมอง")}: ${esc(ucLab(L))} · ${m1T("Reader", "ผู้อ่าน")}: ${esc(ct.audience)}</span></div>
+    ${uc1 ? m1SupBadge() + gxCreditNote(c) + `<div class="gx-part m1b-pbwrap"><b>${m1T("Relationship programme by quadrant", "โปรแกรมความสัมพันธ์ตามช่อง")}</b>${m1PlaybookAll(k)}</div>` : ""}
     <div class="gx-part"><b><i>1</i>สิ่งที่ข้อมูลแสดง</b><p>${esc(gxShows(c, k))}</p></div>
     <div class="gx-part"><b><i>2</i>สิ่งที่ยังสรุปไม่ได้</b><ul class="gx-ev">${gxCannot(c, v, k).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
-    <div class="gx-part"><b><i>3</i>คำถามสำหรับหารือ (3 ข้อ)</b>
+    <div class="gx-part"><b><i>3</i>คำถามสำหรับหารือ (${ct.qs.length} ข้อ)</b>
       <ol class="gx-qs">${ct.qs.map((q, i) => `<li><span>${esc(q)}</span>
         ${inPlan(q) ? `<span class="pill ok">อยู่ในแผนแล้ว</span>` : addB(q, "คำถามข้อ " + (i + 1))}</li>`).join("")}</ol></div>
     <div class="gx-part"><b><i>4</i>หลักฐานที่ใช้ตรวจ</b>
       <ul class="gx-ev gx-evb">${ct.ev.map((e, i) => { const t = "ตรวจหลักฐาน E0" + (i + 1) + " · " + e;
         return `<li><span><b>E0${i + 1}</b> ${esc(e)}</span>${inPlan(t) ? `<span class="pill ok">อยู่ในแผนแล้ว</span>` : addB(t, "E0" + (i + 1))}</li>`; }).join("")}</ul></div>
-    <div class="gx-part"><b><i>5</i>${esc(ct.askLabel)}</b><p class="gx-ask">${esc(ct.ask)}</p></div>
+    <div class="gx-part"><b><i>5</i>${esc(ct.askLabel)}</b><p class="gx-ask">${esc(ct.ask)}</p>${uc1 ? m1Wording() : ""}</div>
     <div class="gx-part"><b><i>6</i>ผลหลังประชุม</b>
       <label class="gx-sm" for="gxRes">ผู้ใช้กรอกหลังประชุมจริงเท่านั้น — ระบบไม่เติมมติ</label>
       <textarea class="inp gx-res" id="gxRes" rows="3" placeholder="ข้อสรุป มติ ผู้รับผิดชอบ และวันติดตาม — กรอกหลังการประชุมจริง">${esc(u.res || "")}</textarea></div>
@@ -506,29 +696,31 @@ function gxPanel(c, v, show, sel) {
       <button class="btn p" data-goto="compass">เปิดรายงานฉบับเต็ม (Compass)</button></div>
   </div>`;
 }
+/** มุมมอง UC1 (D1): B_EG เป็นตัวหลักของช่องและ OIS · B_T1 แสดงเป็นเงาสีเทาพร้อมชิป CAUTION เท่านั้น · ไม่มีแถวครอบครัว/political ties */
 function gxCreditNote(c) {
-  const t1 = c.t1 || t1Of(c), pf = typeof S.pilotFormula !== "undefined" ? S.pilotFormula : null;
-  return `<div class="note warn gx-cnote"><span class="pill warn">Caution · B_T1</span>
-    <b>แนวทาง Pilot Use case 2:</b> แสดงสูตร B_T1 คู่กับป้าย Caution — B_T1: OpenInnoScore ${fmt(t1.ois, 1)} · Tier ${t1.tier} · ช่อง ${t1.quad}
-    (ทุกตัวชี้วัด validity ของ B_T1 ต่ำกว่าเกณฑ์ผ่าน ใช้เปรียบเทียบเท่านั้น) ·
-    ${pf ? `แถบสถานะตอนนี้แสดง <b>${pf === "T1" ? "B_T1 (shadow · Caution)" : "B_EG (สูตรหลัก)"}</b> — สลับได้ที่หน้าสถาปัตยกรรมข้อมูล · ` : ""}
-    <b>political ties และความเป็นกิจการครอบครัวไม่ใช้เป็นเหตุผลในการพิจารณาสินเชื่อ</b></div>`;
+  const sc = m1ScoreOf(c), t1 = sc.t1 || (() => { try { return t1Of(c); } catch (e) { return null; } })();
+  return `<div class="note gx-cnote m1b-d1"><b>${m1T("Lens formula: B_EG", "สูตรของมุมมองนี้: B_EG")}</b> — ${m1T("quadrant and OIS on this screen come from B_EG (pooled PASS)", "ช่องและ OIS บนหน้านี้มาจาก B_EG (ผ่านเกณฑ์ภาพรวม)")} ·
+    <span class="m1b-shadowtxt">${m1T("Shadow", "เงา")} B_T1: ${t1 && isFinite(t1.ois) ? `OIS ${fmt(t1.ois, 1)} · ${m1T("quadrant", "ช่อง")} ${t1.quad}` : m1T("not available", "ไม่มีค่า")}</span>
+    <span class="pill warn m1b-caution">CAUTION</span>
+    <div class="gx-sm" style="margin-top:4px">${m1T("Political ties and family-business status are context only and are never used as reasons in any decision of the pilot organisation (R6) — those rows are hidden in this lens.",
+      "political ties และความเป็นกิจการครอบครัวเป็นข้อมูลบริบท ไม่ใช้เป็นเหตุผลในการตัดสินใจใด ๆ ขององค์กรนำร่อง (R6) — ซ่อนแถวเหล่านี้ในมุมมองนี้")}</div></div>`;
 }
+/** มุมมอง Board Profile (นอกกลุ่มอ้างอิง) — ไม่วางบน Grid (R4 · D2) */
 function gxBank() {
-  return `<div class="gx-ph"><span class="gx-exlab on">บอร์ดธนาคาร · Pilot Use case 1</span>
-      <h3>บอร์ดธนาคารวางบน Grid นี้ไม่ได้</h3></div>
-    <p class="gx-p">ฐานอ้างอิง REF-928 ครอบคลุมบริษัท SET อุตสาหกรรม 1–7 นอกกลุ่มการเงินเท่านั้น ธนาคารจึงอยู่นอกกลุ่มอ้างอิง (R4) —
-      ระบบไม่คำนวณตำแหน่ง tier เปอร์เซ็นไทล์ หรือ Signal B และไม่แสดงจุดบนกราฟ จุดพื้นหลังด้านบนเป็นบริษัทนอกกลุ่มการเงินเพื่อให้เห็นนิยามของช่องเท่านั้น</p>
-    <p class="gx-p">สำหรับบอร์ดธนาคาร ใช้ชุดคำถามประเมินตนเองระดับคณะ OI-1…OI-6 (CG Code 2560) และโปรไฟล์องค์ประกอบคณะกรรมการเชิงพรรณนาแทน ·
-      ไม่ประเมินกรรมการรายบุคคล · political ties ไม่ใช่เหตุผลเชิงบวก</p>
+  return `<div class="gx-ph"><span class="gx-exlab on">${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</span>
+      <h3>${m1T("This lens is not placed on the Grid", "มุมมองนี้ไม่วางตำแหน่งบน Grid")}</h3></div>
+    <p class="gx-p">${m1T("REF-928 covers SET firms in industries 1–7 outside the Financials sector. Boards outside that group — Financials, firms without an English letter, or the board under review when it is outside REF-928 — get a descriptive Board Profile only: no position, OIS, tier or What-if (R4, D2). The background points show the quadrant definitions only.",
+      "REF-928 ครอบคลุมบริษัท SET อุตสาหกรรม 1–7 นอกกลุ่มธุรกิจการเงิน (Financials) · บอร์ดที่อยู่นอกกลุ่มนี้ — กลุ่มธุรกิจการเงิน บริษัทที่ไม่มีสารภาษาอังกฤษ หรือบอร์ดที่ประเมินซึ่งอยู่นอก REF-928 — ได้เฉพาะ Board Profile เชิงพรรณนา ไม่มีตำแหน่ง OIS tier หรือ What-if (R4, D2) · จุดพื้นหลังแสดงนิยามของช่องเท่านั้น")}</p>
+    <p class="gx-p">${m1T("Use the board-level OI-1…OI-6 self-assessment and the descriptive board profile instead · no individual director is assessed · political ties are never a positive reason.",
+      "ใช้ชุดคำถามประเมินตนเองระดับคณะ OI-1…OI-6 และโปรไฟล์องค์ประกอบคณะกรรมการเชิงพรรณนาแทน · ไม่ประเมินกรรมการรายบุคคล · political ties ไม่ใช่เหตุผลเชิงบวก")}</p>
     <div class="gx-row"><button class="btn p" data-goto="bod">BOD Self-Assessment (OI-1…6)</button>
-      <button class="btn s" data-goto="outdomain">โหมดนอกกลุ่มอ้างอิง (ธนาคาร)</button></div>`;
+      <button class="btn s" data-goto="outdomain">${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</button></div>`;
 }
 function gxOut(c) {
   return `<div class="gx-ph"><span class="gx-exlab on">นอกกลุ่มอ้างอิง</span><h3>${esc(c.t)} อยู่นอกกลุ่มอ้างอิง — ไม่แสดงตำแหน่งบน Grid</h3></div>
     <p class="gx-p">บริษัทนี้อยู่นอกอุตสาหกรรม 1–7 หรือไม่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ (R4) ระบบจึงไม่วางจุดบนกราฟ ·
       ใช้โปรไฟล์เชิงพรรณนาและชุดคำถาม BOD แทน</p>
-    <div class="gx-row"><button class="btn p" data-goto="outdomain">เปิดโหมดนอกกลุ่มอ้างอิง</button>
+    <div class="gx-row"><button class="btn p" data-goto="outdomain">${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</button>
       <button class="btn s" data-goto="bod">BOD Self-Assessment (OI-1…6)</button></div>`;
 }
 
@@ -542,12 +734,13 @@ function viewMatrix2() {
   const ref = pathOn ? gxRefPoint(c) : null;
   const msg = !v.inDomain ? `<div class="note warn gx-msg"><b>${esc(c.t)} อยู่นอกกลุ่มอ้างอิง</b> — ไม่แสดงจุดของบริษัทบนกราฟ (R4)
         <button class="btn s" data-goto="outdomain">เปิดโหมดนอกกลุ่มอ้างอิง</button></div>`
-    : !L.placeable ? `<div class="note warn gx-msg"><b>มุมมองบอร์ดธนาคาร</b> — ธนาคารอยู่นอกฐานอ้างอิง REF-928 จึงไม่แสดงจุดบนกราฟ (R4)
-        <button class="btn s" data-goto="bod">OI-1…6</button><button class="btn s" data-goto="outdomain">โหมดนอกกลุ่มอ้างอิง</button></div>` : "";
+    : !L.placeable ? `<div class="note warn gx-msg"><b>${esc(m1T("Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)"))}</b> — ${m1T("boards outside REF-928 get a descriptive profile only; no point is placed on the Grid (R4)", "บอร์ดนอก REF-928 ได้เฉพาะโปรไฟล์เชิงพรรณนา ไม่วางจุดบนกราฟ (R4)")}
+        <button class="btn s" data-goto="bod">OI-1…6</button><button class="btn s" data-goto="outdomain">Board Profile</button></div>` : "";
+  const uc1 = L.id === "credit", sc0 = show ? m1ScoreOf(c) : null, clPts = show && uc1 ? gxClientPts() : [];
   return pageHead("Board Strategy Compass · 2×2", "ตำแหน่งบริษัทและประเด็นสำหรับการหารือของบอร์ด",
     `Grid นี้ใช้เปิด <b>ประเด็นสำหรับการหารือของบอร์ด</b> — ไม่ได้บอกว่าบริษัทต้องย้ายไปช่องใด ·
      คลิกจุดของบริษัท (หมายเลข 1) หรือคลิกช่องใดก็ได้ เพื่อดูคำถาม หลักฐานที่ใช้ตรวจ และเรื่องที่ให้พิจารณาใต้กราฟ`)
-    + gxLensBar()
+    + gxLensBar() + (uc1 ? m1SupBadge() : "")
     + `<div class="note warn b4-zpend" role="note"><b>${esc(ZONE_CFG.pendingNote)}</b> · ชื่อบนหน้าจอแสดงทั้งชื่อที่ใช้อยู่และชื่อตามบทความวิจัย เช่น “${esc(zoneName("A"))}”</div>`
     + `<div class="gx-sb">${statusBar(c)}</div>
     <div class="card gx-card">
@@ -562,12 +755,12 @@ function viewMatrix2() {
           ${gxLayerBar(L, show)}
           <div class="gx-svgwrap">${tbl ? gxTable(c, v, show) : gxSvg(c, v, show, sel.q, { ref, ind: indOn })}</div>
           ${tbl ? "" : `<div class="legend gx-legend">
-            <span><i style="background:var(--ok);opacity:.55"></i>${esc(ZONES.A.l)}</span>
-            <span><i style="background:var(--serious);opacity:.55"></i>${esc(ZONES.C.l)}</span>
-            <span><i style="background:var(--ink-3);opacity:.45"></i>${esc(ZONES.B.l)} · ${esc(ZONES.D.l)}</span>
+            ${["A", "B", "C", "D"].map(k => `<span><i style="background:${ZONES[k].c};opacity:.55"></i>${esc(ZONES[k].l)}</span>`).join("")}
+            ${clPts.some(p => p.hollow) ? `<span class="m1b-lg-hollow"><i style="background:transparent;border:2px solid var(--ink-2);border-radius:99px"></i>${esc(m1OutLab())}${clPts.some(p => /Not yet validated/.test(p.sub)) ? " · " + esc(m1NyvLab()) : ""}</span>` : ""}
+            ${sc0 && uc1 && sc0.t1 && isFinite(sc0.t1.Y) ? `<span class="m1b-lg-shadow"><i style="background:transparent;border:2px dashed var(--ink-3);border-radius:99px"></i>B_T1 ${m1T("shadow", "เงา")} <span class="pill warn">CAUTION</span></span>` : ""}
             ${show ? `<span><i style="background:var(--ink);border-radius:99px"></i><b>1</b> ${esc(c.t)} — คลิกเพื่อเปิดประเด็น</span>` : ""}
             ${peers.map((p, i) => `<span><i style="background:${SER[i]};border-radius:99px"></i><b>${i + 2}</b> ${esc(p.t)} (คู่เทียบ)</span>`).join("")}
-            ${indOn ? `<span><i style="background:transparent;border:2px solid var(--s2);border-radius:99px"></i>บริษัทอื่นใน${esc(IND[c.ind] || "อุตสาหกรรมเดียวกัน")} (${gxIndCos(c, show).length} บริษัท · คลิกเพื่อเปิด)</span>` : ""}</div>`}
+            ${indOn ? `<span><i style="background:var(--s2);border-radius:99px"></i>บริษัทอื่นใน${esc(IND[c.ind] || "อุตสาหกรรมเดียวกัน")} (${gxIndCos(c, show).length} บริษัท · คลิกเพื่อเปิด)</span>` : ""}</div>`}
           <div class="gx-qpick"><span class="gx-sm">ดูคำถามประจำช่อง:</span>${["D", "A", "C", "B"].map(k =>
             `<button class="btn g${k === sel.q ? " on" : ""}" data-gxq="${k}" style="--zc:${ZONES[k].c}">${ZONES[k].l}${show && k === v.quad ? " ●" : ""}</button>`).join("")}</div>
           <p class="gx-split">${esc(GX_SPLIT)}</p>
@@ -677,13 +870,14 @@ function b4Neigh(c) {
 const b4Med = a => { const b = a.filter(v => isFinite(v)).sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : NaN; };
 function b4NeighTable(rows, c, cap) {
   const q = x => x.quad || zoneOf(x.promo, x.amp);
+  const ctx = !(typeof ucLens === "function" && ucLens().id === "credit");    // D1: UC1 ซ่อนแถวครอบครัว / political ties
   return `<div class="tw"><table class="tr-tbl b4-ntbl"><caption>${esc(cap)}</caption>
     <thead><tr><th class="n">อันดับ</th><th>บริษัท</th><th class="n">OIS</th><th>ช่อง 2×2</th><th class="n">กรรมการหญิง</th><th class="n">อายุงานเฉลี่ย (ปี)</th>
-      <th class="n">ครอบครัว <span class="gx-sm">บริบท</span></th><th>political ties <span class="gx-sm">บริบท</span></th></tr></thead>
+      ${ctx ? `<th class="n">ครอบครัว <span class="gx-sm">บริบท</span></th><th>political ties <span class="gx-sm">บริบท</span></th>` : ""}</tr></thead>
     <tbody>${rows.map(({ x, r, me }) => { const fn = femaleN(x.fem, x.bsize);
       return `<tr${me ? ' class="hl"' : ""}><td class="n">${r}</td><td><b>${esc(x.t)}</b> <span class="gx-sm">${esc(x.n || "")}${x.ind !== c.ind ? " · " + esc(IND[x.ind] || "") : ""}</span>${me ? ` <span class="pill blue">บริษัทนี้</span>` : ""}</td>
         <td class="n">${fmt(b4Ois(x), 0)}</td><td style="white-space:nowrap" title="${esc(ZONES[q(x)].l)}"><span style="color:${ZONES[q(x)].c}">●</span> ${esc(zoneName(q(x), true))} (${q(x)})</td>
-        <td class="n">${pct1(x.fem)}${fn !== null ? ` · ${fn} คน` : ""}</td><td class="n">${fmt(x.ten, 1)}</td><td class="n">${pct1(x.fam)}</td><td>${x.pol ? "มี" : "ไม่มี"}</td></tr>`; }).join("")}</tbody></table></div>`;
+        <td class="n">${pct1(x.fem)}${fn !== null ? ` · ${fn} คน` : ""}</td><td class="n">${fmt(x.ten, 1)}</td>${ctx ? `<td class="n">${pct1(x.fam)}</td><td>${x.pol ? "มี" : "ไม่มี"}</td>` : ""}</tr>`; }).join("")}</tbody></table></div>`;
 }
 /** การ์ดบริษัทคะแนนใกล้เคียง — Pro Max เท่านั้น (ระดับอื่นไม่สร้างเนื้อหา) */
 function b4NeighCard(c) {
@@ -751,7 +945,7 @@ function wireMatrix2(h) {
   const closePop = () => { const p = h.querySelector(".gx-pop"); if (p) p.remove(); };
   h.querySelectorAll(".mk").forEach(m => {
     const me = m.classList.contains("me");
-    tipOn(m, el => `<div class="tk">${esc(el.dataset.z)}</div><b>${esc(el.dataset.t)}</b> · ${esc(el.dataset.n)}<br>OIS ${el.dataset.i}
+    tipOn(m, el => `<div class="tk">${esc(el.dataset.z)}</div><b>${esc(el.dataset.t)}</b> · ${esc(el.dataset.n)}<br>OIS ${el.dataset.i}${el.dataset.sub ? "<br>" + esc(el.dataset.sub) : ""}
       ${me ? "<br>คลิกเพื่อเปิดประเด็นสำหรับบอร์ด" : "<br>คลิกเพื่อเลือกเปิดประเด็นของบริษัทนี้"}`);
     const act = e => {
       e.stopPropagation(); if (typeof TT !== "undefined" && TT) TT.classList.remove("on");
@@ -759,14 +953,15 @@ function wireMatrix2(h) {
       closePop();
       const wr = wrap.getBoundingClientRect(), r = m.getBoundingClientRect();
       const pop = document.createElement("div"); pop.className = "gx-pop"; pop.setAttribute("role", "dialog");
-      pop.innerHTML = `<b>${esc(m.dataset.t)}</b> · ${esc(m.dataset.n)}<div class="gx-sm">${esc(m.dataset.z)} · OIS ${esc(m.dataset.i)} · คู่เทียบ</div>
-        <div class="gx-row"><button class="btn p" data-open="1">เปิดประเด็นของบริษัทนี้</button><button class="btn g" data-x="1">ปิด</button></div>`;
+      const isCl = m.dataset.client === "1" || !byT[m.dataset.t];
+      pop.innerHTML = `<b>${esc(m.dataset.t)}</b> · ${esc(m.dataset.n)}<div class="gx-sm">${esc(m.dataset.z)} · OIS ${esc(m.dataset.i)}${m.dataset.sub ? " · " + esc(m.dataset.sub) : ""}</div>
+        <div class="gx-row">${isCl ? "" : `<button class="btn p" data-open="1">${m1T("Open this company's points", "เปิดประเด็นของบริษัทนี้")}</button>`}<button class="btn g" data-x="1">${m1T("Close", "ปิด")}</button></div>`;
       wrap.appendChild(pop);
       const pw = pop.offsetWidth;
       pop.style.left = Math.max(4, Math.min(r.left - wr.left + r.width / 2 - pw / 2, wr.width - pw - 4)) + "px";
       pop.style.top = (r.bottom - wr.top + 6) + "px";
       pop.querySelector("[data-x]").onclick = closePop;
-      pop.querySelector("[data-open]").onclick = () => {
+      if (pop.querySelector("[data-open]")) pop.querySelector("[data-open]").onclick = () => {
         const t = m.dataset.t;
         S.t = t; S.peers = []; S.wi = null; S.gxSel = null;
         const sc = $("#selCo");
@@ -817,7 +1012,7 @@ function viewCompass() {
         <span>รหัสรายงาน ${esc(code)} · ฉบับ 01</span><span>จัดทำ ${esc(dstr)}</span></div>
     </div>
     ${gxLensBar()}
-    <p class="gx-lensline">มุมมอง: <b>${esc(L.lab)}</b> · ผู้อ่าน: <b>${esc(L.audience)}</b></p>`;
+    <p class="gx-lensline">มุมมอง: <b>${esc(ucLab(L))}</b> · ผู้อ่าน: <b>${esc(L.audience)}</b></p>${L.id === "credit" ? m1SupBadge() : ""}`;
   const legal = `<div class="cmp-legal">
       <b>ข้อจำกัดของรายงานฉบับนี้</b> — ตำแหน่งบนกริดคำนวณจากองค์ประกอบคณะกรรมการและข้อความในรายงานประจำปี
       เทียบกับฐานอ้างอิงที่ freeze แล้ว เป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ
@@ -831,14 +1026,15 @@ function viewCompass() {
 
   if (!cp || !v.inDomain) {
     return `<div class="cmp">${head}
-      <h2 class="cmp-h1">${!cp ? "บอร์ดธนาคาร — ใช้การประเมินตนเองระดับคณะแทนตำแหน่งบน Grid" : esc(c.t) + " อยู่นอกกลุ่มอ้างอิง"}</h2>
+      <h2 class="cmp-h1">${!cp ? esc(m1T("Board Profile (outside the reference group) — board-level self-assessment instead of a Grid position", "Board Profile (นอกกลุ่มอ้างอิง) — ใช้การประเมินตนเองระดับคณะแทนตำแหน่งบน Grid")) : esc(c.t) + " อยู่นอกกลุ่มอ้างอิง"}</h2>
       <div class="grid g-side-r cmp-pos"><div>${grid}</div>
         <div class="cmp-panel">${!cp ? gxBank() : gxOut(c)}</div></div>
       ${legal}</div>`;
   }
 
   return `<div class="cmp">${head}
-    <h2 class="cmp-h1">${esc(cp.head)}</h2>
+    <h2 class="cmp-h1">${L.id === "credit" ? esc(m1T(`Relationship programme · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[0]}`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[k].name} (${k}) · ${PLAYBOOK_UC1[k].name[1]}`)) : esc(cp.head)}</h2>
+    ${L.id === "credit" ? `<div class="m1b-pbwrap">${m1PlaybookAll(k)}</div>` : ""}
     <p class="cmp-sub">${esc(c.n)} (${esc(c.t)}) · วาระทบทวนการกำกับดูแลนวัตกรรม · สำหรับ${esc(L.audience)}</p>
 
     <h3 class="cmp-sec">ตำแหน่งจากผลโมเดล</h3>
@@ -859,7 +1055,7 @@ function viewCompass() {
       </div>
     </div>
 
-    <h3 class="cmp-sec">คำถามที่ใช้ในการหารือ (3 ข้อ)
+    <h3 class="cmp-sec">คำถามที่ใช้ในการหารือ (${cp.qs.length} ข้อ)
       <span class="cmp-tag">คำถามประยุกต์จากงานวิจัย ไม่ใช่แบบวัดที่รับรองแล้ว</span></h3>
     <ol class="cmp-qs">${cp.qs.map((q, i) => `<li>${esc(q)} <span class="cmp-ev">หลักฐาน E0${Math.min(i + 1, cp.ev.length)}</span></li>`).join("")}</ol>
 
@@ -892,11 +1088,11 @@ function viewCompass() {
     </div>
 
     <h3 class="cmp-sec">${esc(cp.askLabel)}</h3>
-    <p class="cmp-ask">${esc(cp.ask)}</p>
+    <p class="cmp-ask">${esc(cp.ask)}</p>${L.id === "credit" ? m1Wording() : ""}
     <div class="gx-sm" style="margin-bottom:5px">ผลหลังประชุม — ผู้ใช้กรอกหลังประชุมจริงเท่านั้น — ระบบไม่เติมมติ</div>
     ${field("res", "มติหรือข้อสรุปหลังการประชุมจริง — กรอกหลังประชุมเท่านั้น", 3)}
     <p class="cmp-status">สถานะ: ${u.res ? "มีบันทึกผลหลังประชุมแล้ว" : "ยังไม่มีมติ"} ·
-      การเห็นชอบแผนศึกษานี้ไม่ใช่การอนุมัติงบลงทุนหรือรับรองพันธมิตร</p>
+      การเห็นชอบแผนศึกษานี้ไม่ใช่การอนุมัติงบประมาณหรือรับรองพันธมิตร</p>
 
     <div class="grid g3 cmp-foot">
       <div><b>ผู้จัดทำและยืนยันข้อสรุป</b>${field("sign", "ฝ่ายกลยุทธ์ / เลขานุการบริษัท", 2)}</div>

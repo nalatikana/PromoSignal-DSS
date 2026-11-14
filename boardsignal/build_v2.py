@@ -37,6 +37,7 @@ parts = {
     "/*__MVP__*/": rd(ROOT / "src" / "v2_mvp.js"),
     "/*__AI__*/": rd(ROOT / "src" / "v2_ai.js"),
     "/*__DATAMOD__*/": rd(ROOT / "src" / "v2_data.js"),
+    "/*__IRB__*/": rd(ROOT / "src" / "v2_irb.js"),
     # ชั้นแปลภาษาอังกฤษ: พจนานุกรม src/i18n/en.json ({ไทย: English}) ฝังเข้า v2_i18n.js แทน placeholder ในไฟล์นั้น
     "/*__I18N__*/": rd(ROOT / "src" / "v2_i18n.js").replace(
         "/*__I18NDICT__*/{}", json.dumps(json.loads(rd(ROOT / "src" / "i18n" / "en.json")), ensure_ascii=False).replace("</", "<\\/"), 1),
@@ -46,7 +47,7 @@ PROF = json.loads(rd(ROOT / "src" / "prof_data.json"))
 
 # คีย์ที่ฉบับเซิร์ฟเวอร์ได้รับ — นอกนั้นตัดทิ้งทั้งหมด (allow-list ไม่ใช่ deny-list: คีย์ใหม่ใน ois_model.json จะไม่หลุดไปเอง)
 SERVER_KEEP = ("version", "tierCuts", "vth", "zone", "quadName", "weakInd", "critMass", "regime", "indValid",
-               "t10", "qn", "nk928", "hist")
+               "t10", "qn", "nk928", "hist", "fyStatus", "div", "jn", "finInd")
 
 
 def server_ois(d):
@@ -94,9 +95,11 @@ if SERVER:
     import re
     sys.path.insert(0, str(ROOT / "model"))
     import ois_core as K
-    # สัมประสิทธิ์ (ปัด 4–5 ตำแหน่ง และ full precision) — "0.2105" เฉย ๆ ชนกับค่า promo ของบริษัทหนึ่งโดยบังเอิญ จึงตรวจที่ 5 ตำแหน่ง
-    secrets = ["0.21057", "3.7251", "0.42003", "0.98413", "0.26401", "4.14721", "0.91193", "0.21793", "0.0029791"]
-    secrets += [repr(x) for x in (K.B1, K.DF, K.DG, K.DW, K.DT, K.FE_B1, K.FE_DF, K.FE_DG, K.FE_DW)]
+    # สัมประสิทธิ์ edit9 (4 หลักนัยสำคัญขึ้นไป และ full precision) — "0.2104" เฉย ๆ อาจชนกับค่า promo ของบริษัทหนึ่ง จึงตรวจที่ 5 ตำแหน่ง
+    secrets = ["0.21044", "3.7247", "0.42043", "0.98469", "0.26403", "4.14628", "0.91086", "0.21801", "0.0029338",
+               "0.64257", "0.066148", "0.29216"]                                   # SE_bW · gW · SE_gW (card)
+    secrets += [repr(x) for x in (K.B1, K.DF, K.DG, K.DW, K.DT, K.FE_B1, K.FE_DF, K.FE_DG, K.FE_DW, K.SE_DW, K.GW, K.SE_GW)]
+    secrets += [f"{abs(x):.4g}" for x in (K.B1, K.DF, K.DG, K.DW, K.SE_DW)] + [f"{abs(x):.7g}" for x in (K.B1, K.DF, K.DG, K.DW)]
     secrets += [f"{abs(x):.6f}".rstrip("0") for row in K.VF for x in row if x]          # V̂f
     secrets += [f"{abs(x):.8f}" for row in K.chol(K.VF) for x in row if abs(x) > 1e-9]  # Cholesky
     # ค่าเฉลี่ย centring (4 หลักนัยสำคัญ ทั้งรูปทศนิยมและร้อยละ) และจุดตัด p5/p95 ที่ไม่ใช่ตัวเลขกลม ๆ
@@ -109,13 +112,13 @@ if SERVER:
     raw = []
     for o in OIS_FULL["co"].values():
         raw += [o["amp"], o["cP"], o["B"], o["cF"], o["cW"]]
-    raw += OIS_FULL["refAmp"] + OIS_FULL["refB"] + OIS_FULL.get("refFull", [])
+    raw += OIS_FULL["refAmp"] + OIS_FULL["refB"] + OIS_FULL.get("refFull", []) + OIS_FULL.get("refAmpT1", []) + OIS_FULL["refT1"]
     secrets += sorted({f"{abs(x):.6f}" for x in raw if abs(x) > 1e-4})
     leak = sorted({t for t in secrets if t in html})
     assert not leak, f"ไฟล์ฉบับเซิร์ฟเวอร์มีตัวเลขของบันทึกพารามิเตอร์/ค่าดิบหลุด: {leak[:12]} (รวม {len(leak)})"
     # amp ดิบ 4 ตำแหน่งที่ prof_data เคยฝังไว้ (เช่น "amp": -0.7492)
     assert not re.search(r'"amp"\s*:\s*-?\d', html), "ไฟล์ฉบับเซิร์ฟเวอร์ยังมี amp ดิบใน DATA/OIS"
-    assert not re.search(r'"(chol|par|mean|cut|refB|refInd|refT1|refP|refAmp|refFull|sv|cP|cF|cG|cW|csg|asg)"\s*:\s*[-\d\[{]', html), \
+    assert not re.search(r'"(chol|par|mean|cut|refB|refInd|refT1|refP|refAmp|refAmpT1|refFull|sv|cP|cF|cG|cW|csg|asg|seW)"\s*:\s*[-\d\[{]', html), \
         "ไฟล์ฉบับเซิร์ฟเวอร์ยังมีคีย์ของบันทึกพารามิเตอร์ (par/chol/mean/cut/ref*/cP…)"
     assert '"server": true' in html or '"server":true' in html
     print("leak check: OK ·", len(secrets), "สตริงที่ตรวจ")

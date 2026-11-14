@@ -17,8 +17,8 @@ const fmt = (v, d = 0) => (v === null || v === undefined || isNaN(v)) ? "—"
 const pct1 = v => fmt(v * 100, 1) + "%";
 
 /* ---------------------------------------------------------------- 1 · โมเดล
-   Signal B / OpenInnoScore — parameter card REF928-edit6-20260930 (แก้ไขครั้งที่ 2)
-   สมการ E1–E13 ของเอกสาร SignalB_OpenInnoScore_Equations_Workflow_20261005_v2
+   Signal B / OpenInnoScore — parameter card REF928-edit9-20261013 (MVP 1 · OIS.version / window.PARAM_VERSION)
+   สมการ E1–E13 ของเอกสาร SignalB_OpenInnoScore_Equations_Workflow_edit9_20261027_v2 · What-if / gate ตาม do-file Client C edit9
    ฐานอ้างอิง = REF-928 ที่ freeze แล้ว (928 firm-years) — ไม่ใช่ snapshot 196 บริษัทอีกต่อไป
    ความลับทางการค้า: บันทึกพารามิเตอร์ (สัมประสิทธิ์ ค่าเฉลี่ย centring จุดตัด p5/p95 V̂f) และฐานอ้างอิงอยู่ใน OIS (ois_model.json)
      — ห้ามแสดงค่าเหล่านี้บนหน้าจอในทุกโหมด (รวม P หลัง winsorise คู่กับ cP, ค่า amp/cP/B ดิบ) — แสดงเป็นเปอร์เซ็นไทล์เท่านั้น
@@ -42,8 +42,9 @@ function midRank(sorted, v) {
   while (a < hi) { const m = (a + hi) >> 1; sorted[m] <= v ? a = m + 1 : hi = m; }
   return 100 * (lo + .5 * (a - lo)) / sorted.length;
 }
-/** ปัดให้ตรงความละเอียดของฐานอ้างอิง (8 ตำแหน่ง) เพื่อให้แถวในฐานนับเป็น "เท่ากัน" ตามนิยาม mid-rank */
-const q8 = b => Math.round(b * 1e8) / 1e8;
+/** edit9: ไม่ปัดแล้ว — ฐานอ้างอิงเก็บค่า double ตรงตาม STATA และค่าป้อนคำนวณด้วยลำดับเดียวกัน การนับ "เท่ากัน" ของ mid-rank
+ *  จึงตรงกับ do-file ทั้งบริษัทในฐานและนอกฐาน (คงชื่อ q8 ไว้ให้โค้ดเดิมเรียกได้) */
+const q8 = b => b;
 /** pctile แบบเก่า (strict rank + ปัดเศษ) — คงไว้ให้โค้ดเดิมเรียกได้ แต่ตอนนี้ชี้ไปที่ mid-rank แล้ว */
 const pctile = (sorted, v) => Math.round(midRank(sorted, q8(v)));
 
@@ -130,9 +131,9 @@ window.OIS_FULL = {
 const inDomainOf = ind => !!IND[ind];
 /** R5 · อุตสาหกรรมที่ ρ ไม่ต่างจากศูนย์ (รายการจาก ois_model: ตอนนี้ 1, 2 — รอยืนยันเรื่องกลุ่ม 4) */
 const WEAK_IND = new Set(OIS.weakInd || [1, 2]);
-/** Critical mass ≥ 3 คน — เกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008) · นับคน ไม่ใช่สัดส่วน
- *  (บทความวิจัยไม่มีตารางทดสอบ critical mass — เดิมอ้าง "Table 4" ผิดแหล่ง · ภาคผนวก ง-20) */
-const CM_CITE = "เกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008)";
+/** Critical mass ≥ 3 คน — D3 (2 พ.ย. 2569): อ้าง Torchia, Calabrò & Huse (2011) เท่านั้น · นับคน ไม่ใช่สัดส่วน
+ *  ข้อความเต็ม: PILOT_LABELS.critical_mass_th / _en · อ้างอิง APA: PILOT_LABELS.torchia_ref */
+const CM_CITE = "Torchia, Calabrò & Huse (2011)";
 const CRIT_N = OIS.critMass || 3;
 const femaleN = (fem, bsize) => bsize ? Math.round(fem * bsize) : null;
 /** สัดส่วนกรรมการหญิงเมื่อเพิ่ม/ลด dk คน บนกริดที่ทั้งสองโหมดคำนวณได้ (ขนาดบอร์ด b = c.bsize หรือ 11 · บีบ 5–25 คน)
@@ -170,6 +171,15 @@ const T10_TEXT = {
   "3D": ["บอร์ดอยู่ในรูปแบบที่สัมพันธ์กับการหนุน แต่ภาษาของ CEO ยังไม่สะท้อนการบุก", "mute"],
   "4D": ["บอร์ดอยู่ในรูปแบบที่สัมพันธ์กับการหนุน แต่ภาษาของ CEO ยังไม่สะท้อนการบุก", "mute"],
 };
+/** คำแปลอังกฤษของข้อความแถบสถานะ (ตารางที่ 10) — ใช้ผ่าน TL() */
+const T10_EN = {
+  "สัญญาณ open innovation: เด่น": "Open-innovation signal: strong",
+  "สัญญาณ open innovation: มี": "Open-innovation signal: present",
+  "ไม่ใช่สัญญาณ open innovation · tier สูงเพราะ CEO ระมัดระวังเข้ากับบอร์ด": "Not an open-innovation signal · the tier is high because a cautious CEO matches the board",
+  "CEO บุก แต่องค์ประกอบบอร์ดไม่อยู่ในรูปแบบที่สัมพันธ์กับการหนุน (ดูสัดส่วนกรรมการหญิงเทียบฐานอ้างอิง)": "Proactive CEO, but the board composition is not in the pattern associated with amplification (see the female-director share against the reference base)",
+  "บอร์ดอยู่ในรูปแบบที่สัมพันธ์กับการหนุน แต่ภาษาของ CEO ยังไม่สะท้อนการบุก": "The board is in the pattern associated with amplification, but the CEO's language does not yet reflect a proactive drive",
+  "สัญญาณใกล้ศูนย์ — ไม่สรุป (B ≈ 0)": "Signal near zero — no conclusion (B ≈ 0)",
+};
 const T10 = Object.fromEntries(Object.entries(T10_TEXT).map(([k, [s, c]]) =>
   [k, { s, c, oi: (OIS.t10[k] || [0, 0])[0], n: (OIS.t10[k] || [0, 0])[1] }]));
 const t10Of = (tier, quad) => T10[tier + quad] || { s: "สัญญาณใกล้ศูนย์ — ไม่สรุป (B ≈ 0)", c: "mute",
@@ -179,7 +189,8 @@ const QN = OIS.qn;
 
 /* E11 · ช่วง 90% ของ OpenInnoScore — Krinsky & Robb (1986) 500 ชุด
    θ^(r) ~ N(θ̂, V̂f) สร้างจาก Cholesky ของ V̂f ด้วย seed คงที่ เพื่อให้ผลซ้ำได้
-   บริษัทในฐาน REF-928 ใช้ช่วงจากไฟล์ STATA โดยตรง (OIS.co[t].band); ค่าป้อนที่ผู้ใช้แก้คำนวณสดด้วยชุดเดียวกัน */
+   บริษัทในฐาน REF-928 ใช้ช่วงจากไฟล์ STATA โดยตรง (OIS.co[t].band); ค่าป้อนอื่นคำนวณสด (seed OIS.seed = 20261026 ตาม card)
+   หมายเหตุ: STATA drawnorm ทำซ้ำนอก STATA ไม่ได้ — ช่วงที่คำนวณสดต่างจาก log ของ STATA ได้ราว ±2 จุดเปอร์เซ็นไทล์ (Monte Carlo) */
 const KR = OIS_SRV ? [] : (() => {               // โหมดเซิร์ฟเวอร์: ชุด θ^(r) อยู่บนเซิร์ฟเวอร์ (server/ois_engine.py)
   const L = OIS.chol, mu = [OPAR.b1, OPAR.dF, OPAR.dG, OPAR.dW];
   let s = OIS.seed % 2147483647 || 1;
@@ -210,32 +221,343 @@ function band90(promo, fam, pol, fem) {
     out.push(midRank(R[r], v.P * (t[0] + t[1] * v.F + t[2] * v.G + t[3] * v.W)));
   }
   out.sort((a, b) => a - b);
-  const q = p => out[Math.min(Math.floor(p * out.length), out.length - 1)];
+  const n = out.length, q = p => out[Math.min(n, Math.ceil(p * n)) - 1];     // ตำแหน่ง ceil(.05R) / ceil(.95R) แบบ wi_kr ของ do-file
   return [Math.round(q(.05) * 10) / 10, Math.round(q(.95) * 10) / 10];
 }
+
+/* ============================================================================
+   MVP 1 · API สาธารณะของชั้นโมเดล (edit9) — ไฟล์อื่นเรียกผ่าน window.* เท่านั้น
+     PARAM_VERSION · PILOT_LABELS · FY_STATUS(fy) · CLIENT_GROUP(inp) · SCORE_FIRM(inp) · MVP_WHATIF(req)
+   ออฟไลน์: คำนวณจากบันทึกพารามิเตอร์ที่ฝังไว้ (ตรรกะเดียวกับ server/ois_engine.py → mvp_score / mvp_whatif ทุกบรรทัด)
+   เซิร์ฟเวอร์: SCORE_FIRM / MVP_WHATIF ส่ง POST /api/mvp/score_firm · /api/mvp/whatif (ผลไม่มี cP / amp / B ดิบ)
+     เรียกแบบ synchronous → คืนผลจากแคช หรือ { ok:false, pending:true } แล้ว render() ใหม่เมื่อผลมาถึง
+     เรียกแบบ Promise → SCORE_FIRM.async(inp) / MVP_WHATIF.async(req) (ใช้ได้ทั้งสองโหมด)
+   FY_STATUS / CLIENT_GROUP เป็นกติกาล้วน (ไม่มีค่าความลับ) — คำนวณในเบราว์เซอร์ทั้งสองโหมด
+   ============================================================================ */
+const PARAM_VERSION = OIS.version || "REF928-edit9-20261013";
+window.PARAM_VERSION = PARAM_VERSION;
+/** ป้ายข้อความทั้งหมดของ pilot — แก้ถ้อยคำที่จุดเดียว (บันทึกอาจารย์ 14 พ.ย. 2569: ห้ามใช้คำกลุ่มธุรกิจของ "องค์กรนำร่อง") */
+const PILOT_LABELS = Object.freeze({
+  supporting_th: "ข้อมูลประกอบ — ไม่ใช่ข้อมูลเข้าแบบจำลองการตัดสินใจขององค์กรนำร่อง",
+  supporting_en: "Supporting information — not an input to the pilot organisation's decision models",
+  uc1_th: "UC1 · ความสัมพันธ์กับลูกค้า (P2)",
+  uc1_en: "UC1 · Client relationship (P2)",
+  uc3: "UC3 · Board OI evaluation (P1)", uc3_en: "UC3 · Board OI evaluation (P1)",
+  uc3_th: "UC3 · ประเมิน open innovation ของคณะกรรมการ (P1)",
+  boardprofile: "Board Profile (outside the reference group)", boardprofile_en: "Board Profile (outside the reference group)",
+  boardprofile_th: "Board Profile (นอกกลุ่มอ้างอิง)",
+  outside_ref_th: "นอกตัวอย่างอ้างอิง", outside_ref_en: "Outside the reference sample",
+  nyv_th: "ยังไม่ตรวจความตรง", nyv_en: "Not yet validated",
+  withheld_g3_en: "Score change withheld (G3) — board-amplification movement only",
+  withheld_g3_th: "งดแสดงการเปลี่ยนแปลงของคะแนน (G3) — แสดงเฉพาะการเคลื่อนของ board amplification",
+  suspended_g5_en: "FAIL year: normal reading withheld and What-if suspended (R3, G5)",
+  suspended_g5_th: "ปีที่สถานะ FAIL: งดการอ่านตามปกติและระงับ What-if (R3, G5)",
+  pilot_org_th: "องค์กรนำร่อง", pilot_org_en: "pilot organisation",
+  financials_th: "กลุ่มธุรกิจการเงิน (Financials)", financials_en: "Financials",
+  caution_t1_en: "B_T1 shadow · CAUTION", caution_t1_th: "B_T1 (เงา) · CAUTION",
+  critical_mass_en: "Critical mass = three or more women directors. Torchia, Calabrò & Huse (2011) report that boards moving from one or two women to at least three were associated with higher firm organizational innovation.",
+  critical_mass_th: "Critical mass = กรรมการหญิงตั้งแต่ 3 คนขึ้นไป · Torchia, Calabrò & Huse (2011) รายงานว่าบอร์ดที่เปลี่ยนจากกรรมการหญิง 1–2 คนเป็นอย่างน้อย 3 คน สัมพันธ์กับนวัตกรรมเชิงองค์กรของบริษัทที่สูงขึ้น",
+  torchia_ref: "Torchia, M., Calabrò, A., & Huse, M. (2011). Women directors on corporate boards: From tokenism to critical mass. Journal of Business Ethics, 102(2), 299–317. https://doi.org/10.1007/s10551-011-0815-z",
+  relational_en: "Association in the reference data, not a forecast",
+  relational_th: "เป็นความสัมพันธ์ในข้อมูลอ้างอิง ไม่ใช่การพยากรณ์",
+});
+window.PILOT_LABELS = PILOT_LABELS;
+/** ลงทะเบียนคำแปลภาษาอังกฤษจากไฟล์นี้ (v2_i18n โหลดท้ายสุด จึงรอ DOMContentLoaded ถ้ายังไม่มี I18N) */
+function i18nLoad(d) {
+  if (window.I18N && typeof I18N.load === "function") I18N.load(d);
+  else document.addEventListener("DOMContentLoaded", () => { if (window.I18N && typeof I18N.load === "function") I18N.load(d); });
+}
+window.i18nLoad = window.i18nLoad || i18nLoad;
+i18nLoad({
+  [PILOT_LABELS.supporting_th]: PILOT_LABELS.supporting_en, [PILOT_LABELS.uc1_th]: PILOT_LABELS.uc1_en,
+  [PILOT_LABELS.uc3_th]: PILOT_LABELS.uc3_en, [PILOT_LABELS.boardprofile_th]: PILOT_LABELS.boardprofile_en,
+  [PILOT_LABELS.outside_ref_th]: PILOT_LABELS.outside_ref_en, [PILOT_LABELS.nyv_th]: PILOT_LABELS.nyv_en,
+  [PILOT_LABELS.withheld_g3_th]: PILOT_LABELS.withheld_g3_en, [PILOT_LABELS.suspended_g5_th]: PILOT_LABELS.suspended_g5_en,
+  [PILOT_LABELS.critical_mass_th]: PILOT_LABELS.critical_mass_en, [PILOT_LABELS.financials_th]: PILOT_LABELS.financials_en,
+  [PILOT_LABELS.caution_t1_th]: PILOT_LABELS.caution_t1_en,
+});
+
+const FY_MAP = OIS.fyStatus || { 2019: "PASS", 2020: "CAUTION", 2021: "PASS", 2022: "FAIL", 2023: "PASS" };
+const fyCE = fy => { const y = Math.trunc(+fy); return y > 2400 ? y - 543 : y; };
+/** F9 · ชิปสถานะปีบัญชี (รับ ค.ศ. หรือ พ.ศ.) — FY2023 letter → outcome 2024 · PASS */
+function FY_STATUS(fy) {
+  const y = fyCE(fy), code = FY_MAP[y] || FY_MAP[String(y)] || "NYV";
+  const lab = { PASS: ["PASS", "ผ่าน (PASS)"], CAUTION: ["CAUTION", "ควรระวัง (CAUTION)"], FAIL: ["FAIL", "ไม่ผ่าน (FAIL)"],
+                NYV: ["Not yet validated", "ยังไม่ตรวจความตรง"] }[code];
+  return { code, fy: y, label_en: lab[0], label_th: lab[1],
+           rule_en: `FY${y} letter → outcome ${y + 1} · ${lab[0]}`, rule_th: `สารปีบัญชี ${y} → ผลลัพธ์ปี ${y + 1} · ${lab[1]}`,
+           whatIfAllowed: code !== "FAIL", readingAllowed: code !== "FAIL" };
+}
+window.FY_STATUS = FY_STATUS;
+
+/** F1 · กลุ่มลูกค้า 1–6 (slide 16 · sb_clientcheck ใน do-file Client C)
+ *  inp = { listed, financial, english_letter, board_table, in_REF928, fiscal_year, industry? } */
+function CLIENT_GROUP(inp) {
+  inp = inp || {};
+  const b = v => v === true || v === 1 || v === "1" || v === "yes" || v === "true";
+  const fy = inp.fiscal_year !== undefined && inp.fiscal_year !== null && inp.fiscal_year !== "" ? fyCE(inp.fiscal_year) : 0;
+  const ind = inp.industry !== undefined && inp.industry !== null && inp.industry !== "" ? +inp.industry : null;
+  const L = PILOT_LABELS, labels = [], labels_th = [];
+  const G = (group, provides, en, th, extra) => Object.assign({ group, provides, label_en: en, label_th: th, labels, labels_th,
+    whatIfAllowed: false, fyStatus: fy ? FY_STATUS(fy) : null }, extra || {});
+  if (!b(inp.listed)) return G(6, "none", "Not listed — not allowed (C1, C3)", "ไม่ได้จดทะเบียน — ไม่อนุญาต (C1, C3)");
+  if (b(inp.financial) || (ind !== null && !(ind >= 1 && ind <= 7)))
+    return G(5, "board_profile", "Financials — Board Profile only (D2)", "กลุ่มธุรกิจการเงิน — Board Profile เท่านั้น (D2)");
+  if (!b(inp.english_letter))
+    return G(4, "board_profile", "Listed, no English letter — Board Profile only", "จดทะเบียน ไม่มีสารภาษาอังกฤษ — Board Profile เท่านั้น");
+  if (!b(inp.board_table))
+    return G(4, "none", "Board table needed before scoring (56-1 / annual report)", "ต้องมีตารางกรรมการ (56-1 / รายงานประจำปี) ก่อนให้คะแนน",
+      { need_board_table: true });
+  let group, provides, en, th;
+  const inref = b(inp.in_REF928);
+  if (inref && fy >= 2019 && fy <= 2023) {
+    group = 1; provides = "full"; en = "In REF-928, FY2019–2023 — full report"; th = "อยู่ใน REF-928 ปีบัญชี 2019–2023 — รายงานเต็ม";
+  } else {
+    group = fy > 2023 ? 3 : 2;
+    provides = group === 3 ? "matrix_out_of_ref_nyv" : "matrix_out_of_ref";
+    en = "2×2, OIS, tier and 90% band against REF-928; What-if when G3 passes";
+    th = "2×2 · OIS · tier และช่วง 90% เทียบ REF-928; What-if เมื่อผ่าน G3";
+    if (!inref) { labels.push(L.outside_ref_en); labels_th.push(L.outside_ref_th); }
+    if (fy > 2023) { labels.push(L.nyv_en); labels_th.push(L.nyv_th); }
+  }
+  let wi = true;
+  if (fy >= 2019 && fy <= 2023 && FY_STATUS(fy).code === "FAIL") {
+    labels.push(`FY${fy} status FAIL: normal reading withheld, What-if suspended (R3, G5)`);
+    labels_th.push(`ปีบัญชี ${fy} สถานะ FAIL: งดการอ่านตามปกติ ระงับ What-if (R3, G5)`);
+    wi = false;
+  }
+  return G(group, provides, en, th, { whatIfAllowed: wi });
+}
+window.CLIENT_GROUP = CLIENT_GROUP;
+
+/* ---- SCORE_FIRM / MVP_WHATIF (ออฟไลน์) ---------------------------------------------------------------------- */
+const REF_AMP_T1 = OIS_SRV ? [] : (OIS.refAmpT1 || []);
+const QN_FULL = { A: "A Deliver", B: "B Discipline", C: "C Develop", D: "D Discover" };
+const JN = OIS.jn || { p: 0.6858, pct: 65.7 };
+const Z90 = 1.6448536269514722;                    // invnormal(0.95) — ตรงกับ do-file
+const r1 = x => Math.round(x * 10) / 10;
+const MVP_IN_KEYS = ["ticker", "promotion", "family_share", "political_ties", "female_share", "industry", "fiscal_year", "board_size", "women"];
+const WHATIF_KEYS = ["base", "board_size", "women_now", "women_target", "target_share", "mode"];
+class MvpErr extends Error {}
+const blank = v => v === undefined || v === null || v === "";
+function fnum(v, name, lo, hi) {
+  if (typeof v === "boolean" || blank(v)) throw new MvpErr(`${name} ต้องเป็นตัวเลข`);
+  const x = +v; if (!isFinite(x) || x < lo || x > hi) throw new MvpErr(`${name} อยู่นอกช่วง ${lo}–${hi}`);
+  return x;
+}
+function inum(v, name, lo, hi) {
+  if (typeof v === "boolean" || blank(v)) throw new MvpErr(`${name} ต้องเป็นจำนวนเต็ม`);
+  const x = +v; if (!isFinite(x) || x !== Math.trunc(x) || x < lo || x > hi) throw new MvpErr(`${name} ต้องเป็นจำนวนเต็ม ${lo}–${hi}`);
+  return x;
+}
+function mvpInputs(inp) {
+  if (!inp || typeof inp !== "object") throw new MvpErr("ค่าป้อนต้องเป็น object");
+  const extra = Object.keys(inp).filter(k => !MVP_IN_KEYS.includes(k)).sort();
+  if (extra.length) throw new MvpErr("ไม่รับคีย์ " + extra.join(", ").slice(0, 80));
+  let base = {}, ticker = null;
+  if (!blank(inp.ticker)) {
+    let t = String(inp.ticker).trim().slice(0, 16); if (!byT[t]) t = t.toUpperCase();
+    const c = byT[t]; if (!c) throw new MvpErr("ไม่พบบริษัท");
+    ticker = t;
+    base = { promotion: c.promo, family_share: c.fam, political_ties: c.pol, female_share: c.fem, industry: c.ind,
+             fiscal_year: ((OIS.co || {})[t] || {}).fy || 2023, board_size: c.bsize };
+  }
+  const g = k => !blank(inp[k]) ? inp[k] : base[k];
+  let bs = g("board_size"); bs = !blank(bs) ? inum(bs, "board_size", 1, 40) : null;
+  let fem = inp.female_share;
+  if (blank(fem) && !blank(inp.women) && bs) fem = inum(inp.women, "women", 0, bs) / bs;
+  if (blank(fem)) fem = base.female_share;
+  const pt = g("political_ties");
+  const out = { ticker,
+    promotion: fnum(g("promotion"), "promotion", 0, 10), family_share: fnum(g("family_share"), "family_share", 0, 1),
+    political_ties: inum(pt === true ? 1 : pt === false ? 0 : pt, "political_ties", 0, 1),
+    female_share: fnum(fem, "female_share", 0, 1), industry: inum(g("industry"), "industry", 1, 8),
+    fiscal_year: fyCE(inum(g("fiscal_year") || 2023, "fiscal_year", 1990, 2700)), board_size: bs };
+  out.stored = !!(ticker && out.female_share === base.female_share && out.promotion === base.promotion
+    && out.family_share === base.family_share && out.political_ties === base.political_ties);
+  return out;
+}
+let _krRef1 = null;
+function krRef1() {
+  if (_krRef1) return _krRef1;
+  const z = REF_PTS.map(p => ({ P: p[0] - OM.P, W: p[8] }));
+  _krRef1 = KR.map(t => z.map(v => v.P * (t[0] + t[3] * v.W)).sort((a, b) => a - b));
+  return _krRef1;
+}
+/** ช่วง 90% จากค่าที่ centre แล้ว — ตำแหน่ง ceil(.05R) / ceil(.95R) แบบ wi_kr ของ do-file */
+function krBandRaw(P, F, G, W, t1) {
+  const out = [], R = t1 ? krRef1() : krRef();
+  for (let r = 0; r < KR.length; r++) {
+    const t = KR[r];
+    out.push(midRank(R[r], t1 ? P * (t[0] + t[3] * W) : P * (t[0] + t[1] * F + t[2] * G + t[3] * W)));
+  }
+  out.sort((a, b) => a - b);
+  const n = out.length;
+  return [out[Math.max(1, Math.ceil(0.05 * n)) - 1], out[Math.min(n, Math.ceil(0.95 * n)) - 1]];
+}
+function scoreCore(v) {
+  const z = cen(v.promotion, v.family_share, v.political_ties, v.female_share);
+  const P = z.P, F = z.F, G = z.G, W = z.W;
+  const a = OPAR.b1 + OPAR.dF * F + OPAR.dG * G + OPAR.dW * W, b = P * a;
+  const a1 = OPAR.b1 + OPAR.dW * W, b1 = P * a1;
+  const co = v.ticker && (OIS.co || {})[v.ticker];
+  const stored = !!(v.stored && co && co.band);
+  return { cP: P, W: wins(v.female_share, "W"), amp: a, B: b, X: midRank(REF_PROMO, wins(v.promotion, "P")),
+    Y: midRank(REF_AMP, a), ois: midRank(REF_B, b), band: stored ? co.band.slice() : krBandRaw(P, F, G, W, false),
+    band_src: stored ? "stata" : "kr", quad: quadOf(P, a), a1, B1: b1, Y1: midRank(REF_AMP_T1, a1), o1: midRank(REF_T1, b1),
+    band1: krBandRaw(P, F, G, W, true), quad1: quadOf(P, a1),
+    clamped: { promotion: clipped(v.promotion, "P"), family_share: clipped(v.family_share, "F"), female_share: clipped(v.female_share, "W") } };
+}
+function packScore(r) {
+  const tu = bd => tierOf(bd[0]) !== tierOf(bd[1]);
+  return { X: r1(r.X), Y: r1(r.Y), quad: r.quad, quad_name: QN_FULL[r.quad], ois: r1(r.ois),
+    band90: [r1(r.band[0]), r1(r.band[1])], band_source: r.band_src, tier: tierOf(r.ois), tier_uncertain: tu(r.band),
+    female_share: Math.round(r.W * 1e6) / 1e6,
+    t1: { Y: r1(r.Y1), quad: r.quad1, quad_name: QN_FULL[r.quad1], ois: r1(r.o1), band90: [r1(r.band1[0]), r1(r.band1[1])],
+          tier: tierOf(r.o1), tier_uncertain: tu(r.band1), chip: "CAUTION", amp: r.a1 },
+    clamped: Object.assign({}, r.clamped), cP: r.cP, amp: r.amp, B: r.B,
+    _raw: { X: r.X, Y: r.Y, ois: r.ois, band90: r.band.slice(), Y1: r.Y1, ois1: r.o1, band1: r.band1.slice() } };
+}
+function scoreFirmLocal(inp) {
+  let v;
+  try { v = mvpInputs(inp); } catch (e) { if (e instanceof MvpErr) return { ok: false, error: e.message }; throw e; }
+  const fys = FY_STATUS(v.fiscal_year);
+  if (!(v.industry >= 1 && v.industry <= 7))
+    return { ok: false, error: "board_profile_only", group: 5, provides: "board_profile",
+             reason: "Financials / outside industries 1–7 → Board Profile only (D2, R4)", fyStatus: fys, version: PARAM_VERSION };
+  const out = { ok: true, version: PARAM_VERSION, fyStatus: fys, in_reference: !!(v.ticker && (OIS.co || {})[v.ticker]),
+    added_to_REF928: false, inputs: { ticker: v.ticker, promotion: v.promotion, family_share: v.family_share,
+      political_ties: v.political_ties, female_share: v.female_share, industry: v.industry, fiscal_year: v.fiscal_year,
+      board_size: v.board_size } };
+  return Object.assign(out, packScore(scoreCore(v)));
+}
+function g6Sentence(w2, mult, mb) {
+  const sh = Math.round(w2 * 1000) / 10, shs = (sh === Math.trunc(sh) ? String(sh) : sh.toFixed(1)) + "%";
+  const pc = m => Math.round(Math.abs(m - 1) * 100);
+  if (Math.abs(mult - 1) < 5e-4) return [
+    `In the reference data, a board with ${shs} women and this level of CEO drive is associated with about the same expected open-innovation activity as the current board, other factors held constant.`,
+    `ในข้อมูลอ้างอิง โครงสร้างที่มีกรรมการหญิง ${shs} ร่วมกับแรงขับ CEO ระดับนี้ สัมพันธ์กับจำนวนกิจกรรมนวัตกรรมแบบเปิดที่คาดหมายใกล้เคียงโครงสร้างปัจจุบัน เมื่อปัจจัยอื่นคงที่ — เป็นความสัมพันธ์ ไม่ใช่การพยากรณ์`];
+  const up = mult >= 1, lo = up ? mb[0] : mb[1], hi = up ? mb[1] : mb[0];
+  return [
+    `In the reference data, a board with ${shs} women and this level of CEO drive is associated with about ${pc(mult)}% ${up ? "more" : "less"} expected open-innovation activity (90% range ${pc(lo)}%–${pc(hi)}%), other factors held constant.`,
+    `ในข้อมูลอ้างอิง โครงสร้างที่มีกรรมการหญิง ${shs} ร่วมกับแรงขับ CEO ระดับนี้ สัมพันธ์กับจำนวนกิจกรรมนวัตกรรมแบบเปิดที่คาดหมาย${up ? "สูงกว่า" : "ต่ำกว่า"}โครงสร้างปัจจุบันประมาณ ${pc(mult)}% (ช่วง 90%: ${pc(lo)}% ถึง ${pc(hi)}%) เมื่อปัจจัยอื่นคงที่ — เป็นความสัมพันธ์ ไม่ใช่การพยากรณ์`];
+}
+function whatifLocal(req) {
+  const fail = (msg, extra) => Object.assign({ ok: false, error: msg, version: PARAM_VERSION }, extra || {});
+  if (!req || typeof req !== "object") return fail("ค่าป้อนต้องเป็น object");
+  const extra = Object.keys(req).filter(k => !WHATIF_KEYS.includes(k)).sort();
+  if (extra.length) return fail("ไม่รับคีย์ " + extra.join(", ").slice(0, 80));
+  const base = typeof req.base === "string" ? { ticker: req.base } : Object.assign({}, req.base || {});
+  if (blank(req.board_size)) return fail("board_size_required", { gate: { D4: false } });
+  let N, v, k, kt = null, N2, w2, mode;
+  try { N = inum(req.board_size, "board_size", 3, 40); } catch (e) { return fail(e.message, { gate: { D4: false } }); }
+  delete base.women; base.board_size = N;
+  try {
+    if (blank(base.female_share) && !blank(req.women_now) && !base.ticker) base.female_share = inum(req.women_now, "women_now", 0, N) / N;
+    v = mvpInputs(base);
+    k = !blank(req.women_now) ? inum(req.women_now, "women_now", 0, N) : Math.round(v.female_share * N);
+    mode = String(req.mode || "replace").toLowerCase();
+    if (mode !== "replace" && mode !== "add_seat") throw new MvpErr("mode ต้องเป็น replace หรือ add_seat");
+    if (!blank(req.women_target)) {
+      kt = inum(req.women_target, "women_target", 0, 80);
+      if (kt < k) return fail("G2: increase only — women_target must be ≥ women_now", { gate: { G2: false } });
+      N2 = mode === "add_seat" ? N + (kt - k) : N;
+      if (kt > N2) throw new MvpErr("women_target เกินขนาดบอร์ด");
+      w2 = kt / N2;
+    } else if (!blank(req.target_share)) {
+      w2 = fnum(req.target_share, "target_share", 0, 1); N2 = N;
+      if (w2 < k / N) return fail("G2: increase only — target_share must be ≥ current share", { gate: { G2: false } });
+    } else throw new MvpErr("ต้องระบุ women_target หรือ target_share");
+  } catch (e) { if (e instanceof MvpErr) return fail(e.message); throw e; }
+  if (w2 > 0.5 + 1e-12) return fail("G4: target share must be ≤ 50%", { gate: { G4: false } });
+  const fys = FY_STATUS(v.fiscal_year);
+  if (!(v.industry >= 1 && v.industry <= 7)) return fail("board_profile_only", { group: 5, provides: "board_profile", fyStatus: fys });
+  const v0 = Object.assign({}, v, { female_share: k / N });
+  v0.stored = !!(v.stored && Math.abs(k / N - v.female_share) < 1e-12);
+  if (v0.stored) v0.female_share = v.female_share;
+  const v1 = Object.assign({}, v, { female_share: w2, stored: false });
+  const c0 = scoreCore(v0), c1 = scoreCore(v1);
+  const jnPass = wins(v.promotion, "P") >= JN.p, suspended = fys.code === "FAIL", withheld = !jnPass && !suspended;
+  const dW = c1.W - c0.W, dB = c0.cP * OPAR.dW * dW, mult = Math.exp(dB);
+  const seW = OPAR.seW, lo = c0.cP * dW * (OPAR.dW - Z90 * seW), hi = c0.cP * dW * (OPAR.dW + Z90 * seW);
+  const mb = [Math.exp(Math.min(lo, hi)), Math.exp(Math.max(lo, hi))];
+  const ws = c0.W - c0.amp / OPAR.dW, ws1 = c0.W - c0.a1 / OPAR.dW;
+  const gate = { G1: { pass: true, rule: "female share only (tenure, family, political ties fixed)" },
+    G2: { pass: true, rule: "increase only" },
+    G3: { pass: jnPass, rule: `promotion ≥ ${JN.p} (P${JN.pct})`, bound_promotion: JN.p, bound_pct: JN.pct },
+    G4: { pass: true, rule: "targets ≤ 50%" },
+    G5: { pass: !suspended, rule: "What-if suspended in FAIL years", fy: fys.code },
+    G6: { pass: true, rule: "relational wording" },
+    jn_pass: jnPass, promotion_pct: r1(c0.X), bound_pct: JN.pct,
+    reason: suspended ? "G5: FY status FAIL — normal reading withheld, What-if suspended (R3)"
+      : withheld ? "G3: promotion below the Johnson–Neyman bound — score change withheld" : "all gates pass" };
+  const out = { ok: true, version: PARAM_VERSION, mode, board_size: N, board_size_sim: N2, women_now: k, women_target: kt,
+    target_share: Math.round(w2 * 1e6) / 1e6, fyStatus: fys, gate, withheld, suspended,
+    cur: packScore(c0), sim: suspended ? null : packScore(c1), dW,
+    W_star: ws, W_star_headcount: Math.max(0, Math.ceil(ws * N - 1e-9)), W_star_headcount_exact: Math.round(ws * N * 100) / 100,
+    W_star_T1: ws1, W_star_T1_headcount: Math.max(0, Math.ceil(ws1 * N - 1e-9)),
+    dB: null, multiplier: null, multiplier_band90: null, sentence_en: null, sentence_th: null };
+  if (suspended) {
+    out.message_en = `FY${fys.fy} status FAIL: normal reading withheld and What-if suspended (R3, G5).`;
+    out.message_th = `ปีบัญชี ${fys.fy} สถานะ FAIL: งดการอ่านตามปกติและระงับ What-if (R3, G5)`;
+    return out;
+  }
+  if (withheld) {
+    ["ois", "band90", "tier", "tier_uncertain", "band_source"].forEach(key => { out.sim[key] = null; });
+    ["ois", "band90", "tier", "tier_uncertain"].forEach(key => { out.sim.t1[key] = null; });
+    out.message_en = PILOT_LABELS.withheld_g3_en; out.message_th = PILOT_LABELS.withheld_g3_th;
+    return out;
+  }
+  Object.assign(out, { dB, multiplier: mult, multiplier_band90: mb });
+  [out.sentence_en, out.sentence_th] = g6Sentence(w2, mult, mb);
+  return out;
+}
+/** SCORE_FIRM(inp) — inp = {promotion, family_share, political_ties (0/1), female_share | women + board_size, industry (1–7;
+ *  8 = Financials → Board Profile only), fiscal_year (ค.ศ./พ.ศ.), board_size?, ticker?} · ให้คะแนนเทียบ REF-928 edit9 ที่ freeze แล้ว
+ *  (บีบค่าป้อนเข้าช่วง min–max ตาม S0f) · ไม่เพิ่มเข้าฐาน · โหมดเซิร์ฟเวอร์ไม่มี cP / amp / B */
+function SCORE_FIRM(inp) { return OIS_SRV ? OIS_REMOTE.mvp("score_firm", inp) : scoreFirmLocal(inp); }
+SCORE_FIRM.async = inp => OIS_SRV ? OIS_REMOTE.mvpAsync("score_firm", inp) : Promise.resolve(scoreFirmLocal(inp));
+/** MVP_WHATIF(req) — req = {base: SCORE_FIRM input | ticker, board_size (จำนวนเต็ม ≥ 3 · D4), women_now, women_target
+ *  (≥ women_now) | target_share (≤ 0.5), mode: "replace" | "add_seat"} → ผลพร้อม gate G1–G6 (ดูหัวไฟล์ส่วนนี้) */
+function MVP_WHATIF(req) { return OIS_SRV ? OIS_REMOTE.mvp("whatif", req) : whatifLocal(req); }
+MVP_WHATIF.async = req => OIS_SRV ? OIS_REMOTE.mvpAsync("whatif", req) : Promise.resolve(whatifLocal(req));
+window.SCORE_FIRM = SCORE_FIRM;
+window.MVP_WHATIF = MVP_WHATIF;
 
 /* E13 · ลำดับตรรกะสำหรับการแสดงผล — คืน tier, quadrant, แถบสถานะ, ป้ายเตือน, ธงสัญญาณ OI */
 const REGIME = OIS.regime;                    // verdict รายปีจากตารางที่ 6 (PASS / CAUTION / FAIL)
 const FY_SHOWN = 2023;
+/** ข้อความสองภาษาตามภาษาที่เลือก (ชิป/แถบสถานะ — ไม่พึ่งชั้นแปล DOM) */
+const TL = (en, th) => (typeof S !== "undefined" && S.lang === "EN") ? en : th;
 function verdictOf(c) {
   const inDomain = c.inDomain !== false && inDomainOf(c.ind);
   const quad = c.quad || zoneOf(c.promo, c.amp), tier = c.tier || tierOf(c.ipi);
   const bd = c.band || band90(c.promo, c.fam, c.pol, c.fem);
   const fy = c.fy || FY_SHOWN, reg = REGIME[fy];
   const chips = [];
-  if (!inDomain) chips.push({ k: "นอกกลุ่มอ้างอิง — ไม่แสดง tier", t: "บริษัทนอกอุตสาหกรรม 1–7 หรือไม่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ (R4)" });
-  if (tierOf(bd[0]) !== tierOf(bd[1])) chips.push({ k: "tier ไม่แน่นอน", t: "ช่วง 90% คร่อมมากกว่าหนึ่ง tier (R8)" });
-  if (reg === "FAIL") chips.push({ k: "Caution: ปีนี้ไม่ผ่านเกณฑ์ validity", t: `ปีบัญชี ${fy} verdict = FAIL ในตารางที่ 6 (R3)` });
-  if (!reg) chips.push({ k: "ยังไม่ได้ validate", t: `ปีบัญชี ${fy} ยังไม่มีผลลัพธ์ปีถัดไปให้ตรวจ (R3)` });
-  if (WEAK_IND.has(c.ind)) chips.push({ k: "หลักฐานอ่อนในอุตสาหกรรมนี้", t: "Spearman ไม่ต่างจากศูนย์ในอุตสาหกรรมนี้ (R5, ตารางที่ 8)" });
+  if (!inDomain) chips.push({ k: TL("Outside the reference group — no tier", "นอกกลุ่มอ้างอิง — ไม่แสดง tier"),
+    t: TL("Firm outside industries 1–7 or without an English letter to shareholders (R4)", "บริษัทนอกอุตสาหกรรม 1–7 หรือไม่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ (R4)") });
+  if (tierOf(bd[0]) !== tierOf(bd[1])) chips.push({ k: TL("Tier uncertain", "tier ไม่แน่นอน"), t: TL("The 90% band spans more than one tier (R8)", "ช่วง 90% คร่อมมากกว่าหนึ่ง tier (R8)") });
+  const fys = FY_STATUS(fy), en = S.lang === "EN";   // F9 · ชิป FY เดียวจากตาราง validity (R3, G5) · ข้อความตามภาษาที่เลือก
+  if (fys.code === "FAIL") chips.push({ k: en ? `FY${fys.fy} FAIL — normal reading withheld · What-if suspended` : `FY${fys.fy} ${fys.label_th} — งดการอ่านตามปกติ · ระงับ What-if`,
+                                        t: (en ? fys.rule_en : fys.rule_th) + " (R3, G5)" });
+  else if (fys.code === "NYV") chips.push({ k: en ? PILOT_LABELS.nyv_en : PILOT_LABELS.nyv_th, t: (en ? fys.rule_en : fys.rule_th) + " (R3)" });
+  else chips.push({ k: en ? fys.rule_en : fys.rule_th, t: en ? fys.rule_en : fys.rule_th });
+  if (WEAK_IND.has(c.ind)) chips.push({ k: TL("Weak evidence in this industry", "หลักฐานอ่อนในอุตสาหกรรมนี้"),
+    t: TL("Spearman not different from zero in this industry (R5, Table 8)", "Spearman ไม่ต่างจากศูนย์ในอุตสาหกรรมนี้ (R5, ตารางที่ 8)") });
   const fn = femaleN(c.fem, c.bsize);
-  if (fn !== null && fn < CRIT_N) chips.push({ k: `กรรมการหญิง ${fn} คน — ต่ำกว่า critical mass`, t: `ใช้เกณฑ์ ≥ ${CRIT_N} คน ตาม${CM_CITE} — บอร์ดที่มี 1–2 คนยังไม่ถึงเกณฑ์นี้` });
-  if (c.amp !== undefined && c.amp <= 0) chips.push({ k: "amp ≤ 0", t: "องค์ประกอบบอร์ดนี้อยู่ในรูปแบบที่ความชันของ promotion focus ไม่เป็นบวก — ภาษาเชิงรุกของ CEO ไม่สัมพันธ์กับ open innovation ที่สูงขึ้นในบอร์ดลักษณะนี้" });
-  if (c.clipped && c.clipped.length) chips.push({ k: "ค่าป้อนถูก clip", t: "ค่า " + c.clipped.join(", ") + " อยู่นอกช่วง p5–p95 ของฐานอ้างอิง จึงถูกแทนด้วยจุดตัดก่อนเข้าสูตร (E2)" });
-  return { tier, quad, band: bd, chips, regime: reg, inDomain, fy,
+  if (fn !== null && fn < CRIT_N) chips.push({ k: TL(`${fn} women directors — below critical mass`, `กรรมการหญิง ${fn} คน — ต่ำกว่า critical mass`),
+    t: TL(PILOT_LABELS.critical_mass_en, PILOT_LABELS.critical_mass_th) });
+  if (c.amp !== undefined && c.amp <= 0) chips.push({ k: "amp ≤ 0", t: TL("In this board composition the promotion-focus slope is not positive — proactive CEO language is not associated with higher open innovation in boards like this",
+    "องค์ประกอบบอร์ดนี้อยู่ในรูปแบบที่ความชันของ promotion focus ไม่เป็นบวก — ภาษาเชิงรุกของ CEO ไม่สัมพันธ์กับ open innovation ที่สูงขึ้นในบอร์ดลักษณะนี้") });
+  if (c.clipped && c.clipped.length) chips.push({ k: TL("Input clamped", "ค่าป้อนถูก clip"),
+    t: TL(c.clipped.map(x => CLIP_EN[x] || x).join(", ") + " is outside the REF-928 range and was clamped before scoring (S0f)",
+          "ค่า " + c.clipped.join(", ") + " อยู่นอกช่วงของฐานอ้างอิง จึงถูกบีบเข้าช่วงก่อนเข้าสูตร (S0f)") });
+  return { tier, quad, band: bd, chips, regime: reg, inDomain, fy, fyStatus: fys,
            st: t10Of(tier, quad),
            flag: inDomain && quad === "A" && bd[0] >= 50 && reg !== "FAIL" };
 }
+const CLIP_EN = { "กรรมการครอบครัว": "Family directors", "กรรมการหญิง": "Female directors" };
 /** รายชื่อตัวแปรที่ค่าป้อนถูก clip (C5) — โหมดเซิร์ฟเวอร์ตรวจที่เซิร์ฟเวอร์ (ไม่มีจุดตัดในเบราว์เซอร์) */
 const clippedOf = c => [["promo", "P", "CEO Promotion Focus"], ["fam", "F", "กรรมการครอบครัว"], ["fem", "W", "กรรมการหญิง"]]
   .filter(([k, kk]) => clipped(c[k], kk)).map(x => x[2]);
@@ -296,7 +618,9 @@ const ASSOC = "ตามสูตร (เชิงความสัมพัน
 /** สูตรที่แถบสถานะกำลังแสดง — "EG" หลัก หรือ "T1" shadow (ป้าย Caution) */
 /** สลับเป็น B_T1 ได้เฉพาะ Pro ขึ้นไป (ภาคผนวก ง: Basic สลับได้ทั้งที่บรรทัด shadow เป็นสิทธิ์ Pro) */
 const canT1 = () => typeof tierRank === "function" ? tierRank() >= 1 : S.plan === "pro";
-const useT1 = () => S.pilotFormula === "T1" && canT1();
+/** F2 #6 / D1: ตัวสลับสูตรแบบ global ถูกถอดแล้ว — B_EG ขับ quadrant และ OIS เสมอ · B_T1 เป็นเส้นเงาสีเทา + ชิป CAUTION เท่านั้น
+ *  (คงชื่อ useT1 ไว้ให้ไฟล์อื่นเรียกได้ — คืน false เสมอ) */
+const useT1 = () => false;
 
 /* ---------------------------------------------------------------- 2 · สถานะ */
 /* กติกาตามเอกสารแก้ไขครั้งที่ 1
@@ -322,7 +646,7 @@ const S = {
   log: [],                                   // ประวัติการใช้ token
   ind: "all", t: "PTG",
   peers: [], wi: null, ceo: null,
-  pilotFormula: "EG",                        // สูตรที่แถบสถานะแสดง: "EG" (หลัก) | "T1" (shadow · ป้าย Caution) — สลับได้ในหน้าสถาปัตยกรรม
+  pilotFormula: "EG",                        // คงไว้เพื่อความเข้ากันได้ — B_EG เสมอ (D1 · ตัวสลับถูกถอดแล้ว F2 #6)
   view: "profile",
 };
 const LS = "boardsignal_demo_v1";
@@ -336,7 +660,7 @@ function load() {
     Object.assign(S, { user: o.u, credits: o.c ?? 3, freeCo: o.f ?? null, unlocked: o.k || {}, sectors: o.s || {}, log: o.l || [],
       plan: o.pl || "free", ov: o.ov || {}, lang: o.lg || "EN", tone: o.tn || "search",
       cons: o.cs || { sizeFixed: true, fem30: false, fam25: false }, horizon: o.hz || "12m", priority: o.pr || "max",
-      view: o.vw || "profile", pilotFormula: o.pf === "T1" ? "T1" : "EG", sc: o.sc || {} });
+      view: o.vw || "profile", pilotFormula: "EG", sc: o.sc || {} });
     if (o.m) document.body.dataset.mode = o.m;
     document.body.classList.toggle("sidehid", !!o.sh);
     return o.u;
@@ -476,8 +800,48 @@ function go(v) {
   syncNavLocks(); render(); window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ---------------------------------------------------------------- ท้ายหน้า (เขียนทับข้อความใน v2.html ครั้งเดียว)
+   ใช้รุ่นพารามิเตอร์จาก PARAM_VERSION (edit9) และป้ายจาก PILOT_LABELS — ไม่มีคำต้องห้ามตามบันทึกอาจารย์ 14 พ.ย. 2569 */
+const FOOT_TXT = [
+  ["เครื่องมือประเมิน (diagnostic) ไม่ใช่การพยากรณ์", "a diagnostic tool, not a forecast"],
+  ["เครื่องมือเสนอแนะ (suggestion tool) — ไม่มีการตัดสินใจอัตโนมัติ", "suggestion tool — no automated decisions"],
+  ["ให้คะแนนบริษัท ไม่ให้คะแนนบุคคล", "scores companies, not individuals"],
+  ["OpenInnoScore = เปอร์เซ็นไทล์ของ Signal B (B = cP × amp) เทียบฐานอ้างอิง REF-928 ที่ freeze แล้ว",
+   "OpenInnoScore = percentile of Signal B (B = cP × amp) against the frozen REF-928 reference base"],
+  ["จากแผงข้อมูล 209 บริษัท 928 บริษัท-ปี (FY2019–2023) · แสดง tier คู่กับ quadrant เสมอ และแสดงช่วง 90% ของคะแนน",
+   "from a panel of 209 firms and 928 firm-years (FY2019–2023) · tier always shown with the quadrant and the 90% band of the score"],
+  ["ตัวเลขทุกตัวเป็นความสัมพันธ์จากข้อมูลย้อนหลัง ไม่ใช่ความสัมพันธ์เชิงสาเหตุ ไม่ใช่ความน่าจะเป็น และไม่ใช่จำนวนกิจกรรม open innovation ที่คาดว่าจะเกิด",
+   "every number is an association in historical data — not causal, not a probability, and not a predicted count of open-innovation activities"],
+  ["Portfolio Matrix แสดงตำแหน่งของบริษัทลูกค้า ไม่ใช่การคัดเลือกหุ้น · ห้ามนำไปใช้ให้คะแนนรายบุคคล",
+   "the Portfolio Matrix shows the positions of client companies, not a stock selection · never used to score individuals"],
+];
+i18nLoad(Object.fromEntries(FOOT_TXT));
+i18nLoad({
+  "B_T1 (เงา): OIS": "B_T1 (shadow): OIS", "· สูตรหลักคือ B_EG": "· the headline formula is B_EG",
+  "สูตรที่ใช้ — B_EG (หลัก) และ B_T1 (เส้นเงา)": "Formulas — B_EG (headline) and B_T1 (shadow line)",
+  "CAUTION · เส้นเงา": "CAUTION · shadow line", "PASS · สูตรหลัก": "PASS · headline formula",
+  "รุ่นพารามิเตอร์": "Parameter version",
+  "ค่าสัมประสิทธิ์ของทั้งสองสูตรไม่แสดงบนหน้าจอ (ความลับทางการค้า)": "coefficients of both formulas are not shown on screen (trade secret)",
+  "ซึ่งขับ quadrant · OIS · tier ในทุกหน้าและทุกเลนส์ ·": "which drives the quadrant, OIS and tier on every page and in every lens ·",
+  "แสดงเป็นเส้นเงาสีเทาพร้อมชิป CAUTION เท่านั้น (D1, 2 พ.ย. 2569) — ไม่มีตัวสลับสูตรแล้ว": "is shown only as a grey shadow line with the CAUTION chip (D1, 2 Nov 2026) — there is no formula switch any more",
+  "ดูการ์ดสูตร": "See the formula card", "(ไม่มีตัวสลับสูตรแล้ว · D1)": "(no formula switch · D1)",
+  "คำแนะนำการซื้อขายหลักทรัพย์ หรือการคัดเลือกหุ้นเข้าพอร์ต (Portfolio Matrix แสดงตำแหน่งของบริษัทลูกค้าเท่านั้น)":
+    "Securities trading advice or stock selection (the Portfolio Matrix only shows the positions of client companies)",
+});
+function footerChrome() {
+  const fb = $("#fBrand"), box = fb && fb.parentElement, lang = (typeof S !== "undefined" && S.lang) || "EN";
+  if (!box || box.dataset.w1 === lang) return;
+  const fr = $("#fRemark"), remark = fr ? fr.outerHTML : '<b style="color:var(--ink-2)" id="fRemark"></b>';
+  const en = lang === "EN", sp = i => `<span data-noi18n>${esc(en ? FOOT_TXT[i][1] : FOOT_TXT[i][0])}</span>`;
+  box.innerHTML = `<b style="color:var(--ink-2)" id="fBrand">OpenInnoScore</b> · ${sp(0)} · ${remark} · ${sp(1)} ·
+    <span class="foot-support" data-noi18n>${esc(en ? PILOT_LABELS.supporting_en : PILOT_LABELS.supporting_th)}</span> · ${sp(2)} · ${sp(3)} ·
+    <span data-noi18n>parameter card</span> <b class="foot-ver" data-noi18n>${esc(PARAM_VERSION)}</b> ${sp(4)} · ${sp(5)} · ${sp(6)}`;
+  box.dataset.w1 = lang;
+}
+
 /* ---------------------------------------------------------------- แถบบน */
 function syncChrome() {
+  footerChrome();
   const bn = "OpenInnoScore";
   ["#sBrand", "#gBrand", "#fBrand"].forEach(s => { const e = $(s); if (e) e.textContent = bn; });
   $("#chipCredit").innerHTML = `<span aria-hidden="true">◈</span> token <b>${S.credits}</b>`;
@@ -846,8 +1210,9 @@ function statusBar(c) {
   const chipsHtml = ch => ch.length ? `<div class="sbchips">${ch.map(x =>
     `<span class="chip" title="${esc(x.t)}">${esc(x.k)}</span>`).join("")}</div>` : "";
   if (!v.inDomain) return `<div class="sbar mute">
-    <div class="sbtop"><b>นอกกลุ่มอ้างอิง — ไม่แสดง tier</b></div>
-    <div class="sbmsg">ฐานอ้างอิง REF-928 ครอบคลุมอุตสาหกรรม 1–7 เท่านั้น ไม่รวมธนาคารและกลุ่มการเงิน — ระบบไม่แสดง tier เปอร์เซ็นไทล์ หรือธงสัญญาณ (R4)</div>
+    <div class="sbtop"><b>${TL("Outside the reference group — no tier", "นอกกลุ่มอ้างอิง — ไม่แสดง tier")}</b></div>
+    <div class="sbmsg">${TL(`REF-928 covers industries 1–7 only and excludes ${PILOT_LABELS.financials_en} — only the ${PILOT_LABELS.boardprofile_en} is shown, with no tier, percentile or OI flag (R4, D2)`,
+      `ฐานอ้างอิง REF-928 ครอบคลุมอุตสาหกรรม 1–7 เท่านั้น ไม่รวม${PILOT_LABELS.financials_th} — ระบบแสดงเฉพาะ ${PILOT_LABELS.boardprofile_th} ไม่แสดง tier เปอร์เซ็นไทล์ หรือธงสัญญาณ (R4, D2)`)}</div>
     ${chipsHtml(v.chips)}</div>`;
   const t1 = c.t1 || t1Of(c);
   const T1 = useT1();
@@ -855,18 +1220,20 @@ function statusBar(c) {
   const tier = T1 ? t1.tier : v.tier, quad = T1 ? t1.quad : v.quad, ois = T1 ? t1.ois : (c.ois ?? c.ipi);
   const st = T1 ? t10Of(t1.tier, t1.quad) : v.st, z = ZONES[quad];
   const chips = T1 ? [{ k: "Caution: สูตร B_T1 (shadow)", t: "ทุกตัวชี้วัด validity ของ B_T1 ต่ำกว่าเกณฑ์ผ่าน (ρ .148 · AUC .595 · lift 1.97) — แสดงเพื่อเปรียบเทียบตามแนวทาง Pilot เท่านั้น" }, ...v.chips] : v.chips;
-  const devC = quad === "C" ? `<div class="sbmsg" style="margin-top:4px;color:var(--ink-2)">B &gt; 0 ในช่องนี้เป็นผลคูณของค่าลบสองค่า (CEO ระมัดระวัง × บอร์ดที่ไม่อยู่ในรูปแบบหนุน) — ไม่ใช่สัญญาณ open innovation</div>` : "";
-  const shadow = S.plan === "pro" ? (T1
-    ? `<div class="sbfoot" style="opacity:.75;margin-top:6px">สูตรหลัก B_EG: OIS ${fmt(c.ois ?? c.ipi, 1)} · Tier ${v.tier} · quadrant ${v.quad} — แถบนี้กำลังแสดง B_T1 (shadow) · สลับกลับได้ที่หน้า “สถาปัตยกรรมข้อมูล”</div>`
-    : `<div class="sbfoot" style="opacity:.7;margin-top:6px">สูตรทางเลือก B_T1 (shadow log · ป้าย Caution): OIS ${fmt(t1.ois, 1)} · Tier ${t1.tier} · quadrant ${t1.quad} — บันทึกไว้เปรียบเทียบตามแนวทาง Pilot; สูตรหลักคือ B_EG</div>`) : "";
+  const devC = quad === "C" ? `<div class="sbmsg" style="margin-top:4px;color:var(--ink-2)">${TL("B &gt; 0 in this quadrant is the product of two negatives (cautious CEO × non-supporting board) — not an open-innovation signal",
+    "B &gt; 0 ในช่องนี้เป็นผลคูณของค่าลบสองค่า (CEO ระมัดระวัง × บอร์ดที่ไม่อยู่ในรูปแบบหนุน) — ไม่ใช่สัญญาณ open innovation")}</div>` : "";
+  /* D1 · B_EG ขับ quadrant และ OIS เสมอ · B_T1 แสดงเป็นเส้นเงาสีเทาพร้อมชิป CAUTION เท่านั้น (ทุกแผน · ไม่มีตัวสลับ) */
+  const shadow = `<div class="sbfoot sb-t1shadow" style="opacity:.7;margin-top:6px;color:var(--ink-3)">${TL("B_T1 (shadow)", "B_T1 (เงา)")}: OIS ${fmt(t1.ois, 1)} · Tier ${t1.tier} · quadrant ${t1.quad}
+      <span class="chip" style="margin-left:6px;background:var(--panel-2);color:var(--warn)" title="${TL("B_T1 pooled validity CAUTION (ρ .148 · AUC .595 · lift 1.97) — for comparison only", "B_T1 pooled validity CAUTION (ρ .148 · AUC .595 · lift 1.97) — ใช้เปรียบเทียบเท่านั้น")}">CAUTION</span>
+      · ${TL("headline formula: B_EG", "สูตรหลักคือ B_EG")}</div>`;
   return `<div class="sbar ${st.c}">
     <div class="sbtop"><b>Tier ${tier} · ${esc(z.q)}</b>
       <span class="oisv">OpenInnoScore ${fmt(ois, 1)}
-        ${T1 ? `<i>B_T1 · ไม่มีช่วง 90%</i>` : `<i>ช่วง 90% ${fmt(v.band[0], 1)}–${fmt(v.band[1], 1)}</i>`}</span>
-      ${v.flag && !T1 ? `<span class="oiflag">ธงสัญญาณ OI</span>` : ""}</div>
-    <div class="sbmsg">${esc(st.s)}</div>${devC}
-    <div class="sbfoot">บริษัทในช่อง Tier ${tier} × ${quad} ของ REF-928 มีจำนวนกิจกรรม open innovation เฉลี่ย
-      <b>${fmt(st.oi, 2)}</b> รายการต่อปี (n = ${st.n}) — ค่าเฉลี่ยของกลุ่มในฐานอ้างอิง ไม่ใช่ค่าคาดหมายของบริษัทนี้</div>
+        ${T1 ? `<i>B_T1 · ไม่มีช่วง 90%</i>` : `<i>${TL("90% band", "ช่วง 90%")} ${fmt(v.band[0], 1)}–${fmt(v.band[1], 1)}</i>`}</span>
+      ${v.flag && !T1 ? `<span class="oiflag">${TL("OI signal flag", "ธงสัญญาณ OI")}</span>` : ""}</div>
+    <div class="sbmsg">${esc(TL(T10_EN[st.s] || st.s, st.s))}</div>${devC}
+    <div class="sbfoot">${TL(`Firms in cell Tier ${tier} × ${quad} of REF-928 average <b>${fmt(st.oi, 2)}</b> open-innovation activities per year (n = ${st.n}) — a group mean in the reference base, not this firm's expected value`,
+      `บริษัทในช่อง Tier ${tier} × ${quad} ของ REF-928 มีจำนวนกิจกรรม open innovation เฉลี่ย <b>${fmt(st.oi, 2)}</b> รายการต่อปี (n = ${st.n}) — ค่าเฉลี่ยของกลุ่มในฐานอ้างอิง ไม่ใช่ค่าคาดหมายของบริษัทนี้`)}</div>
     ${T1 ? `<div class="sbfoot" style="color:var(--warn)">ทุกตัวชี้วัด validity ของ B_T1 ต่ำกว่าเกณฑ์ผ่าน — ใช้เปรียบเทียบเท่านั้น</div>` : ""}
     ${chipsHtml(chips)}${shadow}
   </div>`;
@@ -893,7 +1260,6 @@ function holdAnalysis(c) {
     <div style="font-size:11.5px;color:var(--ink-3);margin-bottom:6px">ป้ายโซนเปลี่ยนเมื่อค่าป้อนเปลี่ยนถึงระดับต่อไปนี้ —
       เป็นการอ่านความชันของสูตร ${ASSOC} ไม่ใช่การทำนายผล</div>
     <div class="tw"><table><thead><tr><th>ค่าป้อนที่เปลี่ยน</th><th class="n">เปลี่ยนได้ถึง</th><th>อ่านอย่างไร</th></tr></thead><tbody>
-      <tr><td>องค์ประกอบกรรมการหญิงต่ำลง</td><td class="n"><b>${femCell}</b></td><td style="color:var(--ink-2)">${femWhy}</td></tr>
       <tr><td>CEO Promotion Focus ต่ำลง</td><td class="n"><b>${fmt(dP, 0)} จุดเปอร์เซ็นไทล์</b></td><td style="color:var(--ink-2)">ภาษาในสารปีถัดไปอยู่ต่ำกว่าค่าเฉลี่ยฐานอ้างอิง</td></tr>
     </tbody></table></div>
     <div style="font-size:11px;color:var(--ink-3);margin-top:8px">${critText(c)} · กรรมการครอบครัวและ political ties เป็นข้อมูลบริบท ไม่แสดงเป็นคันโยก (R6)</div>
@@ -1708,7 +2074,7 @@ function viewArch() {
       "Pilot shadow log: บันทึก B_T1 คู่กับ B_EG ทุกครั้งที่ให้คะแนน (ดูการ์ดสูตรด้านบน)"]],
     ["นอกขอบเขต", "mute", [
       "การให้คะแนนรายบุคคล — ผิดหลัก PDPA มาตรา 26",
-      "คำแนะนำการลงทุนหรือการซื้อขายหลักทรัพย์",
+      "คำแนะนำการซื้อขายหลักทรัพย์ หรือการคัดเลือกหุ้นเข้าพอร์ต (Portfolio Matrix แสดงตำแหน่งของบริษัทลูกค้าเท่านั้น)",
       "การอ้างเหตุ-ผลหรือการทำนาย — ระบบรายงานความสัมพันธ์และตำแหน่งเท่านั้น (R7)",
       "ข้อมูลเรียลไทม์ระดับวินาที"]]]
       .map(([t, cls, items]) => `<div class="card">
@@ -1739,33 +2105,26 @@ function viewArch() {
           : "<b>ฉบับออฟไลน์ (ไฟล์นี้)</b>: ทั้งสามส่วนฝังในไฟล์ตามขอบเขตส่งมอบ #1 (ใช้ภายใต้ NDA) · <b>ฉบับเซิร์ฟเวอร์</b> (OpenInnoScore_server.html บน Render) ย้ายไว้หลัง API แล้ว"}</div>
     </div>`;
 }
-/** การ์ดสลับสูตรที่แถบสถานะแสดง — B_EG (หลัก) / B_T1 (shadow · Caution) ตามแนวทาง Pilot Use case 2 */
+/** การ์ดเอกสารสูตร (F2 #6): ตัวสลับสูตรแบบ global ถูกถอดแล้ว — B_EG ขับ quadrant และ OIS ทุกหน้า ·
+ *  B_T1 เป็นเส้นเงาสีเทาพร้อมชิป CAUTION ในเลนส์ UC1 (D1) · การ์ดนี้เป็นเอกสารประกอบเท่านั้น */
 function pilotFormulaCard() {
-  const T1 = useT1(), alt = ((DATA.validYear || {}).alt || []);
+  const alt = ((DATA.validYear || {}).alt || []);
   const row = n => alt.find(a => a[0].indexOf(n) === 0) || [];
   const cell = (r) => r.length ? `ρ ${fmt(r[2], 3)} · AUC ${fmt(r[3], 3)} · lift ${fmt(r[4], 2)}×` : "—";
   return `<div class="card" style="margin-bottom:14px">
-    <h3>สูตรที่แถบสถานะแสดง — Pilot shadow log</h3>
-    <p class="desc">สูตรหลักคือ <b>B_EG</b> (E5, g_T = 0) · สูตรทางเลือก <b>B_T1</b> (H1 + H4 เท่านั้น) บันทึกคู่กันเป็น shadow log
-      เพื่อเปรียบเทียบตามแนวทาง Pilot — ทุกตัวชี้วัด validity ของ B_T1 ต่ำกว่าเกณฑ์ผ่าน จึงแสดงพร้อมป้าย Caution เสมอ</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <span style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
-        <button class="btn ${T1 ? "g" : "p"}" onclick="setPilotFormula('EG')" style="border-radius:0;padding:6px 14px;font-size:12px">B_EG (หลัก)</button>
-        <button class="btn ${T1 ? "p" : "g"}" onclick="setPilotFormula('T1')" style="border-radius:0;padding:6px 14px;font-size:12px"${canT1() ? "" : ' disabled title="สิทธิ์ Pro ขึ้นไป"'}>B_T1 (shadow · Caution)${canT1() ? "" : " 🔒 Pro"}</button></span>
-      <span style="font-size:11.5px;color:var(--ink-2)">ตอนนี้แถบสถานะทุกหน้าแสดง <b>${T1 ? "B_T1" : "B_EG"}</b>${T1 ? " พร้อมป้าย Caution" : ""}</span>
-    </div>
+    <h3>สูตรที่ใช้ — B_EG (หลัก) และ B_T1 (เส้นเงา)</h3>
+    <p class="desc">สูตรหลักคือ <b>B_EG</b> (E5, g_T = 0) ซึ่งขับ quadrant · OIS · tier ในทุกหน้าและทุกเลนส์ ·
+      สูตรทางเลือก <b>B_T1</b> (H1 + H4 เท่านั้น) แสดงเป็นเส้นเงาสีเทาพร้อมชิป CAUTION เท่านั้น (D1, 2 พ.ย. 2569) — ไม่มีตัวสลับสูตรแล้ว</p>
     <div class="tw" style="margin-top:10px"><table><thead><tr><th>สูตร</th><th>นิยาม</th><th>validity (pooled)</th><th>สถานะ</th></tr></thead><tbody>
-      <tr${T1 ? "" : ' class="hl"'}><td><b>B_EG</b></td><td style="color:var(--ink-2)">cP × amp (δT ปิดด้วย evidence gate)</td><td>${cell(row("B_EG"))}</td><td><span class="pill ok">PASS · สูตรหลัก</span></td></tr>
-      <tr${T1 ? ' class="hl"' : ""}><td><b>B_T1</b></td><td style="color:var(--ink-2)">cP × (ค่าคงที่ + น้ำหนักกรรมการหญิง × cW) — H1 + H4 เท่านั้น</td><td>${cell(row("B_T1"))}</td><td><span class="pill warn">CAUTION · shadow</span></td></tr>
+      <tr class="hl"><td><b>B_EG</b></td><td style="color:var(--ink-2)">cP × amp (δT ปิดด้วย evidence gate)</td><td>${cell(row("B_EG"))}</td><td><span class="pill ok">PASS · สูตรหลัก</span></td></tr>
+      <tr><td><b>B_T1</b></td><td style="color:var(--ink-2)">cP × (ค่าคงที่ + น้ำหนักกรรมการหญิง × cW) — H1 + H4 เท่านั้น</td><td>${cell(row("B_T1"))}</td><td><span class="pill warn">CAUTION · เส้นเงา</span></td></tr>
     </tbody></table></div>
-    <div style="font-size:10.8px;color:var(--ink-3);margin-top:8px">ผู้ใช้ Pro เห็นบรรทัด shadow B_T1 ใต้แถบสถานะเสมอ · ค่าสัมประสิทธิ์ของทั้งสองสูตรไม่แสดงบนหน้าจอ (ความลับทางการค้า)</div>
+    <div style="font-size:10.8px;color:var(--ink-3);margin-top:8px">รุ่นพารามิเตอร์ ${esc(PARAM_VERSION)} · ค่าสัมประสิทธิ์ของทั้งสองสูตรไม่แสดงบนหน้าจอ (ความลับทางการค้า)</div>
   </div>`;
 }
 /** สลับสูตรที่แสดง — เรียกจากปุ่มในหน้าสถาปัตยกรรม */
 function setPilotFormula(f) {
-  if (f === "T1" && !canT1()) { toast("การสลับเป็น B_T1 เป็นสิทธิ์ของ Pro ขึ้นไป"); return; }
-  S.pilotFormula = f === "T1" ? "T1" : "EG"; save(); render();
-  toast(S.pilotFormula === "T1" ? "แถบสถานะแสดง B_T1 (shadow · Caution)" : "แถบสถานะกลับไปแสดงสูตรหลัก B_EG");
+  S.pilotFormula = "EG"; save();                  // D1: ไม่มีการสลับสูตรแล้ว (คงฟังก์ชันไว้ให้ลิงก์เดิมเรียกได้)
 }
 
 /* ============================================================================
@@ -1930,7 +2289,7 @@ function marginalCard(c) {
       <div><div class="mv-margh"><b>สัดส่วนกรรมการหญิง</b> <span class="pill ok">ทนต่อ FE-Poisson · Tier 1 (within-firm)</span></div>
         ${margPanel(c, "fem")}
         <p class="mv-sub">เทอมกรรมการหญิงยังมีนัยเมื่อเปลี่ยนเป็น fixed-effects Poisson — อ่านเป็นรูปแบบภายในบริษัทเดียวกันที่ค่อนข้างคงทน แต่ยังเป็น<b>ความสัมพันธ์</b> ไม่ใช่เหตุ-ผล ·
-          เกณฑ์ critical mass ≥ ${CRIT_N} คน เป็น${CM_CITE}</p></div>
+          เกณฑ์ critical mass ≥ ${CRIT_N} คน อ้างอิง ${CM_CITE}</p></div>
       <div><div class="mv-margh"><b>สัดส่วนกรรมการครอบครัว</b> <span class="pill warn">ไม่ทนต่อ FE · Tier 2 (between-firm · บริบท R6)</span></div>
         ${margPanel(c, "fam")}
         <p class="mv-sub">เทอมครอบครัวอ่อนลงจนไม่มีนัยเมื่อใช้ fixed-effects — เป็นรูปแบบระหว่างบริษัท จึงแสดงเป็นข้อมูลบริบทเท่านั้น ไม่ใช่คันโยกหรือเหตุผลเชิงบวก (R6)</p></div>
@@ -2031,7 +2390,7 @@ function viewValid() {
           <td class="n">${f3(a[2])}</td><td class="n">${f3(a[3])}</td><td class="n">${fmt(a[4], 2)}</td><td class="n">${f3(a[5])}</td>
           <td><span class="pill ${VD[a[6]][1]}">${VD[a[6]][0]}</span></td></tr>`).join("")}</tbody></table></div>
       <p class="mv-sub">ตัดเทอมอายุงานแทบไม่เปลี่ยนผล (B_EG ≈ B_FULL) · B_T1 ใช้เฉพาะเทอมที่ทน FE จึงอ่อนกว่า (CAUTION) — ผู้ใช้ Pro เห็น B_T1 ใต้แถบสถานะ และสลับได้ที่หน้า “สถาปัตยกรรมข้อมูล”
-        <button class="lnk" data-goto="arch">ไปที่ตัวสลับสูตร</button> · ตอนนี้แสดง <b>${useT1() ? "B_T1" : "B_EG"}</b></p>
+        <button class="lnk" data-goto="arch">ดูการ์ดสูตร</button> · สูตรหลัก <b>B_EG</b> (ไม่มีตัวสลับสูตรแล้ว · D1)</p>
       <div class="tr-k" style="margin-top:12px">B_EG (AUC 0.614) เทียบตัวชี้วัดเดี่ยว — DeLong test ของพื้นที่ใต้กราฟ (pooled 928 บริษัท-ปี)</div>
       <div class="tw"><table class="mv-ptbl"><thead><tr><th>ตัวเปรียบเทียบ</th><th class="n">AUC</th><th>ผลเทียบกับ B_EG</th></tr></thead><tbody>
         ${P.base.map(b => `<tr><td>${esc(b[0])}</td><td class="n">${f3(b[1])}</td><td><span class="pill ${b[3]}">${esc(b[2])}</span></td></tr>`).join("")}
@@ -2192,6 +2551,7 @@ function wireProfile(h) { /* ปุ่มทั้งหมดใช้ data-got
    ============================================================================ */
 const VIEWS = { profile: viewProfile, fit: viewFit, matrix: viewMatrix, peer: viewPeer, studio: viewStudio, sector: viewSector, billing: viewBilling, arch: viewArch, valid: viewValid };
 function render() {
+  footerChrome();                                  // ท้ายหน้าเปลี่ยนตามภาษา (EN/TH) ทุกครั้งที่ render
   const host = $("#v-" + S.view);
   // หน้าของแก้ไขครั้งที่ 1 (Zone A/B/C) ถูกลงทะเบียนในไฟล์ถัดไป — ตอนบูตอาจยังไม่มี จึงต้องกันไว้
   if (!host || typeof VIEWS[S.view] !== "function") return;

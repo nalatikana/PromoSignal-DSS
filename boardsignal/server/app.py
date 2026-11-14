@@ -529,8 +529,54 @@ async def api_score(req: Request):
     return secure(JSONResponse({"record": RECORD_ID, "items": out}))
 
 
+MVP_DOMAIN_ERR = ("board_profile_only", "board_size_required", "G2:", "G4:")
+MVP_MAX_BODY = 4096
+
+
+async def _mvp(req: Request, kind):
+    """POST /api/mvp/score_firm · /api/mvp/whatif (MVP 1 · edit9) — body = ค่าป้อนหนึ่งชุด (object)
+    score_firm: {promotion, family_share, political_ties 0/1, female_share | women + board_size, industry 1–8, fiscal_year, ticker?}
+    whatif:     {base: (ค่าป้อนของ score_firm) | ticker, board_size (≥ 3 · D4), women_now, women_target | target_share, mode}
+    ตรวจคีย์แบบ allow-list ที่ ENGINE (คีย์อื่น → 400) · โควตาเดียวกับ /api/score (ต่อ session/IP ต่อนาที และต่อบัญชี/IP ต่อวัน)
+    ผลลัพธ์ = ค่าที่หน้าจอแสดงเท่านั้น (เปอร์เซ็นไทล์ 1 ตำแหน่ง · ตัวคูณ 3 ตำแหน่ง · W* 3 ตำแหน่ง) — ไม่มี cP / amp / B / สัมประสิทธิ์
+    ข้อจำกัดเชิงโดเมน (Board Profile only · D4 · G2 · G4) ตอบ 200 {ok:false, error} · ค่าป้อนผิดรูป ตอบ 400"""
+    s, err = require(req)
+    if err:
+        return err
+    try:
+        raw = await req.body()
+        if len(raw) > MVP_MAX_BODY:
+            return jerr(413, ok=False, error="คำขอใหญ่เกินไป")
+        body = json.loads(raw.decode("utf-8") or "null")
+        assert isinstance(body, dict)
+    except Exception:  # noqa: BLE001
+        return jerr(400, ok=False, error="รูปแบบคำขอไม่ถูกต้อง (ต้องเป็น JSON object)")
+    ip = "ip:" + client_ip(req)
+    n = 2 if kind == "whatif" else 1
+    if not allow_all([(item_limiter, s["sid"]), (item_limiter, ip)], n):
+        log.warning("mvp rate-limited session=%s", sid_hash(s))
+        return jerr(429, ok=False, error="เรียกบ่อยเกินไป — รอสักครู่")
+    if not allow_all([(day_limiter, f"u{uid_of(s)}"), (day_limiter, ip)], n):
+        DBX.event(uid_of(s), "score_quota", {"n": n, "kind": kind})
+        return jerr(429, ok=False, error="ใช้โควตาการคำนวณของวันนี้ครบแล้ว — ติดต่อผู้ดูแลระบบ")
+    fn = ENGINE.mvp_whatif if kind == "whatif" else ENGINE.mvp_score
+    out = await asyncio.to_thread(fn, body, True)
+    DBX.event(uid_of(s), "mvp_" + kind, {"ok": bool(out.get("ok")), "err": str(out.get("error") or "")[:40]})
+    if not out.get("ok") and not any(str(out.get("error") or "").startswith(e) for e in MVP_DOMAIN_ERR):
+        return jerr(400, **out)
+    return secure(JSONResponse(out))
+
+
+async def api_mvp_score(req: Request):
+    return await _mvp(req, "score_firm")
+
+
+async def api_mvp_whatif(req: Request):
+    return await _mvp(req, "whatif")
+
+
 async def api_outdomain(req: Request):
-    """POST {fem_count, fam_count, bsize} → {femP, famP} · โหมดนอกกลุ่มอ้างอิง (ธนาคาร/การเงิน) — เปอร์เซ็นไทล์ของสัดส่วน
+    """POST {fem_count, fam_count, bsize} → {femP, famP} · โหมดนอกกลุ่มอ้างอิง (กลุ่มธุรกิจการเงิน / Board Profile) — เปอร์เซ็นไทล์ของสัดส่วน
     องค์ประกอบบอร์ดเทียบการกระจายของ REF-928 (ข้อมูลเชิงพรรณนา ไม่ใช่คะแนน · ไม่เกี่ยวกับสัมประสิทธิ์) · นับโควตาเหมือน /api/score"""
     s, err = require(req)
     if err:
@@ -1098,6 +1144,8 @@ ROUTES = [
     Route("/favicon.ico", lambda req: Response(status_code=204)),
     Route("/api/score", api_score, methods=["POST"]),
     Route("/api/outdomain", api_outdomain, methods=["POST"]),
+    Route("/api/mvp/score_firm", api_mvp_score, methods=["POST"]),
+    Route("/api/mvp/whatif", api_mvp_whatif, methods=["POST"]),
     Route("/api/amp", api_gone, methods=["GET", "POST"]),
     Route("/api/band", api_gone, methods=["GET", "POST"]),
     Route("/api/llm", api_llm, methods=["POST"]),

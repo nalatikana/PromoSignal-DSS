@@ -54,7 +54,7 @@ def test_score_http():
         assert st == 200, (st, r)
         own, a, clamped = r["items"]
         assert r["record"].startswith("REF928")
-        assert own["ois"] == 95.9 and own["band"] == [89.3, 98.3], own                  # ค่าจริง = ค่าในไฟล์ (ช่วงจาก STATA)
+        assert own["ois"] == 95.9 and own["band"] == [88.6, 98.0], own                  # ค่าจริง = ค่าในไฟล์ (ช่วงจาก STATA edit9)
         assert isinstance(a["ap"], int) and isinstance(a["dp"], int) and a["ois"] == round(a["ois"], 1)
         assert a["tier"] in (1, 2, 3, 4) and a["quad"] in "ABCD" and len(a["band"]) == 2 and "oisInd" in a and "full" in a
         assert set(a) <= {"ois", "ipi", "tier", "quad", "ap", "dp", "oisInd", "iip", "t1", "band", "full"}, set(a)
@@ -62,7 +62,7 @@ def test_score_http():
         for it in r["items"]:
             assert not (RAW_KEYS & set(it)) and not ({"csg", "asg", "clip"} & set(it)), it
         dumped = json.dumps(r)
-        for bad in ("0.5709", "0.2313", "0.6196", "0.2159", "0.1037", "0.6127", "3.7251", "0.21057"):
+        for bad in ("0.5709", "0.2313", "0.6196", "0.2159", "0.1037", "0.6127", "3.7247", "0.21044", "0.64257"):
             assert bad not in dumped, bad
         # ค่าป้อนรุ่นเดิม (promo/fam/pol/fem/od/"mean"/{pct}) และบริษัทที่ไม่มี → 400
         for bad in ({"promo": 0.5, "fem": .3}, {"ticker": "PTG", "promo": 0.5}, {"ticker": "PTG", "fam": .2},
@@ -166,7 +166,82 @@ def test_probe_blocked():
     print("test_probe_blocked: PASS ·", len(seen), "ผลลัพธ์ต่างกันจาก", len(fracs), "สัดส่วนบนกริด")
 
 
+LEAK = ("0.5709", "0.2313", "0.6196", "0.2158", "0.2159", "3.7247", "0.21044", "0.98469", "0.42043", "0.64257", "0.1037", "0.6127")
+PUBLIC_RAW = {"cP", "amp", "B", "_raw", "par", "mean", "cut", "chol", "seW"}
+
+
+def _walk_keys(x, acc):
+    if isinstance(x, dict):
+        for k, v in x.items():
+            acc.add(k)
+            _walk_keys(v, acc)
+    elif isinstance(x, list):
+        for v in x:
+            _walk_keys(v, acc)
+    return acc
+
+
+def test_mvp_http():
+    """POST /api/mvp/score_firm · /api/mvp/whatif (MVP 1 · edit9): ค่าตามกรณีทดสอบ · guardrails · allow-list · ไม่มีค่าดิบ"""
+    tmp = Path(tempfile.mkdtemp())
+    srv = Server({"APP_USERS": "bob:bobpw", "ADMIN_USER": "admin", "ADMIN_PASSWORD": "adminpw", "SECRET_KEY": "t",
+                  "DB_PATH": str(tmp / "ois.db")}, log_path=tmp / "srv.log")
+    try:
+        anon = Client(srv.base)
+        st, _ = anon.json("POST", "/api/mvp/score_firm", data={"promotion": .72})
+        assert st == 401
+        bob = Client(srv.base)
+        bob.login("bob", "bobpw")
+        cc = {"promotion": .72, "family_share": .25, "political_ties": 0, "industry": 5, "fiscal_year": 2024}
+        st, r = bob.json("POST", "/api/mvp/score_firm", data=dict(cc, women=2, board_size=9))
+        assert st == 200 and r["ok"] and r["version"] == "REF928-edit9-20261013", r
+        assert (r["X"], r["Y"], r["quad"], r["ois"], r["tier"], r["tier_uncertain"]) == (68.1, 31.6, "B", 45.3, 3, True), r
+        assert (r["t1"]["Y"], r["t1"]["quad"], r["t1"]["ois"], r["t1"]["chip"]) == (62.4, "A", 67.1, "CAUTION"), r["t1"]
+        assert r["fyStatus"]["code"] == "NYV" and r["added_to_REF928"] is False
+        st, w = bob.json("POST", "/api/mvp/whatif", data={"base": cc, "board_size": 9, "women_now": 2, "women_target": 3})
+        assert st == 200 and w["ok"] and not w["withheld"], w
+        assert w["multiplier"] == 1.064 and w["multiplier_band90"] == [1.045, 1.082] and w["W_star"] == 0.234, w
+        assert w["W_star_headcount"] == 3 and w["W_star_T1"] == 0.159 and w["sim"]["quad"] == "A" and w["sim"]["ois"] == 73.2
+        st, k = bob.json("POST", "/api/mvp/whatif", data={"base": {"promotion": .85, "family_share": .3, "political_ties": 0,
+                         "industry": 6, "fiscal_year": 2023}, "board_size": 10, "women_now": 1, "women_target": 3})
+        assert k["multiplier"] == 1.231 and k["multiplier_band90"] == [1.161, 1.306] and k["sim"]["quad"] == "A", k
+        assert "23% more" in k["sentence_en"] and "16%–31%" in k["sentence_en"], k["sentence_en"]
+        st, b = bob.json("POST", "/api/mvp/whatif", data={"base": "BTS", "board_size": 11, "women_now": 2, "women_target": 3})
+        assert st == 200 and b["withheld"] and b["multiplier"] is None and b["sim"]["ois"] is None and b["sim"]["Y"] > b["cur"]["Y"], b
+        assert b["message_en"] == "Score change withheld (G3) — board-amplification movement only"
+        st, t = bob.json("POST", "/api/mvp/whatif", data={"base": "TSTH", "board_size": 8, "women_now": 1, "women_target": 2})
+        assert t["W_star"] == 0.168 and t["W_star_headcount"] == 2, t
+        st, d4 = bob.json("POST", "/api/mvp/whatif", data={"base": "TSTH", "women_now": 1, "women_target": 2})
+        assert st == 200 and d4["ok"] is False and d4["error"] == "board_size_required", d4
+        st, g2 = bob.json("POST", "/api/mvp/whatif", data={"base": cc, "board_size": 9, "women_now": 2, "women_target": 1})
+        assert g2["ok"] is False and g2["error"].startswith("G2"), g2
+        st, g4 = bob.json("POST", "/api/mvp/whatif", data={"base": cc, "board_size": 9, "women_now": 2, "women_target": 5})
+        assert g4["ok"] is False and g4["error"].startswith("G4"), g4
+        st, g5 = bob.json("POST", "/api/mvp/whatif", data={"base": dict(cc, fiscal_year=2565), "board_size": 9, "women_now": 2,
+                          "women_target": 3})
+        assert g5["suspended"] and g5["sim"] is None and g5["fyStatus"]["code"] == "FAIL" and g5["multiplier"] is None, g5
+        st, fin = bob.json("POST", "/api/mvp/score_firm", data=dict(cc, industry=8, female_share=.2))
+        assert st == 200 and fin["ok"] is False and fin["provides"] == "board_profile", fin
+        for bad in ({"promotion": .7, "amp": 1}, dict(cc, female_share=2), dict(cc, female_share=.2, political_ties=3), [1, 2]):
+            st, rr = bob.json("POST", "/api/mvp/score_firm", data=bad)
+            assert st == 400 and rr["ok"] is False, (bad, st, rr)
+        st, rr = bob.json("POST", "/api/mvp/whatif", data={"base": cc, "board_size": 9, "women_now": 2, "women_target": 3, "x": 1})
+        assert st == 400
+        for out in (r, w, k, b, t):
+            keys = _walk_keys(out, set())
+            assert not (PUBLIC_RAW & keys), PUBLIC_RAW & keys
+            dumped = json.dumps(out)
+            for bad in LEAK:
+                assert bad not in dumped, bad
+        st, ev = Client(srv.base).json("GET", "/api/health")
+        assert ev["record"].startswith("REF928-edit9-20261013#")
+    finally:
+        srv.stop()
+    print("test_mvp_http: ALL PASS")
+
+
 if __name__ == "__main__":
     test_engine_parity()
+    test_mvp_http()
     test_probe_blocked()
     test_score_http()

@@ -386,7 +386,37 @@ const OIS_REMOTE = (() => {
   const par = { b1: NaN, dF: NaN, dG: NaN, dW: NaN, dT: NaN, gT: 0 };
   /** OM ฉบับเซิร์ฟเวอร์ — ป้ายค่าเฉลี่ย (ไม่ใช่ตัวเลขของบันทึกพารามิเตอร์) · OM.P มีค่าเท่ากับ zP เพื่อวาดเส้นแบ่งบนสเกลเปอร์เซ็นไทล์ */
   const mean = { P: meanTok("P", ZP), F: meanTok("F", NaN), G: meanTok("G", NaN), W: meanTok("W", NaN), T: meanTok("T", NaN) };
-  return { ampOf, cpOf, signalB, oisOf, oisIndOf, band90, scoreOf, fullOf, t1Of, ampPct, promoPct, clipped, od, canScore,
+  /* ---- MVP 1 (edit9) · SCORE_FIRM / MVP_WHATIF → POST /api/mvp/score_firm · /api/mvp/whatif ----
+     ผลจากเซิร์ฟเวอร์ไม่มี cP / amp / B ดิบ · แคชตามค่าป้อน (JSON) · sync: คืนผลจากแคช หรือ {ok:false, pending:true} แล้ว render ใหม่ */
+  const MV = new Map(), MVQ = new Map();
+  const mvKey = (kind, inp) => kind + "|" + JSON.stringify(inp === undefined ? null : inp);
+  function mvpAsync(kind, inp) {
+    const k = mvKey(kind, inp);
+    if (MV.has(k)) return Promise.resolve(MV.get(k));
+    if (MVQ.has(k)) return MVQ.get(k);
+    const url = kind === "whatif" ? "/api/mvp/whatif" : "/api/mvp/score_firm";
+    const p = fetch(url, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+                           body: JSON.stringify(inp === undefined ? null : inp) })
+      .then(async r => {
+        if (r.status === 401) { location.href = "/login"; return { ok: false, error: "ต้องเข้าสู่ระบบใหม่", status: 401 }; }
+        let j = null; try { j = await r.json(); } catch (e) { }
+        j = j || { ok: false, error: "เซิร์ฟเวอร์ตอบ " + r.status };
+        if (r.status === 429 || r.status >= 500) { j = Object.assign({ ok: false, status: r.status, retry: true }, j); return j; }
+        MV.set(k, j); if (MV.size > 400) MV.delete(MV.keys().next().value);
+        return j;
+      })
+      .catch(e => ({ ok: false, error: "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", retry: true }))
+      .finally(() => MVQ.delete(k));
+    MVQ.set(k, p);
+    return p;
+  }
+  function mvp(kind, inp) {
+    const k = mvKey(kind, inp);
+    if (MV.has(k)) return MV.get(k);
+    if (!MVQ.has(k)) mvpAsync(kind, inp).then(r => { if (r && !r.retry) rerender(); });
+    return { ok: false, pending: true, error: "pending", version: OIS.version };
+  }
+  return { ampOf, cpOf, signalB, oisOf, oisIndOf, band90, scoreOf, fullOf, t1Of, ampPct, promoPct, clipped, od, canScore, mvp, mvpAsync,
     femGrid, tenGrid, promoAtPct, promoInv, isPctTok, isMean, par, mean, zA: ZA, zP: ZP, firm: t => (OIS.co || {})[t] || null,
     stats: () => ({ cache: R.size, amp: AREG.size, cp: CREG.size, queued: Q.size }) };
 })();

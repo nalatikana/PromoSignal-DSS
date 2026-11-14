@@ -1,9 +1,9 @@
 /* ============================================================================
-   v2_pilot.js — หน้าตามแนวทาง Pilot (BBL guideline · REC exemption)
-     A. BOD Self-Assessment OI-1…OI-6 (ระดับคณะ)
-     B. โหมดนอกกลุ่มอ้างอิง (ธนาคาร / การเงิน) — เชิงพรรณนา ไม่มี tier
-     C. ข้อสั่งการบอร์ด / Compliance program (Level 3 add-on)
-     D. แบบสอบถามทดสอบการยอมรับ (consent · ออฟไลน์ไม่ระบุตัวตน · ฉบับเซิร์ฟเวอร์ผูกกับบัญชีที่เข้าสู่ระบบ — ข้อความชี้แจงบอกตามจริง)
+   v2_pilot.js — หน้าตามแนวทาง Pilot (องค์กรนำร่อง · REC)
+     A. BOD Self-Assessment OI-1…OI-6 (ระดับคณะ) — window.bodOiFor(ticker, fy) ใช้ในรายงานคณะกรรมการ
+     B. Board Profile (outside the reference group) — เชิงพรรณนา ไม่มี tier / OIS / What-if (F7)
+     C. ข้อสั่งการบอร์ด / Compliance program (Level 3 add-on · ฉบับนำร่องไม่ส่งอีเมล)
+     D. แบบสอบถามประเมินต้นแบบนวัตกรรม (ขั้นตอนที่ 4.2) — ย้ายไป v2_irb.js (MVP1)
      E. System log (ระดับรวม) + ตรวจการคำนวณรายบริษัท (ค่าในบันทึกพารามิเตอร์แสดงเฉพาะผู้ดูแลในฉบับเซิร์ฟเวอร์)
      F. การเชื่อมต่อ (Phase ถัดไป)
    กติกา: ฉบับออฟไลน์เก็บสถานะใน localStorage คีย์เดียว ไม่เก็บชื่อ อีเมล IP หรือรหัสพนักงาน
@@ -12,9 +12,9 @@
 const PL_KEY = "ois_pilot_v1";
 const PL = (() => {
   const d = { bod: { a: {}, ev: {}, draft: "" }, bodAll: {}, bodYear: null,
-              od: { name: "", sector: "bank", bsize: 12, femN: 2, famN: 0, pol: 0, draft: "" },
+              od: { name: "", sector: "", bsize: null, femN: null, famN: null, pol: 0, draft: "", _v2: 1 },
               dir: { rows: [], mode: "table" },
-              survey: { step: 0, cur: null, resp: [] },
+              survey: { step: 0, cur: null, resp: [] },   /* ข้อมูลรุ่นเดิม — แบบสอบถามใหม่เก็บที่ ois_irb_survey_v1 (v2_irb.js) */
               log: { crash: 0, errs: [], render: {}, issues: [] },
               integr: { ep: {}, res: {} } };
   try {
@@ -119,7 +119,7 @@ function plScale(key, val, labs) {
 function plWireScale(h, onPick) {
   h.querySelectorAll(".pl-scale button").forEach(b => b.onclick = () => onPick(b.parentElement.dataset.scale, +b.dataset.v));
 }
-const PL_LEGAL = `เครื่องมือนี้เป็นเครื่องมือช่วยเสนอแนะ (suggestion tool) ไม่มีการตัดสินใจอัตโนมัติ ไม่ใช่คะแนนเครดิต
+const PL_LEGAL = `เครื่องมือนี้เป็นเครื่องมือช่วยเสนอแนะ (suggestion tool) ไม่มีการตัดสินใจอัตโนมัติ
   และไม่ใช้ประเมินบุคคล · ข้อมูลทั้งหมดเป็นระดับคณะหรือระดับองค์กร · ` + (PL_SRV
   ? "ฉบับเซิร์ฟเวอร์บันทึกการใช้งานผูกกับบัญชีผู้ใช้ (ไม่เก็บ IP ในฐานข้อมูล)" : "ไม่เก็บชื่อ อีเมล หรือ IP");
 
@@ -220,101 +220,152 @@ function wireBod(h) {
 }
 
 /* ============================================================================
-   B · โหมดนอกกลุ่มอ้างอิง — เชิงพรรณนา ไม่มี tier / percentile / Signal B
+   B · Board Profile (outside the reference group) — F7 · R4 · D2 · D3
+     • ชื่อเมนู/หน้า "Board Profile (outside the reference group)" (PILOT_LABELS ถ้ามี) · ไม่ระบุประเภทองค์กร · ไม่มีกลุ่มธุรกิจตั้งต้น
+     • ไม่มี tier, OIS หรือ What-if · ป้าย "นอกโดเมน / Outside the reference sample"
+     • เปอร์เซ็นไทล์เป็นตำแหน่งเชิงพรรณนาเทียบการกระจายของ REF-928 เท่านั้น — ไม่จัดอันดับหรือเทียบกับบริษัทอื่น
+     • รับบริษัทที่หน้านำเข้าส่งมา (กลุ่ม 4–5 รวมกลุ่มธุรกิจการเงิน) ผ่าน localStorage "ois_bp_target_v1"
+     • หมายเหตุ critical mass อ้าง Torchia, Calabrò & Huse (2011) เท่านั้น (D3)
    ============================================================================ */
-const OD_SECTORS = { bank: "ธนาคาร", fin: "การเงิน / หลักทรัพย์", ins: "ประกันภัย / ประกันชีวิต", other: "อื่น ๆ นอก SET อุตสาหกรรม 1–7", noen: "ไม่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ" };
-/* เปอร์เซ็นไทล์เทียบ REF-928 — ออฟไลน์คำนวณจากจุดอ้างอิงที่ฝังไว้ (ภายใน ไม่แสดงค่าเฉลี่ย/จุดตัด) · เซิร์ฟเวอร์ถาม POST /api/outdomain
-   ปัด 6 ตำแหน่ง (ความละเอียดของ cF/cW ในจุดอ้างอิง) ทั้งฐานและค่าป้อนก่อนจัดอันดับ — fam = 0 นับเท่ากับ 264 แถวที่เป็น 0 (≈ 14 ไม่ใช่ 0 · ภาคผนวก ง-40)
-   ตรงกับ Engine.od ใน server/ois_engine.py
-   ภาพฮิสโตแกรมใช้ OIS.hist (ค่าดิบ ช่องละ 5 จุด) ทั้งสองโหมด — ไม่ใช้ค่ารายแถว */
+const PLB = (k, en, th) => { const P = window.PILOT_LABELS || {}, isEn = typeof S === "object" && S.lang === "EN";
+  const v = P[k + (isEn ? "_en" : "_th")] ?? (P[k] && typeof P[k] === "object" ? P[k][isEn ? "en" : "th"] : P[k]);
+  return typeof v === "string" && v ? v : isEn ? en : th; };
+const BP_TITLE = () => PLB("boardprofile", "Board Profile (outside the reference group)", "Board Profile (นอกกลุ่มอ้างอิง)");
+const BP_OUTSIDE = () => PLB("outside_sample", "Outside the reference sample", "นอกโดเมน / Outside the reference sample");
+const BP_CM = () => PLB("critical_mass", "Critical mass = three or more women directors. Torchia, Calabrò & Huse (2011) report that boards moving from one or two women to at least three were associated with higher firm organizational innovation.",
+  "Critical mass = กรรมการหญิงตั้งแต่ 3 คนขึ้นไป · Torchia, Calabrò & Huse (2011) รายงานว่าคณะกรรมการที่เปลี่ยนจากกรรมการหญิง 1–2 คนเป็นอย่างน้อย 3 คน สัมพันธ์กับนวัตกรรมเชิงองค์กรของบริษัทที่สูงขึ้น");
+const BP_CM_EN = () => { const P = window.PILOT_LABELS || {}; return typeof P.critical_mass_en === "string" && P.critical_mass_en ? P.critical_mass_en : null; };
+/** กลุ่มธุรกิจ — ไม่มีค่าตั้งต้น (F7) · "กลุ่มธุรกิจการเงิน (Financials)" ตามบันทึกอาจารย์ 14 พ.ย. (ไม่ใช้คำว่า สถาบันการเงิน) */
+const OD_SECTORS = () => ({
+  fin: PLB("financials", "Financials", "กลุ่มธุรกิจการเงิน (Financials)"),
+  other: T("Other industry outside the reference base (outside SET industries 1–7)", "อุตสาหกรรมอื่นนอกฐานอ้างอิง (นอก SET อุตสาหกรรม 1–7)"),
+  noen: T("No English letter to shareholders", "ไม่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ") });
+/* ค่าที่บันทึกจากรุ่นเดิม: กลุ่มธุรกิจเดิม (bank / ins) → Financials · ขนาดคณะตั้งต้น 12 ของรุ่นเดิมไม่ถือเป็นค่าที่ผู้ใช้กรอก */
+(() => { const o = PL.od || (PL.od = {});
+  if (o.sector === "bank" || o.sector === "ins") o.sector = "fin";
+  if (!o._v2) { if (o.bsize === 12 && o.femN === 2 && !o.name) { o.bsize = null; o.femN = null; o.famN = null; } o._v2 = 1; }
+  ["name", "sector"].forEach(k => { if (o[k] == null) o[k] = ""; });
+})();
+/** บริษัทที่หน้านำเข้าส่งมา (กลุ่ม 4–5) — รูปแบบยืดหยุ่น: {ticker,name,industry,financial,bsize|board_size,femN|fem_count|women|fem(สัดส่วน),famN|fam_count|fam(สัดส่วน),pol,group,at} */
+function bpTarget() { try { const o = JSON.parse(localStorage.getItem("ois_bp_target_v1") || "null"); return o && typeof o === "object" ? o : null; } catch (e) { return null; } }
+function bpApplyTarget(force) {
+  const t = bpTarget(); if (!t) return null;
+  const sig = JSON.stringify(t); if (!force && PL.od._bpSig === sig) return t;
+  const n = v => v === "" || v === null || v === undefined || isNaN(+v) ? null : +v;
+  const inp = Object.assign({}, t, t.inputs || {});
+  const bs = n(inp.bsize ?? inp.board_size ?? inp.boardSize ?? inp.directors);
+  const cnt = (a, b, r) => { const x = n(a ?? b); if (x !== null) return Math.round(x); const p = n(r); return p !== null && bs ? Math.round((p > 1 ? p / 100 : p) * bs) : null; };
+  Object.assign(PL.od, { name: String(t.name || t.ticker || "").slice(0, 120), ticker: t.ticker || "",
+    sector: t.financial || /financ|การเงิน/i.test(String(t.industry || t.sector || "")) ? "fin" : t.noEnglish || t.no_en ? "noen" : "other",
+    bsize: bs, femN: cnt(inp.femN, inp.fem_count ?? inp.women, inp.fem), famN: cnt(inp.famN, inp.fam_count, inp.fam),
+    pol: inp.pol ? 1 : 0, draft: "", _bpSig: sig, _bpFrom: t.ticker || t.name || "1" });
+  plSave(); return t;
+}
 let _odRef = null;
 const odQ = x => Math.round(x * 1e6) / 1e6;
+/* เปอร์เซ็นไทล์เทียบ REF-928 — ออฟไลน์คำนวณจากจุดอ้างอิงที่ฝังไว้ (ไม่แสดงค่าเฉลี่ย/จุดตัด) · เซิร์ฟเวอร์ถาม POST /api/outdomain
+   ปัด 6 ตำแหน่งทั้งฐานและค่าป้อนก่อนจัดอันดับ (ตรงกับ Engine.od ใน server/ois_engine.py) */
 function odRef() {
   if (_odRef) return _odRef;
   if (OIS_SRV) return _odRef = { W: [], F: [] };
   const W = REF_PTS.map(p => odQ(p[8] + OM.W)).sort((a, b) => a - b), F = REF_PTS.map(p => odQ(p[6] + OM.F)).sort((a, b) => a - b);
   return _odRef = { W, F };
 }
-/** แถบฮิสโตแกรม SVG ของฐานอ้างอิง (OIS.hist · ค่าดิบ ช่องละ 5 จุดเปอร์เซ็นต์) พร้อมเส้นตำแหน่งค่าที่ป้อน */
+/** แถบฮิสโตแกรมของการกระจายในฐานอ้างอิง (OIS.hist · ช่องละ 5 จุดเปอร์เซ็นต์) พร้อมเส้นตำแหน่งค่าที่ป้อน — ไม่มีจุดของบริษัทอื่น */
 function odStrip(key, v, color) {
   const H0 = OIS.hist || {}, bins = (H0[key] || []).slice(0, 14), bw0 = H0.w || .05, mx = bins.length * bw0 || .7;
   const top = Math.max(1, ...bins), W = 320, H = 56, bw = W / Math.max(1, bins.length);
   const bars = bins.map((b, i) => `<rect x="${(i * bw).toFixed(1)}" y="${(H - 10 - b / top * (H - 14)).toFixed(1)}" width="${(bw - 1.5).toFixed(1)}" height="${(b / top * (H - 14)).toFixed(1)}" rx="1.5" fill="var(--q3)"/>`).join("");
   const x = Math.min(W - 1, v / mx * W);
-  return `<svg class="pl-hist" viewBox="0 0 ${W} ${H}" role="img" aria-label="ตำแหน่งค่าเทียบฐานอ้างอิง">${bars}
+  return `<svg class="pl-hist" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(T("Position against the reference distribution", "ตำแหน่งค่าเทียบการกระจายของฐานอ้างอิง"))}">${bars}
     <line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="2" y2="${H - 8}" stroke="${color}" stroke-width="2"/>
     <text x="0" y="${H - 1}" font-size="8" fill="var(--ink-3)">0%</text><text x="${W}" y="${H - 1}" font-size="8" fill="var(--ink-3)" text-anchor="end">${fmt(mx * 100, 0)}%</text></svg>`;
 }
 function odCalc() {
-  const o = PL.od, r = odRef(), bs = Math.max(1, +o.bsize || 1);
+  const o = PL.od, ok = +o.bsize >= 1, r = odRef(), bs = ok ? +o.bsize : NaN;
+  if (!ok) return { ok, bs, fem: NaN, fam: NaN, femP: NaN, famP: NaN, fn: null };
   const fem = clamp((+o.femN || 0) / bs, 0, 1), fam = clamp((+o.famN || 0) / bs, 0, 1);
   if (OIS_SRV) { const p = OIS_REMOTE.od({ fem_count: +o.femN || 0, fam_count: +o.famN || 0, bsize: bs }) || {};
-    return { bs, fem, fam, femP: p.femP ?? NaN, famP: p.famP ?? NaN, fn: femaleN(fem, bs) }; }
-  return { bs, fem, fam, femP: midRank(r.W, odQ(fem)), famP: midRank(r.F, odQ(fam)), fn: femaleN(fem, bs) };
+    return { ok, bs, fem, fam, femP: p.femP ?? NaN, famP: p.famP ?? NaN, fn: Math.round(+o.femN || 0) }; }
+  return { ok, bs, fem, fam, femP: midRank(r.W, odQ(fem)), famP: midRank(r.F, odQ(fam)), fn: Math.round(+o.femN || 0) };
 }
 function odDraft() {
-  const o = PL.od, c = odCalc(), nm = o.name.trim() || "บริษัท";
-  return `ในปีบัญชี ${bodYear()} คณะกรรมการ${nm}ได้ใช้ข้อมูลเชิงพรรณนาเปรียบเทียบองค์ประกอบของคณะกรรมการกับฐานอ้างอิงบริษัทจดทะเบียนนอกกลุ่มการเงิน (928 บริษัท-ปี) ประกอบการหารือเรื่องการพัฒนาคณะกรรมการ ` +
-    `โดยสัดส่วนกรรมการหญิงร้อยละ ${fmt(c.fem * 100, 1)} (${c.fn} คน จาก ${c.bs} คน) อยู่ที่เปอร์เซ็นไทล์ ${fmt(c.femP, 0)} และสัดส่วนกรรมการที่มีความสัมพันธ์กับผู้ถือหุ้นใหญ่/ครอบครัวร้อยละ ${fmt(c.fam * 100, 1)} อยู่ที่เปอร์เซ็นไทล์ ${fmt(c.famP, 0)} ของฐานอ้างอิง ` +
-    `งานวิจัยที่อ้างอิงพบความสัมพันธ์ (association) ระหว่างองค์ประกอบคณะกรรมการบางลักษณะกับระดับกิจกรรมนวัตกรรมแบบเปิดในบริษัทกลุ่มอ้างอิง ซึ่งไม่ใช่ความสัมพันธ์เชิงสาเหตุ และเนื่องจาก${nm}อยู่นอกกลุ่มอ้างอิง จึงไม่มีการจัดระดับ (tier) หรือคะแนนเปรียบเทียบ ` +
+  const o = PL.od, c = odCalc(), nm = o.name.trim() || T("the company", "บริษัท");
+  if (!c.ok) return "";
+  if (S.lang === "EN") return `In fiscal year ${bodYear() - 543}, the board of ${nm} used descriptive information comparing its board composition with the distribution of the REF-928 reference base (928 firm-years of listed companies) as context for its discussion of board development. ` +
+    `Women directors were ${fmt(c.fem * 100, 1)}% of the board (${c.fn} of ${c.bs}), a descriptive position at percentile ${fmt(c.femP, 0)} of the reference distribution, and directors related to major shareholders or the family were ${fmt(c.fam * 100, 1)}%, at percentile ${fmt(c.famP, 0)}. ` +
+    `These positions describe where the values sit in the reference distribution; they are not scores and do not rank the company against other companies. Because ${nm} is outside the reference sample, no tier, score or what-if result is produced. ` +
+    `The board uses this information only as context for reviewing its skill matrix and its board-level self-assessment; no individual director is assessed.`;
+  return `ในปีบัญชี ${bodYear()} คณะกรรมการ${nm}ได้ใช้ข้อมูลเชิงพรรณนาเปรียบเทียบองค์ประกอบของคณะกรรมการกับการกระจายในฐานอ้างอิง REF-928 (928 บริษัท-ปีของบริษัทจดทะเบียน) ประกอบการหารือเรื่องการพัฒนาคณะกรรมการ ` +
+    `โดยสัดส่วนกรรมการหญิงร้อยละ ${fmt(c.fem * 100, 1)} (${c.fn} คน จาก ${c.bs} คน) อยู่ที่ตำแหน่งเปอร์เซ็นไทล์ ${fmt(c.femP, 0)} ของการกระจายในฐานอ้างอิง และสัดส่วนกรรมการที่มีความสัมพันธ์กับผู้ถือหุ้นใหญ่/ครอบครัวร้อยละ ${fmt(c.fam * 100, 1)} อยู่ที่ตำแหน่งเปอร์เซ็นไทล์ ${fmt(c.famP, 0)} ` +
+    `ตำแหน่งดังกล่าวเป็นข้อมูลเชิงพรรณนา ไม่ใช่คะแนน และไม่ใช้จัดอันดับหรือเปรียบเทียบกับบริษัทอื่น และเนื่องจาก${nm}อยู่นอกกลุ่มอ้างอิง จึงไม่มีการจัดระดับ คะแนน หรือผลจำลองสถานการณ์ ` +
     `คณะกรรมการใช้ข้อมูลดังกล่าวเป็นบริบทประกอบการทบทวนทักษะและองค์ประกอบของคณะกรรมการ (skill matrix) และการประเมินตนเองระดับคณะเท่านั้น ไม่มีการประเมินกรรมการรายบุคคล`;
 }
 function viewOutdomain() {
-  const o = PL.od, c = odCalc();
-  const inp = (k, lab, type, extra) => `<label class="pl-lab">${lab}<input class="inp" data-od="${k}" type="${type}" value="${esc(o[k])}" ${extra || ""}></label>`;
-  return pageHead("Pilot · Use Case 2", "โหมดนอกกลุ่มอ้างอิง (out of domain) — ธนาคาร / การเงิน / ไม่มีสารภาษาอังกฤษ",
-    `ฐานอ้างอิง REF-928 ครอบคลุม SET อุตสาหกรรม 1–7 เท่านั้น · บริษัทนอกกลุ่มนี้ได้เฉพาะ<b>ข้อมูลเชิงพรรณนา</b>และชุดคำถาม BOD ·
-     ระบบจะไม่คำนวณ tier, percentile หรือ Signal B ให้ (R4)`)
-    + `<div class="sbar mute" style="margin-bottom:14px"><div class="sbtop"><span class="pill crit">out of domain — ไม่แสดง tier/percentile (R4)</span>
-        <b>${esc(o.name.trim() || "บริษัทนอกกลุ่มอ้างอิง")}</b> · ${esc(OD_SECTORS[o.sector] || "")}</div>
-      <div class="sbmsg">ค่าที่แสดงด้านล่างเป็นตำแหน่งของสัดส่วนองค์ประกอบคณะกรรมการเทียบการกระจายในฐานอ้างอิง ไม่ใช่คะแนน และไม่ได้บอกว่าดีหรือไม่ดี</div></div>`
+  const tg = bpApplyTarget(false), o = PL.od, c = odCalc(), SEC = OD_SECTORS();
+  const inp = (k, lab, type, extra) => `<label class="pl-lab">${lab}<input class="inp" data-od="${k}" type="${type}" value="${esc(o[k] ?? "")}" ${extra || ""}></label>`;
+  const cm = BP_CM_EN() && S.lang === "EN" ? BP_CM_EN() : BP_CM();
+  const pctTxt = p => T(`descriptive position: percentile ${fmt(p, 0)} of the reference distribution`, `ตำแหน่งเชิงพรรณนา: เปอร์เซ็นไทล์ ${fmt(p, 0)} ของการกระจายในฐานอ้างอิง`);
+  return pageHead("Board Profile", BP_TITLE(),
+    T(`For a board outside the REF-928 reference group (SET industries 1–7 with an English letter to shareholders), including companies routed from the import check (client groups 4–5, incl. Financials). The page gives <b>descriptive positions only</b> — no tier, OpenInnoScore or What-if (R4 · D2).`,
+      `สำหรับคณะกรรมการที่อยู่นอกกลุ่มอ้างอิง REF-928 (SET อุตสาหกรรม 1–7 ที่มีสารถึงผู้ถือหุ้นภาษาอังกฤษ) รวมบริษัทที่ส่งมาจากการตรวจตอนนำเข้า (ลูกค้ากลุ่ม 4–5 รวมกลุ่มธุรกิจการเงิน) · หน้านี้ให้<b>ตำแหน่งเชิงพรรณนาเท่านั้น</b> — ไม่มีระดับ (tier) คะแนน OpenInnoScore หรือ What-if (R4 · D2)`))
+    + `<div class="sbar mute bp-bar" style="margin-bottom:14px"><div class="sbtop"><span class="pill crit" id="bpOutside">${esc(BP_OUTSIDE())}</span>
+        <b>${esc(o.name.trim() || T("Company (not named)", "บริษัท (ยังไม่ระบุชื่อ)"))}</b>${o.sector ? ` · ${esc(SEC[o.sector] || "")}` : ""}</div>
+      <div class="sbmsg">${T("Values below are positions of board-composition ratios within the reference distribution. They are not scores, do not say good or bad, and are not compared with or ranked against any other company.",
+        "ค่าด้านล่างเป็นตำแหน่งของสัดส่วนองค์ประกอบคณะกรรมการในการกระจายของฐานอ้างอิง ไม่ใช่คะแนน ไม่ได้บอกว่าดีหรือไม่ดี และไม่เทียบหรือจัดอันดับกับบริษัทอื่น")}</div></div>`
+    + (tg ? `<div class="note bp-imp" style="margin-bottom:12px">${T("Routed from the import page", "ส่งมาจากหน้านำเข้าข้อมูล")}: <b>${esc(tg.name || tg.ticker || "—")}</b>${tg.industry ? ` · ${esc(tg.industry)}` : ""}${tg.group ? ` · ${T("client group", "กลุ่มลูกค้า")} ${esc(tg.group)}` : ""}
+        <button class="btn g" id="plOdReload" style="padding:3px 10px;margin-left:8px">${T("Reload imported values", "โหลดค่าที่นำเข้าอีกครั้ง")}</button></div>` : "")
     + `<div class="grid g-side">
-      <div class="card"><h3>ข้อมูลองค์ประกอบคณะกรรมการ</h3><p class="desc">กรอกจำนวนคน (ระดับคณะ) — ไม่ต้องระบุชื่อ</p>
-        ${inp("name", "ชื่อบริษัท (แสดงผลเท่านั้น ไม่บันทึกออกนอกเครื่อง)", "text", 'placeholder="เช่น ธนาคาร ก"')}
-        <label class="pl-lab">กลุ่มธุรกิจ<select class="sel" data-od="sector">${Object.entries(OD_SECTORS).map(([k, v]) => `<option value="${k}"${o.sector === k ? " selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
-        ${inp("bsize", "จำนวนกรรมการทั้งหมด (คน)", "number", 'min="1" max="30"')}
-        ${inp("femN", "กรรมการหญิง (คน)", "number", 'min="0" max="30"')}
-        ${inp("famN", "กรรมการที่มีความสัมพันธ์กับผู้ถือหุ้นใหญ่/ครอบครัว (คน)", "number", 'min="0" max="30"')}
-        <label class="pl-lab">มีกรรมการที่มีความเชื่อมโยงทางการเมือง (political ties)
-          <div class="seg" style="margin-top:4px"><button class="btn ${o.pol ? "g" : "p"}" data-odpol="0" style="padding:5px 12px">ไม่มี</button><button class="btn ${o.pol ? "p" : "g"}" data-odpol="1" style="padding:5px 12px">มี</button></div></label>
+      <div class="card"><h3>${T("Board composition", "ข้อมูลองค์ประกอบคณะกรรมการ")}</h3><p class="desc">${T("Enter head counts (board level) — no names. Actual board size is required.", "กรอกจำนวนคน (ระดับคณะ) — ไม่ต้องระบุชื่อ · ต้องกรอกจำนวนกรรมการจริง")}</p>
+        ${inp("name", T("Company name (display only, not sent off this device)", "ชื่อบริษัท (แสดงผลเท่านั้น ไม่บันทึกออกนอกเครื่อง)"), "text", `placeholder="${esc(T("e.g. Company A", "เช่น บริษัท ก"))}"`)}
+        <label class="pl-lab">${T("Business group", "กลุ่มธุรกิจ")}<select class="sel" data-od="sector"><option value=""${o.sector ? "" : " selected"}>${T("— select —", "— เลือก —")}</option>${Object.entries(SEC).map(([k, v]) => `<option value="${k}"${o.sector === k ? " selected" : ""}>${esc(v)}</option>`).join("")}</select></label>
+        ${inp("bsize", T("Total directors (persons)", "จำนวนกรรมการทั้งหมด (คน)"), "number", 'min="1" max="30"')}
+        ${inp("femN", T("Women directors (persons)", "กรรมการหญิง (คน)"), "number", 'min="0" max="30"')}
+        ${inp("famN", T("Directors related to major shareholders / family (persons)", "กรรมการที่มีความสัมพันธ์กับผู้ถือหุ้นใหญ่/ครอบครัว (คน)"), "number", 'min="0" max="30"')}
+        <label class="pl-lab">${T("Directors with political ties", "มีกรรมการที่มีความเชื่อมโยงทางการเมือง (political ties)")}
+          <div class="seg" style="margin-top:4px"><button class="btn ${o.pol ? "g" : "p"}" data-odpol="0" style="padding:5px 12px">${T("None", "ไม่มี")}</button><button class="btn ${o.pol ? "p" : "g"}" data-odpol="1" style="padding:5px 12px">${T("Yes", "มี")}</button></div></label>
       </div>
       <div class="stack">
-        <div class="card"><h3>(2) โปรไฟล์เชิงพรรณนาเทียบ REF-928</h3>
-          <p class="desc">เปอร์เซ็นไทล์แบบ mid-rank ของค่าที่ป้อน เทียบการกระจายของ 928 บริษัท-ปี · แถบ = ฮิสโตแกรมของฐานอ้างอิง (ช่องละ 5 จุดเปอร์เซ็นต์) เส้น = ตำแหน่งของบริษัทนี้ ·
-            ค่าเฉลี่ยและจุดตัดในบันทึกพารามิเตอร์ไม่แสดงบนหน้าจอ${OIS_SRV ? " · เปอร์เซ็นไทล์คำนวณบนเซิร์ฟเวอร์" : ""}</p>
-          <div class="grid g2">
-            <div class="pl-prof"><div class="k">สัดส่วนกรรมการหญิง</div><div class="v">${fmt(c.fem * 100, 1)}%<span> · เปอร์เซ็นไทล์ ${fmt(c.femP, 0)}</span></div>
+        <div class="card"><h3>${T("(2) Descriptive profile against the REF-928 distribution", "(2) โปรไฟล์เชิงพรรณนาเทียบการกระจายของ REF-928")}</h3>
+          <p class="desc">${T("Mid-rank percentile of the entered value within the distribution of 928 firm-years · bars = reference histogram (5-point bins), line = this board · reference means and cut values are not shown",
+            "เปอร์เซ็นไทล์แบบ mid-rank ของค่าที่ป้อนในการกระจายของ 928 บริษัท-ปี · แถบ = ฮิสโตแกรมของฐานอ้างอิง (ช่องละ 5 จุดเปอร์เซ็นต์) เส้น = คณะกรรมการนี้ · ไม่แสดงค่าเฉลี่ยและจุดตัดของฐานอ้างอิง")}${OIS_SRV ? T(" · computed on the server", " · คำนวณบนเซิร์ฟเวอร์") : ""}</p>
+          ${c.ok ? `<div class="grid g2">
+            <div class="pl-prof"><div class="k">${T("Women directors", "สัดส่วนกรรมการหญิง")}</div><div class="v">${fmt(c.fem * 100, 1)}%<span> · ${pctTxt(c.femP)}</span></div>
               ${odStrip("W", c.fem, "var(--s1)")}
-              <div class="u">กรรมการหญิง ${c.fn} คน ${c.fn < CRIT_N ? `— <b>ต่ำกว่า critical mass (${CRIT_N} คน)</b> งานวิจัยพบว่าบอร์ดที่มี 1–2 คนไม่ต่างจาก 0 คนอย่างมีนัย` : `— ถึง critical mass (≥ ${CRIT_N} คน)`}</div></div>
-            <div class="pl-prof"><div class="k">สัดส่วนกรรมการครอบครัว / ผู้ถือหุ้นใหญ่</div><div class="v">${fmt(c.fam * 100, 1)}%<span> · เปอร์เซ็นไทล์ ${fmt(c.famP, 0)}</span></div>
+              <div class="u">${T(`Women directors: ${c.fn} of ${c.bs}`, `กรรมการหญิง ${c.fn} คน จาก ${c.bs} คน`)} — ${c.fn < CRIT_N ? T(`below critical mass (${CRIT_N})`, `ต่ำกว่า critical mass (${CRIT_N} คน)`) : T(`critical mass reached (≥ ${CRIT_N})`, `ถึง critical mass (≥ ${CRIT_N} คน)`)}
+                <div class="bp-cm" id="bpCm">${esc(cm)}</div></div></div>
+            <div class="pl-prof"><div class="k">${T("Family / major-shareholder directors", "สัดส่วนกรรมการครอบครัว / ผู้ถือหุ้นใหญ่")}</div><div class="v">${fmt(c.fam * 100, 1)}%<span> · ${pctTxt(c.famP)}</span></div>
               ${odStrip("F", c.fam, "var(--s2)")}
-              <div class="u">ตำแหน่งเทียบการกระจายของฐานอ้างอิง — ไม่ใช่คะแนนและไม่ได้บอกว่าดีหรือไม่ดี</div></div>
-          </div>
-          <div class="note ${o.pol ? "warn" : ""}" style="margin-top:12px"><b>Political ties: ${o.pol ? "มี" : "ไม่มี"}</b> · บริบท: บริษัท-ปีในฐานอ้างอิง REF-928 ส่วนใหญ่มีความเชื่อมโยงทางการเมือง ·
-            <b>political ties ไม่ใช้เป็นเหตุผลเชิงบวก (R6)</b> และเป็นข้อมูลอ่อนไหวตาม PDPA ม.26 — แสดงเป็นบริบทระดับคณะเท่านั้น</div>
+              <div class="u">${T("Position within the reference distribution — not a score and not a comparison with other companies", "ตำแหน่งในการกระจายของฐานอ้างอิง — ไม่ใช่คะแนนและไม่ใช่การเทียบกับบริษัทอื่น")}</div></div>
+          </div>` : `<div class="note warn" id="bpNeedSize">${T("Enter the actual number of directors to see the descriptive profile.", "กรอกจำนวนกรรมการจริงเพื่อดูโปรไฟล์เชิงพรรณนา")}</div>`}
+          <div class="note ${o.pol ? "warn" : ""}" style="margin-top:12px"><b>Political ties: ${o.pol ? T("yes", "มี") : T("none", "ไม่มี")}</b> · ${T("Political ties are not used as a positive reason (R6) and are sensitive data under PDPA s.26 — shown as board-level context only.",
+            "political ties ไม่ใช้เป็นเหตุผลเชิงบวก (R6) และเป็นข้อมูลอ่อนไหวตาม PDPA ม.26 — แสดงเป็นบริบทระดับคณะเท่านั้น")}</div>
         </div>
         <div class="grid g2">
-          <div class="card"><h3>(1) ชุดคำถาม BOD OI-1…OI-6</h3>
-            <p class="desc">ส่วนที่ใช้ได้เต็มรูปแบบกับบริษัทนอกกลุ่มอ้างอิง — ประเมินตนเองระดับคณะตาม CG Code 2560</p>
-            <button class="btn p" data-goto="bod">ไปที่ BOD Self-Assessment →</button>
-            ${Object.keys(PL.bod.a).length ? `<div class="u" style="font-size:11.5px;color:var(--ink-3);margin-top:8px">ตอบแล้ว ${Object.keys(PL.bod.a).length}/6 ประเด็น</div>` : ""}</div>
-          <div class="card"><h3>(3) ร่างข้อความระดับคณะสำหรับ 56-1</h3>
-            <p class="desc">ส่วนที่ 2 ข้อ 7–8 · ถ้อยคำแบบ association ไม่ใช่ causal · ไม่มี tier/คะแนน</p>
-            <button class="btn s" id="plOdDraft">สร้างร่างข้อความ</button>
+          <div class="card"><h3>${T("(1) BOD question set OI-1…OI-6", "(1) ชุดคำถาม BOD OI-1…OI-6")}</h3>
+            <p class="desc">${T("Fully usable for a board outside the reference group — board-level self-assessment under the CG Code 2017", "ส่วนที่ใช้ได้เต็มรูปแบบกับคณะกรรมการนอกกลุ่มอ้างอิง — ประเมินตนเองระดับคณะตาม CG Code 2560")}</p>
+            <button class="btn p" data-goto="bod">${T("Go to BOD Self-Assessment →", "ไปที่ BOD Self-Assessment →")}</button>
+            ${Object.keys(PL.bod.a).length ? `<div class="u" style="font-size:11.5px;color:var(--ink-3);margin-top:8px">${T(`Answered ${Object.keys(PL.bod.a).length}/6`, `ตอบแล้ว ${Object.keys(PL.bod.a).length}/6 ประเด็น`)}</div>` : ""}</div>
+          <div class="card"><h3>${T("(3) Board-level draft text for 56-1", "(3) ร่างข้อความระดับคณะสำหรับ 56-1")}</h3>
+            <p class="desc">${T("Part 2 items 7–8 · associational wording · no tier or score", "ส่วนที่ 2 ข้อ 7–8 · ถ้อยคำแบบ association ไม่ใช่ causal · ไม่มีระดับหรือคะแนน")}</p>
+            <button class="btn s" id="plOdDraft" ${c.ok ? "" : "disabled"}>${T("Create draft text", "สร้างร่างข้อความ")}</button>
             ${o.draft ? `<textarea class="inp pl-ta" rows="8" readonly style="margin-top:10px">${esc(o.draft)}</textarea>
-              <div class="pl-tools"><button class="btn g" id="plOdCopy">คัดลอก</button></div>` : ""}</div>
+              <div class="pl-tools"><button class="btn g" id="plOdCopy">${T("Copy", "คัดลอก")}</button></div>` : ""}</div>
         </div>
-        <div class="note" style="font-size:11.2px">${PL_LEGAL} · ไม่มี Signal B สำหรับบริษัทนอกกลุ่มอ้างอิง เพราะไม่มีค่า promotion focus และฐานอ้างอิงไม่ครอบคลุมกลุ่มการเงิน</div>
+        <div class="note" style="font-size:11.2px">${PL_LEGAL}</div>
       </div></div>`;
 }
 function wireOutdomain(h) {
   h.querySelectorAll("[data-od]").forEach(el => el.onchange = () => {
-    const k = el.dataset.od; PL.od[k] = el.type === "number" ? Math.max(0, +el.value || 0) : el.value; PL.od.draft = ""; plSave(); render();
+    const k = el.dataset.od; PL.od[k] = el.type === "number" ? (el.value === "" ? null : Math.max(0, Math.round(+el.value || 0))) : el.value; PL.od.draft = ""; plSave(); render();
   });
   h.querySelectorAll("[data-odpol]").forEach(b => b.onclick = () => { PL.od.pol = +b.dataset.odpol; PL.od.draft = ""; plSave(); render(); });
   const d = h.querySelector("#plOdDraft"); if (d) d.onclick = () => { PL.od.draft = odDraft(); plSave(); render(); };
   const c = h.querySelector("#plOdCopy"); if (c) c.onclick = () => plCopy(PL.od.draft);
+  const rl = h.querySelector("#plOdReload"); if (rl) rl.onclick = () => { bpApplyTarget(true); render(); };
 }
+window.bpApplyTarget = bpApplyTarget;
+
 
 /* ============================================================================
    C · ข้อสั่งการของบอร์ดและ Compliance program (Level 3 add-on)
@@ -412,401 +463,21 @@ function wireDirectives(h) {
 }
 
 /* ============================================================================
-   D · แบบสอบถามทดสอบการยอมรับ — consent + anonymous (REC exemption)
+   D · แบบสอบถามประเมินต้นแบบนวัตกรรม (ขั้นตอนที่ 4.2) ย้ายไป v2_irb.js (MVP1 · ตามภาพจำลองของอาจารย์ 30 ต.ค. 2569)
+   ส่วนนี้คงไว้เฉพาะตัวช่วยที่หน้าอื่นใช้ร่วม: plMe / plIsAdmin (สิทธิ์ผู้ดูแลจาก /api/me) และ svMedian
    ============================================================================ */
-const SUS_ITEMS = ["ฉันคิดว่าฉันอยากใช้ระบบนี้บ่อย ๆ", "ฉันพบว่าระบบนี้ซับซ้อนโดยไม่จำเป็น", "ฉันคิดว่าระบบนี้ใช้งานง่าย",
-  "ฉันคิดว่าฉันต้องการความช่วยเหลือจากผู้เชี่ยวชาญทางเทคนิคจึงจะใช้ระบบนี้ได้", "ฉันพบว่าฟังก์ชันต่าง ๆ ในระบบนี้ทำงานร่วมกันได้ดี",
-  "ฉันคิดว่าระบบนี้มีความไม่สอดคล้องกันมากเกินไป", "ฉันคิดว่าคนส่วนใหญ่จะเรียนรู้การใช้ระบบนี้ได้อย่างรวดเร็ว", "ฉันพบว่าระบบนี้ใช้งานยุ่งยากมาก",
-  "ฉันรู้สึกมั่นใจมากในการใช้ระบบนี้", "ฉันต้องเรียนรู้หลายสิ่งก่อนจึงจะเริ่มใช้ระบบนี้ได้"];
-const TAM_ITEMS = ["ท่านสามารถเรียนรู้การใช้งานระบบจำลองได้ง่าย", "ท่านเข้าใจเมทริกซ์กลยุทธ์ 2x2 (Strategy Matrix) ได้ด้วยตนเอง",
-  "ท่านสามารถเรียกดูรายงานวินิจฉัยเชิงพรรณนา (Descriptive Diagnostic Report) ขององค์กรเปรียบเทียบในอุตสาหกรรมได้สะดวก",
-  "หน้าจอแสดงผลภาพรวม (Dashboard Layout) มีความชัดเจนตามสิทธิ์การใช้งาน",
-  "คำอธิบายเชิงลึกประกอบผลการประเมินและการแสดงสถิติดัชนีกลุ่ม (Percentile) ช่วยให้เข้าใจผลได้",
-  "ดัชนีกลุ่มอุตสาหกรรม (Industry-adjusted Percentile) ช่วยให้องค์กรมองเห็นตำแหน่งของตนเทียบกับคู่แข่ง",
-  "รายงานผลสัมฤทธิ์เชิงประจักษ์ (Evidence Base) ช่วยลดเวลาของฝ่ายกลยุทธ์/เลขานุการบริษัทในการเตรียมวาระ BOD Evaluation",
-  "ระบบสะท้อนช่องว่าง (Headroom) ระหว่างโครงสร้างผู้นำกับกลยุทธ์นวัตกรรมได้", "ระบบมีประโยชน์ต่อองค์กรของท่าน",
-  "ระบบช่วยลดอัตวิสัยในการประเมินของคณะกรรมการ", "ท่านจะนำรายงานไปใช้กับ Workflow การประเมินบอร์ดประจำปี",
-  "ท่านเชื่อมั่นต่อความปลอดภัย เนื่องจากระบบรันบนข้อมูลสาธารณะ (56-1 One Report) และแยก Engine หลังบ้านเพื่อรักษาความลับทางการค้า",
-  "What-if Studio ให้มุมมองที่ดีกว่าการประเมินแบบเดิม", "ท่านจะนำระบบไปใช้เมื่อเป็น Full Scale SaaS",
-  "ท่านจะผลักดันให้ฝ่ายกลยุทธ์/กำกับกฎเกณฑ์ใช้ระบบนี้", "ท่านจะใช้ระบบเพื่อติดตามผลอย่างต่อเนื่อง",
-  "ท่านจะแนะนำระบบนี้ให้พันธมิตรหรือบริษัทมหาชนอื่น"];
-const TAM_GRP = [["PEOU", "การรับรู้ว่าใช้งานง่าย", 1, 5], ["PU", "การรับรู้ประโยชน์", 6, 9], ["ATT", "ทัศนคติ", 10, 13], ["BI", "ความตั้งใจใช้", 14, 17]];
-const LIK = ["ไม่เห็นด้วยอย่างยิ่ง", "ไม่เห็นด้วย", "เฉย ๆ", "เห็นด้วย", "เห็นด้วยอย่างยิ่ง"];
-const COMP_Q = [
-  { q: "tier ของ OpenInnoScore เป็นความน่าจะเป็นที่บริษัทจะผิดนัดชำระหนี้", o: ["จริง", "ไม่จริง — tier เป็นลำดับควอร์ไทล์ของสัญญาณเทียบฐานอ้างอิง ไม่ใช่ความน่าจะเป็นใด ๆ"], c: 1 },
-  { q: "บริษัทที่ได้คะแนนสูงใน quadrant C (Develop) หมายถึงมีสัญญาณ open innovation เด่น", o: ["จริง", "ไม่จริง — คะแนนสูงใน C มาจากความเข้ากันของสองด้านที่ระมัดระวัง ไม่ใช่สัญญาณ open innovation"], c: 1 },
-  { q: "ปีที่ regime = FAIL ควรอ่านผลอย่างไร", o: ["ใช้ผลได้ตามปกติ", "อ่านอย่างระมัดระวัง ไม่ขึ้นธงสัญญาณ OI และระบุว่าปีนั้นไม่ผ่านเกณฑ์ validity", "ไม่ต้องแสดงผลเลย"], c: 1 },
-  { q: "ระบบให้คะแนนกรรมการรายบุคคลหรือไม่", o: ["ให้ — เพื่อใช้ประกอบการสรรหา", "ไม่ — ประเมินโครงสร้างคณะกรรมการระดับองค์กรเท่านั้น (PDPA ม.26)"], c: 1 },
-  { q: "ตัวเลขของระบบเป็นความสัมพันธ์เชิงสาเหตุ (การปรับบอร์ดจะทำให้นวัตกรรมเพิ่ม) หรือไม่", o: ["ใช่", "ไม่ — เป็นความสัมพันธ์เชิงสหสัมพันธ์จากข้อมูลย้อนหลัง"], c: 1 },
-];
-/* ส่วนที่ 4ข แทรกหลัง TAM — คงโครงสร้าง 6 ส่วนตามเอกสาร REC (ส่วนที่ 4 มีสองช่วงย่อย) */
-const SV_STEPS = ["เอกสารชี้แจงและความยินยอม", "ส่วนที่ 1 ข้อมูลทั่วไป", "ส่วนที่ 2 งานตามสถานการณ์", "ส่วนที่ 3 SUS", "ส่วนที่ 4 TAM", "ส่วนที่ 4ข คุณค่าเชิงพาณิชย์", "ส่วนที่ 5 ความเข้าใจ", "ส่วนที่ 6 ปลายเปิด"];
-const SV_DONE = SV_STEPS.length;
-const svShuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-/** การทดสอบที่ 1 (A/B) — จัดกลุ่มตอนให้ความยินยอม: grid = มี 2×2 · table = ข้อมูลชุดเดียวกันเป็นตาราง/ข้อความ
- *  ภาคผนวก ง: เดิมโยนเหรียญรายคน (n = 40 อาจได้กลุ่มไม่เท่ากัน) → จัดแบบสมดุล: ให้กลุ่มที่มีคนน้อยกว่า ·
- *  เท่ากันแล้วสลับตามลำดับ (ลำดับที่คู่ = grid) · ฉบับเซิร์ฟเวอร์นับจากฐานข้อมูลกลาง (/api/survey/arms) ถ้าเรียกได้ ไม่เช่นนั้นนับในเครื่อง */
-function svArm(counts) {
-  const g = counts.grid || 0, t = counts.table || 0;
-  if (g !== t) return g < t ? "grid" : "table";
-  return (g + t) % 2 === 0 ? "grid" : "table";
-}
-function svLocalCounts() {
-  const c = { grid: 0, table: 0 };
-  PL.survey.resp.forEach(r => { if (c[r.arm] !== undefined) c[r.arm]++; });
-  (PL.survey.started || []).forEach(a => { if (c[a] !== undefined) c[a]++; });   // เริ่มแล้วแต่ยังไม่ส่ง นับด้วยเพื่อให้สลับกลุ่มทันที
-  return c;
-}
-/** ฉบับเซิร์ฟเวอร์: เซิร์ฟเวอร์เป็นผู้จัดกลุ่มและเก็บถาวรต่อบัญชี (GET /api/survey/arms → { grid, table, arm }) — ตัวนับมาจาก
- *  การจัดกลุ่มบนเซิร์ฟเวอร์เท่านั้น แถวที่ส่งปลอมผ่าน API จึงเอียงตัวนับไม่ได้ และแถว survey ที่ส่งเข้าใช้กลุ่มของเซิร์ฟเวอร์เสมอ ·
- *  เรียกไม่ได้ (> 2 วินาที / ล้ม) → นับในเครื่อง (arm_src = "local") */
-async function svArmCounts() {
-  if (!PL_SRV) return { src: "local", c: svLocalCounts() };
-  try {
-    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 2000);
-    const r = await fetch("/api/survey/arms", { credentials: "same-origin", signal: ac.signal }); clearTimeout(tm);
-    if (r.ok) { const j = await r.json(); if (j && typeof j.grid === "number") return { src: "server", c: j, arm: j.arm || null }; }
-  } catch (e) { }
-  return { src: "local", c: svLocalCounts() };
-}
-const svNew = (arm, src) => {
-  let lens = null; try { lens = typeof ucLens === "function" ? (ucLens() || {}).id ?? null : null; } catch (e) { lens = null; }
-  return { id: plId(), arm: arm || svArm(svLocalCounts()), arm_src: src || "local", lens, demoT: (cur() || {}).t || null,
-    perm: { q4: svShuffle(["ok", "causal", "indiv", "other"]), q5: svShuffle(["ok", "zone", "cp", "tier"]) },
-    p1: {}, task: {}, tasks: {}, ti: 0, sus: {}, tam: {}, wtp: {}, comp: {}, open: {} };
-};
-const svDemo = r => { const c = (r && r.demoT && byT[r.demoT]) ? coOf(r.demoT) : cur(), v = verdictOf(c);
-  return { c, v, tier: v.tier, quad: v.quad, reg: v.regime || "ยังไม่ validate", cP: c.cP !== undefined ? c.cP : cpOf(c.promo),
-    sx: "AB".includes(v.quad) ? 1 : -1, sy: "AD".includes(v.quad) ? 1 : -1 }; };
-/** คำถามสำหรับที่ประชุมบอร์ดที่เหมาะกับแต่ละโซน (ตัวเลือกที่ถูกของงาน 4) */
-const SV_ZQ = {
-  A: "จะกำหนดตัวชี้วัดและรอบติดตามอย่างไร ให้แผนนวัตกรรมแบบเปิดที่ทั้ง CEO และบอร์ดหนุนอยู่แล้วเปลี่ยนเป็นผลลัพธ์ที่ตรวจสอบได้",
-  B: "เกณฑ์อนุมัติ ทบทวน และหยุดโครงการนวัตกรรมที่ CEO ผลักดัน ชัดเจนเพียงพอหรือไม่ และบอร์ดมีทักษะที่จะกำกับโครงการเหล่านี้หรือยัง",
-  C: "tier ที่สูงมาจากความระมัดระวังที่เข้ากัน — บริษัทมีฐานความพร้อม (ทักษะบอร์ด ทรัพยากร พันธมิตร) เพียงพอหรือยังหากจะเริ่มนวัตกรรมแบบเปิด",
-  D: "บอร์ดอยู่ในรูปแบบที่พร้อมหนุน แต่ฝ่ายจัดการยังไม่สื่อสารโอกาส — มีโอกาสจากพันธมิตรภายนอกใดที่ยังไม่ถูกนำเสนอต่อบอร์ด",
-};
-const SV_OPP = { A: "C", C: "A", B: "D", D: "B" };
-/** คำถามที่ถูกของงาน 4 = คำถามข้อแรกของช่องนั้นในเอกสารแนวทาง 2×2 ของลูกค้า (COMPASS) — ใช้ SV_ZQ เป็นค่าสำรอง */
-const svZQ = q => (typeof COMPASS === "object" && COMPASS[q] && COMPASS[q].qs && COMPASS[q].qs[0]) || SV_ZQ[q] || "—";
-const SV_TL = ["tier", "quad", "reg", "q4", "q5"];
-/** งาน 1–5 ของส่วนที่ 2 — คำถามและหลักฐานเหมือนกันทั้งสองกลุ่ม ต่างกันเฉพาะรูปแบบการแสดงหลักฐาน */
-function svTasks(r, d) {
-  const z = ZONES[d.quad] || { l: "—" };
-  const q4 = { ok: svZQ(d.quad), other: svZQ(SV_OPP[d.quad]),
-    causal: "บอร์ดต้องเพิ่มกรรมการหญิงเพื่อเพิ่มนวัตกรรมของบริษัท",
-    indiv: "ควรให้คะแนนกรรมการรายบุคคลเพื่อหาว่าใครทำให้ผลประเมินต่ำ" };
-  const bd = d.v.band || [0, 0];
-  const q5 = { ok: "การปรับองค์ประกอบคณะกรรมการจะทำให้ระดับนวัตกรรมแบบเปิดของบริษัทนี้เปลี่ยนไป",
-    zone: `ตำแหน่งของบริษัทเทียบฐานอ้างอิง REF-928 อยู่ในโซน ${z.l}`,
-    cp: `ภาษาของ CEO ${d.sx > 0 ? "เน้นโอกาสสูงกว่า" : "ต่ำกว่า"}ค่าเฉลี่ยฐานอ้างอิง`,
-    tier: `tier ที่แสดงคือ Tier ${d.tier} และช่วง 90% ${tierOf(bd[0]) !== tierOf(bd[1]) ? "คร่อมมากกว่าหนึ่ง tier" : "อยู่ใน tier เดียว"}` };
-  return [
-    { k: "tier", q: "งาน 1 — จากหลักฐานในกรอบ บริษัทสาธิตอยู่ tier ใด", o: [1, 2, 3, 4].map(v => ({ v, l: "Tier " + v })), ok: v => v === d.tier },
-    { k: "quad", q: "งาน 2 — บริษัทสาธิตอยู่ quadrant ใด", o: ["D", "A", "C", "B"].map(v => ({ v, l: `${ZONES[v].l} (${v})` })), ok: v => v === d.quad },
-    { k: "reg", q: "งาน 3 — ป้าย regime ของปีบัญชีที่แสดงคือข้อใด", o: ["PASS", "CAUTION", "FAIL", "ยังไม่ validate"].map(v => ({ v, l: v })), ok: v => v === d.reg },
-    { k: "q4", q: "งาน 4 — จากข้อมูลนี้ ข้อใดเป็นคำถามที่เหมาะสมที่สุดสำหรับนำเข้าที่ประชุมบอร์ด", o: (r.perm?.q4 || Object.keys(q4)).map(v => ({ v, l: q4[v] })), ok: v => v === "ok" },
-    { k: "q5", q: "งาน 5 — ข้อใดเป็นสิ่งที่ยังสรุปไม่ได้จากข้อมูลนี้", o: (r.perm?.q5 || Object.keys(q5)).map(v => ({ v, l: q5[v] })), ok: v => v === "ok" },
-  ];
-}
-/** ข้อความแถบสถานะ — ใช้เหมือนกันทั้งสองกลุ่ม */
-function svStatus(d) {
-  const v = d.v, bd = v.band || [NaN, NaN];
-  return `<div class="sbar ${esc(v.st.c)} pl-ev-sb"><div class="sbtop"><b>Tier ${v.tier}</b><span>ช่วง 90% ${fmt(bd[0], 1)}–${fmt(bd[1], 1)}</span>
-      <span class="pill mute">regime ปีบัญชี ${esc(v.fy)}: ${esc(d.reg)}</span></div>
-    <div class="sbmsg">${esc(v.st.s)}</div>
-    ${v.chips.length ? `<div class="sbchips">${v.chips.map(x => `<span class="chip">${esc(x.k)}</span>`).join("")}</div>` : ""}</div>`;
-}
-/** กลุ่ม grid — 2×2 ขนาดเล็ก ตำแหน่งจุดตามเครื่องหมายและขนาดของ cP / amp เทียบช่วงของ REF-928 */
-let _svSc = null;
-function svGrid(d) {
-  const c = d.c;
-  if (!_svSc) _svSc = { x: Math.max(...REF_PTS.map(p => Math.abs(p[0] - OM.P))) || 1, y: Math.max(...REF_PTS.map(p => Math.abs(p[1]))) || 1 };
-  const W = 340, H = 236, L = 30, R = 8, T = 8, B = 30, cx = (L + W - R) / 2, cy = (T + H - B) / 2, hw = (W - R - L) / 2 - 12, hh = (H - B - T) / 2 - 12;
-  /* ตำแหน่งตามเครื่องหมายของ quadrant ที่ระบบคำนวณ (ให้ภาพตรงกับตาราง) · ระยะจากเส้นแบ่งตามขนาด |cP|, |amp| */
-  const x = cx + d.sx * (6 + clamp(Math.abs(d.cP) / _svSc.x, 0, 1) * (hw - 6)), y = cy - d.sy * (6 + clamp(Math.abs(c.amp || 0) / _svSc.y, 0, 1) * (hh - 6));
-  const cell = (x0, y0, k) => `<rect x="${x0}" y="${y0}" width="${cx - L}" height="${cy - T}" fill="${ZONES[k].c}" fill-opacity=".07" stroke="var(--line)"/>
-    <text x="${x0 + (cx - L) / 2}" y="${y0 + 16}" font-size="11.5" font-weight="600" text-anchor="middle" fill="${ZONES[k].c}">${ZONES[k].l} (${k})</text>`;
-  return `<svg class="pl-mini" viewBox="0 0 ${W} ${H}" role="img" aria-label="Strategy Grid 2×2 ของบริษัทสาธิต">
-    ${cell(L, T, "D")}${cell(cx, T, "A")}${cell(L, cy, "C")}${cell(cx, cy, "B")}
-    <line x1="${cx}" x2="${cx}" y1="${T}" y2="${H - B}" stroke="var(--ink-3)" stroke-dasharray="4 3"/>
-    <line x1="${L}" x2="${W - R}" y1="${cy}" y2="${cy}" stroke="var(--ink-3)" stroke-dasharray="4 3"/>
-    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--ink)" stroke="var(--panel)" stroke-width="2.5"/>
-    <text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" font-size="9" font-weight="700" text-anchor="middle" fill="var(--panel)">1</text>
-    <text x="${(L + W - R) / 2}" y="${H - 9}" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">CEO Promotion Focus →</text>
-    <text transform="translate(12 ${(T + H - B) / 2}) rotate(-90)" font-size="10.5" text-anchor="middle" fill="var(--ink-2)">สัญญาณบทบาทของโครงสร้างบอร์ด →</text></svg>
-    <div class="pl-mcap">จุด 1 = บริษัทสาธิต · CEO Promotion Focus เปอร์เซ็นไทล์ ${fmt(c.dp, 0)} · สัญญาณบทบาทของโครงสร้างบอร์ด เปอร์เซ็นไทล์ ${fmt(c.ap, 0)} · เส้นประ = ค่าเฉลี่ยฐานอ้างอิง / amp = 0</div>`;
-}
-/** กลุ่ม table — ข้อมูลชุดเดียวกับ grid ในรูปตาราง ไม่มีภาพ */
-function svTable(d) {
-  const c = d.c, z = ZONES[d.quad] || { l: "—" };
-  return `<div class="tw"><table class="pl-evt"><tbody>
-    <tr><th>Quadrant</th><td><b>${esc(z.l)} (${esc(d.quad)})</b></td></tr>
-    <tr><th>CEO Promotion Focus</th><td>${d.sx > 0 ? "สูงกว่า" : "ต่ำกว่า"}ค่าเฉลี่ยฐานอ้างอิง (เปอร์เซ็นไทล์ ${fmt(c.dp, 0)})</td></tr>
-    <tr><th>สัญญาณบทบาทของโครงสร้างบอร์ด</th><td>${d.sy > 0 ? "อยู่ในรูปแบบที่สัมพันธ์กับการหนุน (≥ 0)" : "ไม่อยู่ในรูปแบบที่สัมพันธ์กับการหนุน (< 0)"} (เปอร์เซ็นไทล์ ${fmt(c.ap, 0)})</td></tr>
-  </tbody></table></div>`;
-}
-const SV_WTP_SETS = [[40000, 180000], [60000, 250000], [90000, 330000]];
-const SV_WTP_OPT = { a: "ก", b: "ข", c: "ค", d: "ง" };
-const SV_ROLE = ["ผู้ใช้ผล", "ผู้เสนอซื้อ", "ผู้อนุมัติงบ", "ไม่เกี่ยว"];
-const SV_YN = ["ใช่", "ไม่แน่ใจ", "ไม่"];
-const SV_PAY = ["OpenInnoScore เป็นหลัก", "ที่ปรึกษาเป็นหลัก", "ทั้งสอง", "ไม่จ่ายเพิ่ม"];
-let _svT0 = {};
-const svPct = v => isNaN(v) ? "—" : fmt(v, 0) + "%";
 const svMedian = a => { const b = a.filter(v => typeof v === "number" && !isNaN(v)).sort((x, y) => x - y); if (!b.length) return NaN;
   const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
-function susScore(s) { if ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].some(i => !s[i])) return NaN;
-  let t = 0; for (let i = 1; i <= 10; i++) t += i % 2 ? s[i] - 1 : 5 - s[i]; return t * 2.5; }
-const tamMean = (t, a, b) => plMean([...Array(b - a + 1)].map((_, i) => t[a + i]).filter(Boolean));
-const compPct = c => 100 * COMP_Q.filter((q, i) => c[i] === q.c).length / COMP_Q.length;
-function viewSurvey() {
-  const sv = PL.survey, st = sv.step, r = sv.cur, d = svDemo(r);
-  const prog = `<div class="pl-prog" aria-label="ความคืบหน้า"><span style="width:${Math.round(st / SV_DONE * 100)}%"></span></div>
-    <div class="pl-steps">${SV_STEPS.map((s, i) => `<span class="${i === st ? "on" : i < st ? "done" : ""}">${i}. ${esc(s)}</span>`).join("")}</div>`;
-  const navBtn = (back, next, nextLab) => `<div class="pl-tools" style="margin-top:14px">${back ? `<button class="btn g" data-svstep="${st - 1}">← ย้อนกลับ</button>` : ""}<span class="spacer"></span>
-    <button class="btn p" data-svstep="${st + 1}">${nextLab || "ถัดไป →"}</button></div>`;
-  const radio = (grp, k, opts, val) => `<div class="pl-opts">${opts.map((o, i) => `<label class="${val === (typeof o === "object" ? o.v : o) ? "on" : ""}"><input type="radio" name="${grp}-${k}" data-sv="${grp}" data-k="${k}" value="${esc(typeof o === "object" ? o.v : o)}"${val === (typeof o === "object" ? o.v : o) ? " checked" : ""}> ${esc(typeof o === "object" ? o.l : o)}</label>`).join("")}</div>`;
-  const likert = (grp, items, from) => items.map((t, i) => `<div class="pl-lik"><div><b>${from + i}.</b> ${esc(t)}</div>${plScale(grp + ":" + (from + i), r[grp][from + i])}</div>`).join("");
-  let body = "";
-  if (st === 0) body = `<div class="card"><h3>เอกสารชี้แจงผู้เข้าร่วมการทดสอบ</h3>
-      <div class="pl-info">
-        <p><b>วัตถุประสงค์</b> — ทดสอบความสามารถในการใช้งานและการยอมรับต้นแบบ OpenInnoScore™ (Dashboard Simulation) เพื่อปรับปรุงระบบก่อนขยายผล</p>
-        <p><b>ใช้เวลา</b> ประมาณ 15–20 นาที · 6 ส่วน: ข้อมูลทั่วไป (ช่วงกว้าง) · งานตามสถานการณ์ 5 งาน (จับเวลา) · SUS 10 ข้อ · TAM 17 ข้อ และส่วนที่ 4ข ทางเลือกการซื้อ 3 ชุด · แบบทดสอบความเข้าใจ 5 ข้อ · คำถามปลายเปิด 2 ข้อ</p>
-        <p><b>การจัดกลุ่ม</b> — ระบบจัดรูปแบบการแสดงหลักฐานในส่วนที่ 2 (ภาพ 2×2 หรือตาราง) ให้แต่ละท่านแบบสลับกลุ่มให้สองกลุ่มมีจำนวนใกล้เคียงกัน เพื่อเปรียบเทียบความเข้าใจและเวลาที่ใช้ระหว่างสองรูปแบบ · ผลไม่ได้ใช้ประเมินตัวท่าน</p>
-        <p><b>ความเป็นส่วนตัวและการเก็บข้อมูล</b> — ${PL_PRIVACY}</p>
-        <p><b>สิทธิ์ของท่าน</b> — เข้าร่วมโดยสมัครใจ ถอนตัวได้ทุกขั้นตอนโดยปิดหน้านี้ ไม่มีผลต่อหน้าที่การงาน</p>
-        <p><b>ผู้วิจัย</b> — โครงการ OpenInnoScore™ (ติดต่อผ่านช่องทางของโครงการ)</p>
-      </div>
-      <div class="note" style="margin-top:8px">บริษัทสาธิตที่ใช้ในงานตามสถานการณ์คือบริษัทที่เลือกอยู่ด้านบนขณะนี้: <b>${esc(d.c.t)} · ${esc(d.c.n)}</b> — เปลี่ยนได้จากตัวเลือกบริษัทก่อนเริ่ม</div>
-      <div class="pl-tools" style="margin-top:14px"><button class="btn p" id="plSvConsent">ยินยอมและเริ่มตอบ</button>
-        ${sv.resp.length ? `<span class="chip">บันทึกในเครื่องแล้ว <b>${sv.resp.length}</b> ชุด</span>` : ""}</div></div>`;
-  else if (st === SV_DONE) body = `<div class="card" style="text-align:center;padding:36px"><div style="font-size:30px">✓</div><h3 style="justify-content:center">ขอบคุณที่ร่วมทดสอบ</h3>
-      <p class="desc">${PL_SRV ? "คำตอบของท่านถูกบันทึกในเครื่องนี้และส่งเข้าฐานข้อมูลกลาง (ผูกกับบัญชีที่เข้าสู่ระบบ)" : "คำตอบของท่านถูกบันทึกในเครื่องนี้ด้วยรหัสสุ่ม (ไม่มีข้อมูลระบุตัวตน)"} · ผลจะรายงานเป็นกลุ่มเมื่อ n ≥ 5</p>
-      ${_svSrv ? `<div class="note ${_svSrv === "ok" ? "ok" : _svSrv === "fail" ? "warn" : ""}" id="plSvSrv" style="margin:0 auto 12px;max-width:420px">${_svSrv === "ok" ? "บันทึกเข้าเซิร์ฟเวอร์แล้ว" : _svSrv === "fail" ? "บันทึกเข้าเซิร์ฟเวอร์ไม่สำเร็จ — คำตอบยังอยู่ในเครื่องนี้" : "กำลังบันทึกเข้าเซิร์ฟเวอร์…"}</div>` : ""}
-      <button class="btn s" data-svstep="0">กลับหน้าแรกของแบบสอบถาม</button></div>`;
-  else if (!r) body = `<div class="note">ยังไม่ได้ให้ความยินยอม</div>`;
-  else if (st === 1) body = `<div class="card"><h3>ส่วนที่ 1 · ข้อมูลทั่วไป (ช่วงกว้าง)</h3>
-      <p class="pl-qt">1. สายงานของท่าน</p>${radio("p1", "role", ["กลยุทธ์", "เลขานุการบริษัท / กำกับดูแล", "อื่น ๆ"], r.p1.role)}
-      <p class="pl-qt">2. ประสบการณ์ทำงานที่เกี่ยวข้อง</p>${radio("p1", "exp", ["< 5 ปี", "5–10 ปี", "> 10 ปี"], r.p1.exp)}${navBtn(true)}</div>`;
-  else if (st === 2) {
-    const T = svTasks(r, d), ti = clamp(r.ti || 0, 0, T.length - 1), t = T[ti], a = (r.tasks || {})[t.k];
-    if (!_svT0[ti]) _svT0[ti] = performance.now();
-    body = `<div class="card"><h3>ส่วนที่ 2 · งานตามสถานการณ์ (บริษัทสาธิต: ${esc(d.c.t)}) <span class="pill mute" style="margin-left:auto">งาน ${ti + 1} / ${T.length}</span></h3>
-      <p class="desc">ตอบจาก<b>หลักฐานในกรอบด้านล่างเท่านั้น</b> (ไม่ต้องเปิดหน้าอื่น) · ระบบบันทึกเวลาที่ใช้ตอบแต่ละงาน — ไม่ได้ใช้ประเมินตัวท่าน</p>
-      <div class="pl-ev" data-arm="${esc(r.arm)}"><div class="pl-ev-h">หลักฐานของบริษัทสาธิต · ${esc(d.c.t)} · ${esc(d.c.n)} · ปีบัญชี ${esc(d.v.fy)}</div>
-        <div class="pl-ev-b">${r.arm === "grid" ? svGrid(d) : svTable(d)}${svStatus(d)}</div></div>
-      <p class="pl-qt">${esc(t.q)}</p>
-      <div class="pl-opts ${ti >= 3 ? "pl-col" : ""}">${t.o.map(o => `<label class="${a && a.ans === o.v ? "on" : ""}"><input type="radio" name="svt-${t.k}" data-svtask="${ti}" value="${esc(o.v)}"${a && a.ans === o.v ? " checked" : ""}> ${esc(o.l)}</label>`).join("")}</div>
-      <div class="pl-tools" style="margin-top:14px">${ti ? `<button class="btn g" data-svti="${ti - 1}">← งานก่อนหน้า</button>` : `<button class="btn g" data-svstep="1">← ย้อนกลับ</button>`}<span class="spacer"></span>
-        ${ti < T.length - 1 ? `<button class="btn p" data-svti="${ti + 1}" id="plSvTiNext" ${a ? "" : "disabled"}>งานถัดไป →</button>`
-          : `<button class="btn p" data-svstep="3" id="plSvTiNext" ${a ? "" : "disabled"}>ถัดไป →</button>`}</div></div>`;
-  }
-  else if (st === 3) body = `<div class="card"><h3>ส่วนที่ 3 · System Usability Scale (10 ข้อ)</h3><p class="desc">1 = ไม่เห็นด้วยอย่างยิ่ง … 5 = เห็นด้วยอย่างยิ่ง</p>${likert("sus", SUS_ITEMS, 1)}${navBtn(true)}</div>`;
-  else if (st === 4) body = `<div class="card"><h3>ส่วนที่ 4 · การยอมรับเทคโนโลยี (TAM · 17 ข้อ)</h3><p class="desc">5 = เห็นด้วยอย่างยิ่ง … 1 = ไม่เห็นด้วยอย่างยิ่ง</p>
-      ${TAM_GRP.map(([k, l, a, b]) => `<div class="pl-grp">${k} · ${esc(l)}</div>${likert("tam", TAM_ITEMS.slice(a - 1, b), a)}`).join("")}${navBtn(true)}</div>`;
-  else if (st === 5) {
-    const w = r.wtp || {};
-    body = `<div class="card"><h3>ส่วนที่ 4ข · คุณค่าเชิงพาณิชย์ (ทางเลือกการซื้อ 3 ชุด)</h3>
-      <div class="note warn pl-wtpnote">ราคาเป็นสมมติฐานสำหรับการทดสอบ ไม่ใช่ใบเสนอราคา · ความเห็นว่ามีประโยชน์ ≠ ความเต็มใจจ่าย ≠ การอนุมัติซื้อจริง (Schmidt &amp; Bijmolt, 2020)</div>
-      <p class="desc">สมมติว่าองค์กรของท่านต้องเลือกวิธีประเมินคณะกรรมการรอบปีหน้า — ในแต่ละชุด เลือก<b>หนึ่ง</b>ทางเลือกที่องค์กรน่าจะเลือกจริง (ราคาต่อปี ไม่รวม VAT)</p>
-      ${SV_WTP_SETS.map(([pb, pc], i) => { const k = "s" + (i + 1), v = w[k];
-        const opt = [["a", "วิธีเดิม", "แบบประเมินบอร์ดฟรี + สรุปใน Excel", 0], ["b", "เครื่องมือ + รายงาน", "เครื่องมือ OpenInnoScore + รายงาน", pb],
-          ["c", "เครื่องมือ + ที่ปรึกษา", "เครื่องมือ + ที่ปรึกษาตีความ/ประชุมหารือ", pc], ["d", "ไม่ซื้อ", "ไม่ซื้อ / ไม่เปลี่ยนวิธี", null]];
-        return `<div class="pl-cset"><div class="pl-grp">ชุดที่ ${i + 1}</div><div class="pl-cbox">${opt.map(([o, h, sc, pr]) => `<label class="${v === o ? "on" : ""}">
-          <input type="radio" name="wtp-${k}" data-sv="wtp" data-k="${k}" value="${o}"${v === o ? " checked" : ""}>
-          <span class="pl-ck">(${SV_WTP_OPT[o]}) ${esc(h)}</span><span class="pl-cs">${esc(sc)}</span>
-          <span class="pl-cp">${pr === null ? "—" : pr === 0 ? "0 บาท" : fmt(pr) + " บาท/ปี"}</span></label>`).join("")}</div></div>`; }).join("")}
-      <p class="pl-qt">บทบาทของท่านในการตัดสินใจซื้อเครื่องมือลักษณะนี้</p>${radio("wtp", "role", SV_ROLE, w.role)}
-      <p class="pl-qt">หากมีการทดลองใช้แบบเสียเงิน 3 เดือน ท่านจะเสนอให้องค์กรทดลองหรือไม่</p>${radio("wtp", "trial", SV_YN, w.trial)}
-      <p class="pl-qt">(ก) ท่านคาดว่าเครื่องมือนี้ลดเวลางานของเลขานุการบริษัท/ฝ่าย CG ได้ประมาณกี่ชั่วโมงต่อรอบการประเมิน</p>
-      <label class="pl-lab pl-hrs"><input class="inp" type="number" min="0" max="1000" step="1" data-svwtp="hrs" value="${w.hrs ?? ""}"> ชั่วโมง / รอบ</label>
-      <p class="pl-qt">(ข) เครื่องมือทำให้พบประเด็นพัฒนาที่วิธีเดิมไม่พบหรือไม่</p>${radio("wtp", "newIss", SV_YN, w.newIss)}
-      <label class="pl-lab">ประเด็นอะไร (ถ้ามี — ไม่ระบุชื่อบุคคล)<textarea class="inp pl-ta" rows="2" data-svwtp="newIssTxt">${esc(w.newIssTxt || "")}</textarea></label>
-      <p class="pl-qt">(ค) หากซื้อ ท่านจะจ่ายเพิ่มเพื่อ OpenInnoScore โดยเฉพาะ หรือจ่ายเฉพาะบริการที่ปรึกษา</p>${radio("wtp", "pay", SV_PAY, w.pay)}
-      ${navBtn(true)}</div>`;
-  }
-  else if (st === 6) body = `<div class="card"><h3>ส่วนที่ 5 · แบบทดสอบความเข้าใจ (5 ข้อ)</h3>
-      ${COMP_Q.map((q, i) => `<p class="pl-qt">${i + 1}. ${esc(q.q)}</p>${radio("comp", String(i), q.o.map((o, j) => ({ v: j, l: o })), r.comp[i])}`).join("")}${navBtn(true)}</div>`;
-  else if (st === 7) body = `<div class="card"><h3>ส่วนที่ 6 · คำถามปลายเปิด</h3>
-      <label class="pl-lab">1. ฟังก์ชันที่อยากให้เพิ่มใน Dashboard Simulation<textarea class="inp pl-ta" rows="3" data-svopen="f1">${esc(r.open.f1 || "")}</textarea></label>
-      <label class="pl-lab">2. ข้อเสนอแนะอื่น<textarea class="inp pl-ta" rows="3" data-svopen="f2">${esc(r.open.f2 || "")}</textarea></label>
-      <div class="note" style="margin-top:8px">กรุณาไม่ระบุชื่อบุคคลหรือข้อมูลที่ระบุตัวตนในคำตอบ</div>
-      <div class="pl-tools" style="margin-top:14px"><button class="btn g" data-svstep="${st - 1}">← ย้อนกลับ</button><span class="spacer"></span><button class="btn p" id="plSvSubmit">ส่งแบบสอบถาม</button></div></div>`;
-  return pageHead("Pilot · การทดสอบการยอมรับ", PL_SRV ? "แบบสอบถามทดสอบการยอมรับ (consent · ผูกกับบัญชีผู้ใช้)" : "แบบสอบถามทดสอบการยอมรับ (consent + anonymous)",
-    PL_SRV ? `ฉบับเซิร์ฟเวอร์: คำตอบผูกกับบัญชีที่เข้าสู่ระบบ (รายละเอียดในเอกสารชี้แจง) · ผลรายงานเป็นกลุ่ม · ถอนตัวได้ทุกเมื่อ`
-      : `ตามแนวทางยกเว้นการพิจารณาจริยธรรม (REC exemption): ไม่เก็บข้อมูลระบุตัวตน · ผลรายงานเป็นกลุ่ม · ถอนตัวได้ทุกเมื่อ`)
-    + prog + body + svAdmin();
-}
-let _svSrv = null, _svSrvR = null, _svSrvMsg = "";
-/** แปลงผลจาก OIS_API.admin เป็นอาร์เรย์คำตอบ — รองรับ [..] / {items|rows|responses|data:[..]} และแถวแบบ {payload} */
-function svFromServer(res) {
-  const arr = Array.isArray(res) ? res : res && (res.items || res.rows || res.responses || res.data || res.results);
-  if (!Array.isArray(arr)) return null;
-  return arr.map(x => { let p = x && x.payload !== undefined ? x.payload : x; if (typeof p === "string") { try { p = JSON.parse(p); } catch (e) { p = null; } } return p; })
-    .filter(p => p && typeof p === "object" && p.sus && p.tam).map(p => Object.assign({ p1: {}, task: {}, comp: {}, open: {}, wtp: {} }, p));
-}
-const SV_BAND = [[4.51, "มากที่สุด"], [3.51, "มาก"], [2.51, "ปานกลาง"], [1.51, "น้อย"], [1, "น้อยที่สุด"]];
-/** การแปลผลค่าเฉลี่ยมาตราส่วน 5 ระดับ (Best & Kahn, 1993) — ปัดเป็นทศนิยม 2 ตำแหน่งก่อนเทียบช่วง */
-const svBand = m => { if (isNaN(m)) return "—"; const r = Math.round(m * 100) / 100; return (SV_BAND.find(([lo]) => r >= lo) || SV_BAND[SV_BAND.length - 1])[1]; };
-/** สถิติเชิงพรรณนา TAM / SUS — ค่าเฉลี่ย SD การแจกแจงความถี่รายข้อ และ Cronbach's alpha รายโครงสร้าง TAM (n ≥ 5) */
-function svAdminDesc(R) {
-  const col = (g, i) => R.map(x => x[g] && x[g][i]).filter(v => v >= 1 && v <= 5);
-  const freq = a => [1, 2, 3, 4, 5].map(v => a.filter(x => x === v).length);
-  const itemRow = (g, i, t) => { const a = col(g, i), f = freq(a), m = plMean(a);
-    return `<tr><td class="n">${i}</td><td class="as-dtq" title="${esc(t)}">${esc(t)}</td><td class="n">${a.length}</td>${f.map(c => `<td class="n">${c}</td>`).join("")}
-      <td class="n"><b>${fmt(m, 2)}</b></td><td class="n">${fmt(plSD(a), 2)}</td><td>${svBand(m)}</td></tr>`; };
-  const head = `<thead><tr><th class="n">ข้อ</th><th>ข้อคำถาม</th><th class="n">n</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">4</th><th class="n">5</th><th class="n">x̄</th><th class="n">SD</th><th>แปลผล</th></tr></thead>`;
-  const grp = TAM_GRP.map(([k, l, a, b]) => {
-    const per = R.map(x => tamMean(x.tam, a, b)).filter(v => !isNaN(v));
-    const rows = R.map(x => [...Array(b - a + 1)].map((_, j) => x.tam[a + j])).filter(r => r.every(v => v >= 1 && v <= 5));
-    const al = rows.length >= 5 ? plAlpha(rows) : NaN;
-    return `<tr class="as-dtg"><td colspan="8"><b>${k} · ${esc(l)}</b> (ข้อ ${a}–${b}) · α = ${rows.length >= 5 ? fmt(al, 2) : `<span class="pill mute">n < 5</span>`}</td>
-      <td class="n"><b>${fmt(plMean(per), 2)}</b></td><td class="n">${fmt(plSD(per), 2)}</td><td><b>${svBand(plMean(per))}</b></td></tr>`
-      + TAM_ITEMS.slice(a - 1, b).map((t, j) => itemRow("tam", a + j, t)).join("");
-  }).join("");
-  const susAll = R.map(x => susScore(x.sus)).filter(v => !isNaN(v));
-  const tamAll = R.map(x => tamMean(x.tam, 1, TAM_ITEMS.length)).filter(v => !isNaN(v));
-  return `<h3 style="margin-top:16px">สถิติเชิงพรรณนา · TAM และ SUS (n = ${R.length})</h3>
-    <p class="desc">ความถี่ = จำนวนผู้ตอบในแต่ละระดับ 1–5 · x̄ = ค่าเฉลี่ย · SD = ส่วนเบี่ยงเบนมาตรฐานตัวอย่าง · Cronbach's α รายโครงสร้าง TAM คำนวณเมื่อมีผู้ตอบครบทุกข้อ ≥ 5 คน<br>
-      เกณฑ์แปลผลค่าเฉลี่ย 5 ระดับ (Best &amp; Kahn, 1993): 4.51–5.00 = มากที่สุด · 3.51–4.50 = มาก · 2.51–3.50 = ปานกลาง · 1.51–2.50 = น้อย · 1.00–1.50 = น้อยที่สุด</p>
-    <div class="grid g4 tight">
-      <div class="stat"><div class="k">TAM รวม 17 ข้อ</div><div class="v" id="plTamAll">${fmt(plMean(tamAll), 2)}</div><div class="u">SD ${fmt(plSD(tamAll), 2)} · ${svBand(plMean(tamAll))}</div></div>
-      <div class="stat"><div class="k">SUS (0–100)</div><div class="v">${fmt(plMean(susAll), 1)}</div><div class="u">SD ${fmt(plSD(susAll), 1)} · n = ${susAll.length}</div></div></div>
-    <div class="tw as-dtw" style="margin-top:10px"><table class="as-dt" id="plTamDesc">${head}<tbody>${grp}</tbody></table></div>
-    <h3 style="margin-top:14px;font-size:12.5px">SUS รายข้อ</h3>
-    <p class="desc">ข้อคู่ (2, 4, 6, 8, 10) เป็นข้อความเชิงลบ — คำแปลผลบอกระดับความเห็นด้วยกับข้อความ ไม่ใช่ระดับความใช้งานง่าย · คะแนน SUS รวมกลับคะแนนข้อคู่แล้ว (Brooke, 1996)</p>
-    <div class="tw as-dtw"><table class="as-dt" id="plSusDesc">${head}<tbody>${SUS_ITEMS.map((t, i) => itemRow("sus", i + 1, t)).join("")}</tbody></table></div>`;
-}
-/* ผลรวมของแบบสอบถาม: ฉบับเซิร์ฟเวอร์แสดงเฉพาะผู้ดูแล (role admin จาก /api/me) · ออฟไลน์แสดงให้ผู้ใช้ Pro ขึ้นไป (เครื่องผู้ดูแลการทดสอบ) */
+/* ผลรวม/สถิติผู้ดูแล: ฉบับเซิร์ฟเวอร์ใช้ role admin จาก /api/me */
 let _plMe = null, _plMeAsk = false;
 function plMe() {
   if (!PL_SRV || _plMe || _plMeAsk || typeof window.OIS_API.me !== "function") return _plMe;
   _plMeAsk = true;
   Promise.resolve().then(() => window.OIS_API.me()).then(m => { _plMe = m && m.ok !== false ? m : { role: "user" };
-    if (["survey", "syslog"].includes(S.view)) render(); }).catch(() => { _plMe = { role: "user" }; });
+    if (["survey", "syslog", "consent", "pilotrec", "expertrec"].includes(S.view)) render(); }).catch(() => { _plMe = { role: "user" }; });
   return null;
 }
 const plIsAdmin = () => !!(plMe() && _plMe.role === "admin");
-function svAdmin() {
-  if (PL_SRV ? !plIsAdmin() : !(typeof tierRank === "function" ? tierRank() >= 1 : S.plan === "pro")) return "";
-  const R = _svSrvR || PL.survey.resp, n = R.length;
-  const canSrv = !!(window.OIS_API && typeof window.OIS_API.admin === "function");
-  const sus = R.map(x => susScore(x.sus)).filter(v => !isNaN(v)), susM = plMean(sus);
-  const tam = TAM_GRP.map(([k, l, a, b]) => [k, plMean(R.map(x => tamMean(x.tam, a, b)).filter(v => !isNaN(v)))]);
-  const comp = plMean(R.map(x => compPct(x.comp)));
-  const task = ["tier", "quad", "reg", "q4", "q5"].map(k => [k, n ? 100 * R.filter(x => x.taskOk && x.taskOk[k]).length / n : NaN]);
-  const sub = (lab, key) => { const g = {}; R.forEach(x => { const v = x.p1[key] || "ไม่ระบุ"; (g[v] = g[v] || []).push(x); });
-    return `<tr><th colspan="3">${lab}</th></tr>` + Object.entries(g).map(([v, xs]) => `<tr><td>${esc(v)}</td><td class="n">${xs.length}</td>
-      <td class="n">${xs.length >= 5 ? fmt(plMean(xs.map(x => susScore(x.sus)).filter(q => !isNaN(q))), 1) : `<span class="pill mute">n < 5 ไม่แสดง</span>`}</td></tr>`).join(""); };
-  return `<div class="card pl-admin" style="margin-top:16px"><h3>ผลรวม (n = ${n}) <span class="pill mute">ผู้ดูแล · Pro</span>
-      <span class="pill ${_svSrvR ? "blue" : "mute"}">${_svSrvR ? "ข้อมูลจากเซิร์ฟเวอร์" : "ข้อมูลในเครื่องนี้"}</span></h3>
-    <p class="desc">ค่าเฉลี่ยระดับกลุ่มเท่านั้น · กลุ่มย่อยแสดงเมื่อ n ≥ 5 · ${PL_SRV ? "ตารางนี้ไม่แสดงตัวระบุตัวตน (CSV จากเซิร์ฟเวอร์สำหรับผู้ดูแลมีอีเมล/ชื่อบัญชี — ใช้ตามข้อความชี้แจง)" : "ไม่มีตัวระบุตัวตนในข้อมูล"} ·
-      ปุ่ม “ล้างคำตอบ” ลบเฉพาะข้อมูลในเครื่องนี้ ไม่ลบบนเซิร์ฟเวอร์</p>
-    ${canSrv ? `<div class="pl-tools" style="margin-bottom:10px"><button class="btn s" id="plSvLoadSrv">โหลดคำตอบทั้งหมดจากเซิร์ฟเวอร์</button>
-      ${_svSrvR ? `<button class="btn g" id="plSvLocal">กลับไปใช้ข้อมูลในเครื่อง</button>` : ""}<span class="as-sm">${esc(_svSrvMsg)}</span></div>` : ""}
-    <div class="grid g4 tight">
-      <div class="stat"><div class="k">SUS เฉลี่ย</div><div class="v" style="color:${susM >= 68 ? "var(--ok)" : "inherit"}">${fmt(susM, 1)}</div><div class="u">เป้าหมาย ≥ 68 (n=${sus.length})</div></div>
-      ${tam.map(([k, m]) => `<div class="stat"><div class="k">TAM · ${k}</div><div class="v">${fmt(m, 2)}</div><div class="u">จาก 5</div></div>`).join("")}
-      <div class="stat"><div class="k">ความเข้าใจถูกต้อง</div><div class="v">${svPct(comp)}</div><div class="u">5 ข้อ</div></div>
-      ${task.map(([k, p], i) => `<div class="stat"><div class="k">งาน ${i + 1} (${k}) ถูกต้อง</div><div class="v">${svPct(p)}</div></div>`).join("")}</div>
-    <div class="tw" style="margin-top:12px"><table><thead><tr><th>กลุ่มย่อย</th><th class="n">n</th><th class="n">SUS เฉลี่ย</th></tr></thead><tbody>${sub("สายงาน", "role")}${sub("ประสบการณ์", "exp")}</tbody></table></div>
-    ${svAdminDesc(R)}${svAdminAB(R)}${svAdminWtp(R)}
-    <div class="pl-tools" style="margin-top:12px"><button class="btn g" id="plSvCsv">Export CSV</button><button class="btn g" id="plSvJson">Export JSON</button><button class="btn g" id="plSvClear">ล้างคำตอบทั้งหมด</button></div></div>`;
-}
-/** การทดสอบที่ 1 · Grid vs ตาราง — แสดงตัวเลขเมื่อแต่ละกลุ่ม n ≥ 5 */
-function svAdminAB(R) {
-  const arms = [["grid", "Grid 2×2"], ["table", "ตาราง/ข้อความ"]].map(([k, l]) => {
-    const xs = R.filter(x => x.arm === k && x.tasks), ok = xs.length >= 5;
-    const acc = plMean(xs.map(x => 100 * SV_TL.filter(t => x.tasks[t] && x.tasks[t].correct).length / SV_TL.length));
-    return { k, l, n: xs.length, ok, acc, med: SV_TL.map(t => svMedian(xs.map(x => x.tasks[t] && x.tasks[t].ms))), tot: svMedian(xs.map(x => x.task_ms)) };
-  });
-  const cell = (a, v) => a.ok ? v : `<span class="pill mute">n < 5</span>`, sec = ms => fmt(ms / 1000, 1);
-  return `<h3 style="margin-top:16px">การทดสอบที่ 1 · Grid vs ตาราง (A/B) <span class="pill mute">แสดงผลเมื่อแต่ละกลุ่ม n ≥ 5</span></h3>
-    <p class="desc">จัดกลุ่มแบบสมดุล (สลับตามจำนวน) ตอนให้ความยินยอม · หลักฐานและคำถามชุดเดียวกัน ต่างกันเฉพาะรูปแบบการแสดง · เวลา = มัธยฐาน (วินาที) จากแสดงงานถึงตอบ</p>
-    <div class="tw"><table class="pl-abt"><thead><tr><th>กลุ่ม</th><th class="n">n</th><th class="n">ความถูกต้อง งาน 1–5</th>
-      ${SV_TL.map((_, i) => `<th class="n">งาน ${i + 1}</th>`).join("")}<th class="n">รวม</th></tr></thead><tbody>
-      ${arms.map(a => `<tr><td>${a.l}</td><td class="n">${a.n}</td><td class="n">${cell(a, fmt(a.acc, 0) + "%")}</td>
-        ${a.med.map(m => `<td class="n">${cell(a, sec(m))}</td>`).join("")}<td class="n">${cell(a, sec(a.tot))}</td></tr>`).join("")}</tbody></table></div>`;
-}
-/** การทดสอบที่ 2 · คุณค่าเชิงพาณิชย์ */
-function svAdminWtp(R) {
-  const W = R.map(x => x.wtp).filter(w => w && (w.s1 || w.s2 || w.s3 || w.role)), n = W.length;
-  const pc = (xs, f) => xs.length ? 100 * xs.filter(f).length / xs.length : NaN;
-  const dist = (k, labs) => labs.map(l => `<span class="chip">${esc(l)} <b>${svPct(pc(W, w => w[k] === l))}</b></span>`).join(" ");
-  const sets = SV_WTP_SETS.map(([pb, pc2], i) => { const k = "s" + (i + 1), xs = W.filter(w => w[k]);
-    return `<tr><td>ชุดที่ ${i + 1} <span style="color:var(--ink-3)">· ข ${fmt(pb)} / ค ${fmt(pc2)}</span></td><td class="n">${xs.length}</td>
-      ${Object.keys(SV_WTP_OPT).map(o => `<td class="n">${svPct(pc(xs, w => w[k] === o))}</td>`).join("")}</tr>`; }).join("");
-  const allNo = pc(W.filter(w => w.s1 && w.s2 && w.s3), w => w.s1 === "d" && w.s2 === "d" && w.s3 === "d");
-  const hrs = W.map(w => w.hrs).filter(v => typeof v === "number");
-  const byRole = SV_ROLE.map(l => { const xs = W.filter(w => w.role === l);
-    return `<tr><td>${esc(l)}</td><td class="n">${xs.length}</td><td class="n">${xs.length >= 5 ? fmt(pc(xs.flatMap(w => ["s1", "s2", "s3"].map(k => w[k]).filter(Boolean)), v => v === "b" || v === "c"), 0) + "%" : `<span class="pill mute">n < 5</span>`}</td></tr>`; }).join("");
-  return `<h3 style="margin-top:16px">การทดสอบที่ 2 · คุณค่าเชิงพาณิชย์ (n = ${n})</h3>
-    <p class="desc">ราคาเป็นสมมติฐานสำหรับการทดสอบ ไม่ใช่ใบเสนอราคา · ความเห็นว่ามีประโยชน์ ≠ ความเต็มใจจ่าย ≠ การอนุมัติซื้อจริง (Schmidt &amp; Bijmolt, 2020) — ต้องติดตามการทดลองแบบเสียเงินหรือการอนุมัติซื้อจริงต่อ</p>
-    <div class="tw"><table class="pl-abt"><thead><tr><th>ชุดราคา</th><th class="n">n</th><th class="n">(ก) วิธีเดิม</th><th class="n">(ข) เครื่องมือ+รายงาน</th><th class="n">(ค) +ที่ปรึกษา</th><th class="n">(ง) ไม่ซื้อ</th></tr></thead><tbody>${sets}</tbody></table></div>
-    <div class="grid g4 tight" style="margin-top:10px">
-      <div class="stat"><div class="k">ไม่ซื้อทั้ง 3 ชุด</div><div class="v">${svPct(allNo)}</div><div class="u">เลือก (ง) ทุกชุด</div></div>
-      <div class="stat"><div class="k">จะเสนอทดลองแบบเสียเงิน 3 เดือน</div><div class="v">${svPct(pc(W, w => w.trial === "ใช่"))}</div><div class="u">ตอบ "ใช่"</div></div>
-      <div class="stat"><div class="k">ชั่วโมงที่ลดได้ / รอบ (เฉลี่ย)</div><div class="v">${fmt(plMean(hrs), 1)}</div><div class="u">n = ${hrs.length} · มัธยฐาน ${fmt(svMedian(hrs), 1)}</div></div>
-      <div class="stat"><div class="k">พบประเด็นพัฒนาใหม่</div><div class="v">${svPct(pc(W, w => w.newIss === "ใช่"))}</div><div class="u">ตอบ "ใช่"</div></div></div>
-    <div class="pl-dist"><span class="pl-dl">บทบาทในการซื้อ</span> ${dist("role", SV_ROLE)}</div>
-    <div class="pl-dist"><span class="pl-dl">จ่ายเพิ่มเพื่ออะไร</span> ${dist("pay", SV_PAY)}</div>
-    <div class="tw" style="margin-top:8px"><table><thead><tr><th>บทบาทในการซื้อ</th><th class="n">n</th><th class="n">เลือก (ข) หรือ (ค) · ทุกชุดรวม</th></tr></thead><tbody>${byRole}</tbody></table></div>`;
-}
-function wireSurvey(h) {
-  const sv = PL.survey;
-  const c = h.querySelector("#plSvConsent"); if (c) c.onclick = async () => {
-    c.disabled = true;
-    const ac = await svArmCounts(), arm = ac.arm || svArm(ac.c);
-    sv.cur = svNew(arm, ac.src); sv.started = (sv.started || []).concat([arm]).slice(-200);
-    _svT0 = {}; sv.step = 1; plSave(); render(); };
-  h.querySelectorAll("[data-svti]").forEach(b => b.onclick = () => { if (!sv.cur) return; sv.cur.ti = +b.dataset.svti; plSave(); render(); });
-  h.querySelectorAll("input[data-svtask]").forEach(i => i.onchange = () => { const r = sv.cur; if (!r) return;
-    const ti = +i.dataset.svtask, t = svTasks(r, svDemo(r))[ti]; let v = i.value; if (t.k === "tier") v = +v;
-    const ms = Math.round(performance.now() - (_svT0[ti] || performance.now()));
-    r.tasks = r.tasks || {}; r.tasks[t.k] = { ans: v, correct: !!t.ok(v), ms }; r.task[t.k] = v; plSave();
-    i.closest(".pl-opts").querySelectorAll("label").forEach(l => l.classList.toggle("on", l.contains(i)));
-    const nx = h.querySelector("#plSvTiNext"); if (nx) nx.disabled = false; });
-  h.querySelectorAll("[data-svwtp]").forEach(el => el.onchange = () => { const r = sv.cur; if (!r) return; r.wtp = r.wtp || {};
-    const k = el.dataset.svwtp; r.wtp[k] = k === "hrs" ? (el.value === "" ? null : clamp(+el.value || 0, 0, 1000)) : el.value.trim().slice(0, 500); plSave(); });
-  h.querySelectorAll("[data-svstep]").forEach(b => b.onclick = () => { sv.step = +b.dataset.svstep; plSave(); render(); });
-  h.querySelectorAll("input[data-sv]").forEach(i => i.onchange = () => { if (!sv.cur) return;
-    const g = i.dataset.sv, k = i.dataset.k; let v = i.value; if (g === "task" && k === "tier") v = +v; if (g === "comp") v = +v;
-    sv.cur[g] = sv.cur[g] || {}; sv.cur[g][k] = v; plSave(); i.closest(".pl-opts, .pl-cbox").querySelectorAll("label").forEach(l => l.classList.toggle("on", l.contains(i))); });
-  plWireScale(h, (k, v) => { if (!sv.cur) return; const [g, i] = k.split(":"); sv.cur[g][+i] = v; plSave();
-    const sc = h.querySelector(`.pl-scale[data-scale="${k}"]`); sc.querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.v === v)); });
-  h.querySelectorAll("[data-svopen]").forEach(t => t.onchange = () => { if (sv.cur) { sv.cur.open[t.dataset.svopen] = t.value.trim().slice(0, 1000); plSave(); } });
-  const sb = h.querySelector("#plSvSubmit"); if (sb) sb.onclick = () => {
-    if (!sv.cur) return; const r = sv.cur, d = svDemo(r), tk = r.tasks || {};
-    r.taskOk = Object.fromEntries(SV_TL.map(k => [k, !!(tk[k] && tk[k].correct)]));
-    r.task_ms = SV_TL.every(k => tk[k]) ? SV_TL.reduce((s, k) => s + tk[k].ms, 0) : null;
-    r.demo = d.c.t; r.day = new Date().toISOString().slice(0, 10); r.sus_score = susScore(r.sus);
-    const si = (sv.started || []).lastIndexOf(r.arm); if (si >= 0) sv.started.splice(si, 1);
-    sv.resp.push(r); sv.cur = null; sv.step = SV_DONE; plSave(); toast(PL_SRV ? "บันทึกแบบสอบถามแล้ว" : "บันทึกแบบสอบถามแล้ว (ไม่มีข้อมูลระบุตัวตน)");
-    _svSrv = window.OIS_API && typeof window.OIS_API.submit === "function" ? "pending" : null;
-    if (_svSrv) plSubmit("survey", r.demo, r).then(ok => { _svSrv = ok ? "ok" : "fail"; if (ok) { r.srv = true; plSave(); toast("บันทึกเข้าเซิร์ฟเวอร์แล้ว"); } if (S.view === "survey") render(); });
-    render();
-  };
-  const x = h.querySelector("#plSvCsv"); if (x) x.onclick = () => plDl("ois_survey_responses.csv", plCsv([
-    ["id", "day", "demo", "arm", "lens", "role", "exp", "task_tier", "task_quad", "task_reg", "tier_ok", "quad_ok", "reg_ok",
-      ...SV_TL.flatMap((_, i) => [`t${i + 1}_ans`, `t${i + 1}_ok`, `t${i + 1}_ms`]), "task_total_ms", "q4_order", "q5_order",
-      ...SUS_ITEMS.map((_, i) => "sus" + (i + 1)), "sus_score", ...TAM_ITEMS.map((_, i) => "tam" + (i + 1)),
-      "wtp_s1", "wtp_s2", "wtp_s3", "wtp_buy_role", "wtp_trial3m", "wtp_hrs_saved", "wtp_new_issue", "wtp_new_issue_txt", "wtp_pay_for",
-      ...COMP_Q.map((_, i) => "comp" + (i + 1)), "open1", "open2"],
-    ...(_svSrvR || sv.resp).map(r => { const tk = r.tasks || {}, w = r.wtp || {};
-      return [r.id, r.day, r.demo, r.arm ?? "", r.lens ?? "", r.p1.role, r.p1.exp, r.task.tier, r.task.quad, r.task.reg, r.taskOk?.tier, r.taskOk?.quad, r.taskOk?.reg,
-      ...SV_TL.flatMap(k => tk[k] ? [tk[k].ans, tk[k].correct ? 1 : 0, tk[k].ms] : ["", "", ""]), r.task_ms ?? "", (r.perm?.q4 || []).join("|"), (r.perm?.q5 || []).join("|"),
-      ...SUS_ITEMS.map((_, i) => r.sus[i + 1]), r.sus_score, ...TAM_ITEMS.map((_, i) => r.tam[i + 1]),
-      ...["s1", "s2", "s3"].map(k => w[k] ? SV_WTP_OPT[w[k]] : ""), w.role, w.trial, w.hrs ?? "", w.newIss, w.newIssTxt, w.pay,
-      ...COMP_Q.map((q, i) => r.comp[i] === q.c ? 1 : 0), r.open.f1, r.open.f2]; })]), "text/csv;charset=utf-8");
-  const j = h.querySelector("#plSvJson"); if (j) j.onclick = () => plDl("ois_survey_responses.json", JSON.stringify(_svSrvR || sv.resp, null, 2));
-  const ls = h.querySelector("#plSvLoadSrv"); if (ls) ls.onclick = async () => {
-    ls.disabled = true; ls.textContent = "กำลังโหลด…";
-    try { const arr = svFromServer(await window.OIS_API.admin({ kind: "survey" }));
-      if (arr) { _svSrvR = arr; _svSrvMsg = `โหลดแล้ว ${arr.length} ชุด`; } else { _svSrvR = null; _svSrvMsg = "เซิร์ฟเวอร์ไม่ส่งข้อมูลกลับ (หรือไม่มีสิทธิ์ผู้ดูแล) — ใช้ข้อมูลในเครื่อง"; }
-    } catch (e) { _svSrvR = null; _svSrvMsg = "โหลดจากเซิร์ฟเวอร์ไม่สำเร็จ — ใช้ข้อมูลในเครื่อง"; }
-    render(); };
-  const lc = h.querySelector("#plSvLocal"); if (lc) lc.onclick = () => { _svSrvR = null; _svSrvMsg = ""; render(); };
-  const cl = h.querySelector("#plSvClear"); if (cl) cl.onclick = () => plAsk(cl, `ลบคำตอบทั้งหมด ${sv.resp.length} ชุดในเครื่องนี้?`, () => { sv.resp = []; _svSrvR = null; plSave(); render(); });
-}
 
 /* ============================================================================
    E · System log — ระดับรวม ไม่มีข้อมูลบุคคล
@@ -1001,12 +672,12 @@ function wireIntegr(h) {
    ============================================================================ */
 bodSel();
 VIEWS.bod = viewBod; VIEWS.outdomain = viewOutdomain; VIEWS.directives = viewDirectives;
-VIEWS.survey = viewSurvey; VIEWS.syslog = viewSyslog; VIEWS.integr = viewIntegr;
-if (typeof WIRES2 === "object" && WIRES2) Object.assign(WIRES2, { bod: wireBod, outdomain: wireOutdomain, directives: wireDirectives, survey: wireSurvey, syslog: wireSyslog, integr: wireIntegr });
+VIEWS.syslog = viewSyslog; VIEWS.integr = viewIntegr;
+if (typeof WIRES2 === "object" && WIRES2) Object.assign(WIRES2, { bod: wireBod, outdomain: wireOutdomain, directives: wireDirectives, syslog: wireSyslog, integr: wireIntegr });
 NAV.push({ id: "bod", g: 4, ico: "☑", lab: "BOD Self-Assessment (OI-1…6)" },
-  { id: "outdomain", g: 4, ico: "◌", lab: "โหมดนอกกลุ่มอ้างอิง (ธนาคาร)" },
+  { id: "outdomain", g: 4, ico: "◌", lab: BP_TITLE() },
   { id: "directives", g: 4, ico: "≡", lab: "ข้อสั่งการบอร์ด / Compliance (Level 3)" },
-  { id: "survey", g: 4, ico: "✎", lab: "แบบสอบถามทดสอบการยอมรับ" },
+  { id: "survey", g: 4, ico: "✎", lab: "แบบสอบถามประเมินต้นแบบนวัตกรรม (4.2)" },
   { id: "syslog", g: 4, ico: "⌁", lab: "System log" },
   { id: "integr", g: 4, ico: "⚙", lab: window.OIS_API ? "การเชื่อมต่อ" : "การเชื่อมต่อ (โหมดออฟไลน์)" });
 buildNav();

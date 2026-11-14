@@ -778,7 +778,7 @@ def _ref_version():
     eng = getattr(A, "ENGINE", None) if A is not None else None
     if eng is not None:
         return getattr(eng, "record_id", None) or eng.version
-    return (A.MODEL.get("version") if A is not None else None) or "REF928-edit6-20260930"
+    return (A.MODEL.get("version") if A is not None else None) or "REF928-edit9-20261013"
 
 
 def _match(st, pp, tol=0.005):

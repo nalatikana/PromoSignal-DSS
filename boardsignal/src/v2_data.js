@@ -25,7 +25,7 @@
   const NO_SET = "การดึงข้อมูลอัตโนมัติจาก SET / Smart Marketplace ถูกยกเลิก — ใช้ข้อมูลที่เจ้าหน้าที่ตรวจและบันทึกแล้วเท่านั้น";
   const EST_LAB = "ค่าประมาณจากพจนานุกรมเปิด — เทียบฐานได้โดยประมาณ";
   const LIWC_LAB = "LIWC-22 (ผู้ใช้กรอกเอง)";
-  const REFV = OIS.version || "REF928-edit6-20260930";
+  const REFV = M1A.ver();
   const VTHX = (typeof VTH === "object" && VTH) || { sp: [.15, .05], auc: [.60, .55], lift: [2.0, 1.3] };
   const ST = { pending: ["รออนุมัติ (เห็นเฉพาะคุณ)", "warn"], approved: ["อนุมัติแล้ว · อยู่ในชุดข้อมูลหลัก", "ok"],
                rejected: ["ไม่อนุมัติ (เห็นเฉพาะคุณ)", "crit"], withdrawn: ["ถอนแล้ว", "mute"] };
@@ -354,9 +354,9 @@
     const ceo = F.ceo, r5 = F.r561;
     const fld = (id, lab, inner, hint) => `<label class="dt-f" for="${id}"><span>${lab}</span>${inner}${hint ? `<small>${hint}</small>` : ""}</label>`;
     const num = (k, step, min, max) => `<input id="dt_${k}" data-dtf="${k}" type="number" inputmode="decimal" step="${step}" min="${min}" max="${max}" value="${esc(F[k])}">`;
-    return pageHead("ข้อมูลหลายปี", "นำเข้าข้อมูลปีใหม่",
-      "กรอกข้อมูลบริษัท-ปีที่ตรวจแล้ว ระบบให้คะแนนทันทีเทียบฐานอ้างอิงที่ตรึงไว้ · ข้อมูลเห็นเฉพาะคุณจนกว่าผู้ดูแล/อาจารย์อนุมัติเข้าสู่ชุดข้อมูลหลัก")
-      + noteSet()
+    if (CL.mode === "client") return dtHead() + noteSet() + modeTabs() + clForm() + clResultCard() + clListCard();
+    return dtHead() + noteSet() + modeTabs()
+      + `<div class="note m1a-research" id="dtResearchNote">${TT("Research dataset submission: a verified firm-year for the research dataset. It is scored against the frozen reference, stays visible only to you, and enters the main dataset only after an administrator / advisor approves it. This is separate from the client list.", "ส่งข้อมูลชุดวิจัย: บริษัท-ปีที่ตรวจแล้วสำหรับชุดข้อมูลวิจัย · ให้คะแนนเทียบฐานอ้างอิงที่ตรึงไว้ เห็นเฉพาะคุณ และเข้าชุดข้อมูลหลักเมื่อผู้ดูแล/อาจารย์อนุมัติเท่านั้น · แยกจากรายชื่อลูกค้า")}</div>`
       + `<div class="grid g2 dt-2" style="margin-top:14px">
       <div class="card"><h3>ข้อมูลบริษัท-ปี</h3>
         <p class="desc">ตัวเลขทุกช่องมาจากเอกสารที่เจ้าหน้าที่ตรวจแล้ว (แบบ 56-1 One Report / รายงานประจำปี) · สัดส่วนคำนวณจากจำนวนคนให้อัตโนมัติ</p>
@@ -454,6 +454,8 @@
     const el = document.getElementById("dtResult"); if (el) el.scrollIntoView({ block: "nearest" });
   }
   function wireUpload(h) {
+    wireClient(h);
+    if (CL.mode === "client") return;
     h.querySelectorAll("[data-dtf]").forEach(el => {
       const k = el.dataset.dtf, ev = el.type === "checkbox" || el.tagName === "SELECT" || k === "ticker" ? "change" : "input";
       el.addEventListener(ev, () => {
@@ -690,7 +692,7 @@
       series: [{ pts, ci }] });
   }
   function vRow(r) {
-    const fy = r.fy === "pooled" ? "รวมปีอ้างอิง" : r.fy === "pooled_all" ? "รวมปีอ้างอิง + ปีใหม่" : r.fy === "pooled_new" ? "รวมเฉพาะปีใหม่" : `${yr(r.fy)} → ${yr(r.fy + 1)}${yrP(r.fy + "→" + (r.fy + 1))}`;
+    const fy = r.fy === "pooled" ? "รวมปีอ้างอิง" : r.fy === "pooled_all" ? "รวมปีอ้างอิง + ปีใหม่" : r.fy === "pooled_new" ? "รวมเฉพาะปีใหม่" : `${yr(r.fy)} → ${yr(r.fy + 1)}${yrP(r.fy + "→" + (r.fy + 1))} ${M1A.fyChip(r.fy)}`;
     const src = r.src === "ref_csv" ? pill("คำนวณจากไฟล์อ้างอิง", "dt-src-r") : r.src === "paper" ? pill("ค่าตามบทความ", "mute") : r.src === "approved" ? pill("ผู้ใช้อนุมัติแล้ว", "dt-src-a") : pill("รวมทุกแหล่ง", "dt-src-c");
     if (r.insufficient) return `<tr class="dt-ins"><td>${fy}</td><td class="n">${r.n}</td><td colspan="4"><b>ข้อมูลยังไม่พอ (n = ${r.n})</b> — ต้องมีอย่างน้อย ${MIN_N} บริษัทที่มีผลลัพธ์ปีถัดไป</td><td>${src}</td></tr>`;
     const m = r.match ? (r.match.ok ? ` <span class="dt-good" title="ต่างจากบทความ ρ ${r.match.diff.sp} · AUC ${r.match.diff.auc} · lift ${r.match.diff.lift}">✓ ตรงบทความ</span>` : ` <span class="dt-bad">ต่างจากบทความ</span>`) : "";
@@ -753,7 +755,7 @@
         <li><b>ทำไมฐานอ้างอิงต้องตรึง (บทความ §4.3 DP2)</b> — คะแนนคือเปอร์เซ็นไทล์แบบ mid-rank เทียบฐาน
           <span class="dt-eq">OIS(b) = 100 · [#{B_j &lt; b} + 0.5·#{B_j = b}] / 928</span>
           ถ้าฐานขยับทุกครั้งที่มีข้อมูลใหม่ คะแนนเดิมของทุกบริษัทจะเปลี่ยนตามโดยที่บริษัทไม่ได้เปลี่ยนอะไร และเทียบข้ามเวลาไม่ได้ · ข้อมูลใหม่จึงถูกวัดเทียบฐานที่ตรึงไว้เสมอ
-          และการตรึงใหม่เป็นเหตุการณ์ที่ตั้งใจ มีเวอร์ชัน (เช่น REF928-edit6-20260930 → ฉบับถัดไป)</li>
+          และการตรึงใหม่เป็นเหตุการณ์ที่ตั้งใจ มีเวอร์ชัน (เช่น REF928-edit6-20260930 → REF928-edit9-20261013 → ฉบับถัดไป)</li>
         <li><b>ความเที่ยงตรงเป็นหลักฐานที่สะสม</b> ไม่ใช่ตัวเลขเดียว (Cronbach &amp; Meehl, 1955; Messick, 1995) — ผลรายปีจึงถูกแสดงคู่กับค่ารวมเสมอ รวมถึงปีที่ไม่ผ่าน</li>
       </ol>
       <p class="dt-ref">อ้างอิง: DeLong, E. R., DeLong, D. M., &amp; Clarke-Pearson, D. L. (1988). Biometrics, 44(3), 837–845 ·
@@ -762,6 +764,209 @@
         บทความ OpenInnoScore §3.3 (เกณฑ์), §4.3 (DP2 ฐานอ้างอิงตรึง), ตารางที่ 3 (ผลรายปี)</p></div>`;
   }
 
+  /* ======================================================================= MVP 1 · F1 — ลูกค้าบริษัทจดทะเบียนใหม่ (client intake)
+     ตรวจกลุ่มลูกค้า 6 กลุ่ม (CLIENT_GROUP) "ก่อน" คำนวณ · กลุ่ม 1–3 → SCORE_FIRM เทียบ REF-928 edit9 ที่ตรึงไว้ (ไม่เพิ่มเข้า REF-928 · DP6)
+     พร้อมป้าย "Outside the reference sample" / "Not yet validated" · กลุ่ม 4–5 → Board Profile (หน้า outdomain · ส่งผ่าน ois_bp_target_v1)
+     · กลุ่ม 6 → ใช้ไม่ได้ · รายชื่อลูกค้าเก็บใน localStorage "ois_clients_v1" ของเบราว์เซอร์นี้เท่านั้น (ไม่ส่งเซิร์ฟเวอร์)
+     คิวอนุมัติของเซิร์ฟเวอร์ใช้กับ "ข้อมูลชุดวิจัย" เท่านั้น (แท็บที่ 2) — แยกจากรายชื่อลูกค้าชัดเจน */
+  const CL = { mode: "client", f: null, res: null, msg: null };
+  const TT = (en, th) => M1A.T(en, th);
+  function clInit(force) {
+    if (CL.f && !force) return CL.f;
+    CL.f = { listed: 1, ticker: "", name: "", ind: "", fin: 0, letter: 1, btab: 1, fy: 2024, psrc: "liwc", liwc: "", lf: null, fam: "", pol: 0, bsize: "", women: "" };
+    return CL.f;
+  }
+  const clT = F => String(F.ticker || "").trim().toUpperCase();
+  const clFin = F => F.ind === "fin" || !!+F.fin;
+  function clGroupOf(F) {
+    const t = clT(F);
+    return M1A.group({ listed: !!+F.listed, financial: clFin(F), english_letter: !!+F.letter, board_table: !!+F.btab, in_REF928: !!byT[t], fiscal_year: Math.round(+F.fy) });
+  }
+  function clPromo(F) {
+    if (F.psrc === "letter") { const l = F.lf; return l && !l.error && l.words >= MIN_WORDS && l.wordsSrv >= MIN_WORDS && isFinite(l.promo) ? +l.promo : null; }
+    return F.liwc === "" || F.liwc === null ? null : +F.liwc;
+  }
+  function clErrs(F, g) {
+    const e = [], t = clT(F), fy = +F.fy;
+    if (!t || !/^[A-Z0-9.\-&_]{1,16}$/.test(t)) e.push(TT("Ticker: 1–16 letters or digits", "ชื่อย่อหลักทรัพย์: ตัวอักษรอังกฤษ/ตัวเลข 1–16 ตัว"));
+    if (t && !byT[t] && !String(F.name || "").trim()) e.push(TT("Company name is required for a company outside REF-928", "บริษัทนอก REF-928 ต้องระบุชื่อบริษัท"));
+    if (!byT[t] && !F.ind) e.push(TT("Choose the SET industry (1–7) or Financials", "เลือกกลุ่มอุตสาหกรรม SET (1–7) หรือกลุ่มธุรกิจการเงิน"));
+    if (!(Number.isInteger(fy) && fy >= 2010 && fy <= 2040)) e.push(TT("Fiscal year (C.E.) must be 2010–2040", "ปีบัญชี (ค.ศ.) ต้องอยู่ระหว่าง 2010–2040"));
+    if (g.group > 3) return e;
+    const bs = +F.bsize, w = +F.women, fam = F.fam === "" ? NaN : +F.fam;
+    if (!(F.bsize !== "" && Number.isInteger(bs) && bs >= 3 && bs <= 30)) e.push(TT("Enter the actual board size (3–30 directors) — there is no default (D4)", "กรอกจำนวนกรรมการจริง (3–30 คน) — ไม่มีค่าตั้งต้น (D4)"));
+    if (!(F.women !== "" && Number.isInteger(w) && w >= 0 && (!(bs >= 1) || w <= bs))) e.push(TT("Number of women directors: whole number from 0 to the board size", "จำนวนกรรมการหญิง: จำนวนเต็ม 0 ถึงจำนวนกรรมการ"));
+    if (!(fam >= 0 && fam <= 100)) e.push(TT("Family-director share: 0–100%", "สัดส่วนกรรมการครอบครัว: 0–100%"));
+    if (F.psrc === "letter") {
+      const l = F.lf;
+      if (!l) e.push(TT("Attach the English letter to shareholders (.txt, at least 2,000 words)", "แนบจดหมายถึงผู้ถือหุ้นภาษาอังกฤษ (.txt อย่างน้อย 2,000 คำ)"));
+      else if (l.error) e.push(l.error);
+      else if (l.words < MIN_WORDS || l.wordsSrv < MIN_WORDS) e.push(TT(`The letter has ${fmt(Math.min(l.words, l.wordsSrv))} words — at least 2,000 are needed`, `จดหมายมี ${fmt(Math.min(l.words, l.wordsSrv))} คำ — ต้องมีอย่างน้อย 2,000 คำ`));
+    } else {
+      const p = F.liwc === "" ? NaN : +F.liwc;
+      if (!(p >= 0 && p <= 20)) e.push(TT("CEO promotion value (LIWC-22) between 0 and 20", "ค่า CEO promotion (LIWC-22) ระหว่าง 0–20"));
+    }
+    return e;
+  }
+  function clInputs(F) {
+    const bs = +F.bsize, w = +F.women;
+    return { listed: !!+F.listed, promotion: clPromo(F), promo_src: F.psrc === "letter" ? "letter" : "liwc", letter_words: F.lf && !F.lf.error ? F.lf.words : null,
+      letter_sha256: F.lf && F.lf.sha256 ? F.lf.sha256 : null, family_share: F.fam === "" ? null : +F.fam / 100, political_ties: +F.pol ? 1 : 0,
+      board_size: F.bsize === "" ? null : bs, women: F.women === "" ? null : w, female_share: bs >= 1 && F.women !== "" ? w / bs : null };
+  }
+  function clSave(rec) {
+    const a = M1A.clients().filter(x => !(x.ticker === rec.ticker && +x.fiscal_year === +rec.fiscal_year));
+    a.push(rec); a.sort((x, y) => String(x.ticker).localeCompare(String(y.ticker)) || x.fiscal_year - y.fiscal_year);
+    if (!M1A.lsSet(M1A.CL_KEY, a)) toast(TT("Could not save in this browser", "บันทึกในเบราว์เซอร์ไม่สำเร็จ"));
+  }
+  function clRun() {
+    const F = clInit(), g = clGroupOf(F), errs = clErrs(F, g);
+    CL.msg = null;
+    if (errs.length) { toast(errs[0]); return; }
+    const t = clT(F), co = byT[t];
+    const ind = co ? co.ind : (F.ind === "fin" ? "fin" : +F.ind);
+    const base = { ticker: t, name: String(F.name || "").trim().slice(0, 160) || (co ? co.n : t), industry: ind, financial: clFin(F), english_letter: !!+F.letter,
+      board_table: !!+F.btab, fiscal_year: Math.round(+F.fy), inputs: clInputs(F), group: g.group, group_label: M1A.isEN() ? g.label_en : (g.label_th || g.label_en), scored: null, saved: new Date().toISOString() };
+    if (g.group === 6) { CL.res = { rec: base, g }; render(); return; }
+    if (g.group === 4 && g.provides === "none") { CL.res = { rec: base, g, needTable: true }; render(); return; }
+    if (g.group === 4 || g.group === 5) {
+      clSave(base);
+      const i = base.inputs;
+      M1A.lsSet(M1A.BP_KEY, { ticker: t, name: base.name, industry: ind, industry_label: M1A.indName(ind), financial: base.financial, english_letter: base.english_letter,
+        board_table: base.board_table, fiscal_year: base.fiscal_year, board_size: i.board_size, women: i.women, female_share: i.female_share,
+        family_share: i.family_share, political_ties: i.political_ties, group: g.group, reason: g.group === 5 ? "financials" : "no_english_letter", from: "intake", at: base.saved });
+      CL.res = { rec: base, g, routed: true }; render();
+      if (VIEWS.outdomain && $("#v-outdomain")) {
+        toast(TT(`Group ${g.group} → Board Profile (outside the reference group)`, `กลุ่ม ${g.group} → Board Profile (นอกกลุ่มอ้างอิง)`));
+        go("outdomain");
+      }
+      return;
+    }
+    const i = base.inputs, s = M1A.score({ promotion: i.promotion, family_share: i.family_share, political_ties: i.political_ties, female_share: i.female_share,
+      industry: ind, fiscal_year: base.fiscal_year, board_size: i.board_size, women: i.women });
+    if (!s) { CL.msg = { k: "crit", t: TT("Scoring is not available in this build", "การให้คะแนนยังไม่พร้อมในไฟล์ฉบับนี้") }; render(); return; }
+    const fc = M1A.fyCode(base.fiscal_year), outside = !co;
+    base.scored = Object.assign({}, s, { version: M1A.ver(), outside_reference_sample: outside, fy_code: fc,
+      labels: [outside ? "Outside the reference sample" : null, fc === "NYV" ? "Not yet validated" : null].filter(Boolean),
+      added_to_REF928: false, at: new Date().toISOString() });
+    clSave(base);
+    CL.res = { rec: base, g };
+    render();
+    const el = document.getElementById("clResult"); if (el) el.scrollIntoView({ block: "nearest" });
+  }
+  const f1x = v => v === null || v === undefined || !isFinite(+v) ? "—" : fmt(+v, 1);
+  function clResultCard() {
+    const R = CL.res; if (!R) return "";
+    const r = R.rec, g = R.g, gl = M1A.isEN() ? g.label_en : (g.label_th || g.label_en);
+    const head = `<h3>${TT("Client check", "ผลตรวจกลุ่มลูกค้า")} · ${esc(r.ticker)} · FY${r.fiscal_year} <span class="pill blue m1a-grp" id="clGroup" data-group="${g.group}">${TT("Group", "กลุ่ม")} ${g.group}</span></h3>
+      <p class="desc">${esc(gl)}${g.provisional ? ` · <span class="pill mute">${TT("provisional rule (CLIENT_GROUP not loaded)", "กติกาสำรอง (ยังไม่มี CLIENT_GROUP)")}</span>` : ""}</p>`;
+    if (R.needTable) return `<div class="card m1a-res" id="clResult" data-group="4">${head}<div class="note warn" id="clNeedTable">${TT("A board table (56-1 Part 2 Item 7 or the annual report) is needed before scoring or a Board Profile. Nothing was saved.", "ต้องมีตารางกรรมการ (56-1 ส่วนที่ 2 ข้อ 7 หรือรายงานประจำปี) ก่อนให้คะแนนหรือทำ Board Profile · ยังไม่บันทึก")}</div></div>`;
+    if (g.group === 6) return `<div class="card m1a-res" id="clResult" data-group="6">${head}<div class="note crit" id="clNotApplicable">${TT("Not applicable — the tool is for companies listed on the SET only (C1, C3). Nothing was scored or saved.", "ใช้ไม่ได้ — เครื่องมือนี้ใช้กับบริษัทจดทะเบียนใน SET เท่านั้น (C1, C3) · ไม่มีการให้คะแนนหรือบันทึก")}</div></div>`;
+    if (g.group === 4 || g.group === 5) return `<div class="card m1a-res" id="clResult" data-group="${g.group}">${head}<div class="note" id="clRouted">${g.group === 5 ? TT("Financials sector → Board Profile only: no matrix position, OIS, tier or What-if (D2).", "กลุ่มธุรกิจการเงิน → Board Profile เท่านั้น: ไม่มีตำแหน่งบนเมทริกซ์ OIS tier หรือ What-if (D2)")
+        : TT("No English letter (or no board table) → Board Profile only: descriptive profile, no tier, OIS or What-if (R4).", "ไม่มีจดหมายภาษาอังกฤษ (หรือไม่มีตารางกรรมการ) → Board Profile เท่านั้น: โปรไฟล์เชิงพรรณนา ไม่มี tier OIS หรือ What-if (R4)")}
+        <button class="btn s" data-goto="outdomain" style="margin-left:8px">${TT("Open Board Profile →", "เปิด Board Profile →")}</button></div></div>`;
+    const s = r.scored, Z = ZONES[s.quad] || {}, band = s.band90 || [];
+    const lbl = [s.outside_reference_sample ? `<span class="pill warn m1a-lbl" data-lbl="outside">${esc(M1A.lab("outside"))}</span>` : "",
+      s.fy_code === "NYV" ? `<span class="pill mute m1a-lbl" data-lbl="notval">${esc(M1A.lab("notval"))}</span>` : ""].join(" ");
+    const g3 = +r.inputs.promotion >= M1A.JN, fyOk = M1A.fy(r.fiscal_year).whatIfAllowed !== false && s.fy_code !== "FAIL";
+    const t1 = s.t1;
+    return `<div class="card m1a-res" id="clResult" data-group="${g.group}">${head}
+      <div class="m1a-chips">${M1A.fyChip(r.fiscal_year, 'id="clFy"')} ${lbl}${s.provisional ? ` <span class="pill mute">${TT("provisional engine", "เครื่องคำนวณสำรอง")}</span>` : ""}</div>
+      <div class="grid g4 tight" style="gap:10px;margin-top:10px">
+        <div class="stat"><div class="k">${TT("Quadrant", "ช่อง (quadrant)")}</div><div class="v num" id="clQuad">${esc(s.quad)}</div><div class="u">${esc(Z.l || "")}</div></div>
+        <div class="stat"><div class="k">OpenInnoScore</div><div class="v num" id="clOis">${f1x(s.ois)}</div><div class="u">${TT("90% band", "ช่วง 90%")} <span id="clBand">[${f1x(band[0])}, ${f1x(band[1])}]</span></div></div>
+        <div class="stat"><div class="k">Tier</div><div class="v num" id="clTier">${s.tier ?? "—"}</div><div class="u">${s.tier_uncertain ? `<span class="pill warn" id="clR8">${TT("tier uncertain (R8)", "tier ไม่แน่นอน (R8)")}</span>` : TT("band within one tier", "ช่วงอยู่ใน tier เดียว")}</div></div>
+        <div class="stat"><div class="k">${TT("Axes (percentile of REF-928)", "แกน (เปอร์เซ็นไทล์ใน REF-928)")}</div><div class="v" style="font-size:15px;margin-top:6px"><span id="clX">X P${f1x(s.X)}</span> · <span id="clY">Y P${f1x(s.Y)}</span></div><div class="u">${TT("dividers P53.8 / P36.0", "เส้นแบ่ง P53.8 / P36.0")}</div></div>
+      </div>
+      ${t1 ? `<p class="m1a-shadow" id="clShadow">${TT("Shadow B_T1", "ค่าเงา B_T1")}: ${TT("quadrant", "ช่อง")} ${esc(String(t1.quad || "").charAt(0))} · OIS_T1 ${f1x(t1.ois)}${t1.band90 ? ` [${f1x(t1.band90[0])}, ${f1x(t1.band90[1])}]` : ""} <span class="pill warn">CAUTION</span></p>` : ""}
+      <p class="dt-prov">${TT(`Scored against the frozen REF-928 (${M1A.ver()}) and never added to it (DP6). ${s.outside_reference_sample ? "The position is shown, but its percentile is not compared against other companies." : ""}`,
+        `ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ (${M1A.ver()}) และไม่เพิ่มเข้า REF-928 (DP6) ${s.outside_reference_sample ? "· แสดงตำแหน่งได้ แต่ไม่นำเปอร์เซ็นไทล์ไปเทียบกับบริษัทอื่น" : ""}`)}
+        · ${TT("CEO promotion", "CEO promotion")} ${fmt(+r.inputs.promotion, 3)} (${r.inputs.promo_src === "letter" ? TT("English letter, system dictionary", "จดหมายภาษาอังกฤษ · พจนานุกรมของระบบ") : "LIWC-22"}) · ${TT("board", "กรรมการ")} ${r.inputs.board_size} · ${TT("women", "หญิง")} ${r.inputs.women}</p>
+      <p class="m1a-sm" id="clG3">${!fyOk ? TT("What-if suspended for this fiscal year (FAIL · G5).", "งด What-if ในปีบัญชีนี้ (FAIL · G5)") : g3 ? TT("G3 passes (promotion ≥ 0.686): What-if is available with the board size entered.", "ผ่าน G3 (promotion ≥ 0.686): ใช้ What-if ได้ด้วยจำนวนกรรมการที่กรอก") : TT("Score change withheld (G3) — board-amplification movement only.", "งดแสดงผลต่างคะแนน (G3) — แสดงเฉพาะการเคลื่อนของ board amplification")}</p>
+      <div class="gx-row" style="margin-top:8px"><button class="btn s" data-clev="${esc(r.ticker)}|${r.fiscal_year}">${TT("Evidence Pack for this client →", "Evidence Pack ของลูกค้านี้ →")}</button></div></div>`;
+  }
+  function clListCard() {
+    const a = M1A.clients();
+    return `<div class="card" style="margin-top:14px" id="clListCard"><h3>${TT("My client list", "รายชื่อลูกค้าของฉัน")} <span class="pill mute">${TT("this browser only · never sent", "เก็บในเบราว์เซอร์นี้เท่านั้น · ไม่ส่งออก")}</span></h3>
+      <p class="desc">${TT("Read by the Portfolio Matrix. Clients outside REF-928 are scored against the frozen reference and never added to it (DP6).", "หน้า Portfolio Matrix อ่านรายชื่อนี้ · ลูกค้านอก REF-928 ให้คะแนนเทียบฐานที่ตรึงไว้และไม่ถูกเพิ่มเข้า REF-928 (DP6)")}</p>
+      ${a.length ? `<div class="tw"><table class="dt-tab" id="clList"><thead><tr><th>${TT("Ticker", "ชื่อย่อ")}</th><th>${TT("Name", "ชื่อ")}</th><th class="n">FY</th><th class="n">${TT("Group", "กลุ่ม")}</th><th>${TT("Result", "ผล")}</th><th>${TT("Labels", "ป้าย")}</th><th></th></tr></thead><tbody>
+        ${a.map((x, k) => { const s = x.scored; return `<tr data-cl="${esc(x.ticker)}|${+x.fiscal_year}"><td><b>${esc(x.ticker)}</b></td><td>${U(x.name || "")}</td><td class="n">${+x.fiscal_year}</td><td class="n">${+x.group}</td>
+          <td>${s ? `${esc(s.quad)} · OIS ${f1x(s.ois)} · Tier ${s.tier ?? "—"}` : +x.group <= 5 ? `<button class="lnk" data-goto="outdomain">Board Profile</button>` : "—"}</td>
+          <td>${s ? [s.outside_reference_sample ? esc(M1A.lab("outside")) : "", s.fy_code === "NYV" ? esc(M1A.lab("notval")) : ""].filter(Boolean).join(" · ") : ""} ${M1A.fyChip(+x.fiscal_year)}</td>
+          <td style="white-space:nowrap">${s ? `<button class="btn g dt-sm" data-clev="${esc(x.ticker)}|${+x.fiscal_year}">Evidence Pack</button> ` : ""}<button class="btn g dt-sm" data-cldel="${k}">${TT("Remove", "ลบ")}</button></td></tr>`; }).join("")}</tbody></table></div>`
+        : `<div class="dt-empty">${TT("No clients yet", "ยังไม่มีลูกค้า")}</div>`}</div>`;
+  }
+  function clForm() {
+    const F = clInit(), t = clT(F), co = byT[t], g = clGroupOf(F), errs = clErrs(F, g), scoring = g.group <= 3;
+    const yn = (k, lab, hint) => `<label class="dt-f"><span>${lab}</span><select id="cl_${k}" data-clf="${k}"><option value="1"${+F[k] ? " selected" : ""}>${TT("Yes", "ใช่")}</option><option value="0"${+F[k] ? "" : " selected"}>${TT("No", "ไม่ใช่")}</option></select>${hint ? `<small>${hint}</small>` : ""}</label>`;
+    const num = (k, lab, step, min, max, hint) => `<label class="dt-f" for="cl_${k}"><span>${lab}</span><input id="cl_${k}" data-clf="${k}" type="number" inputmode="decimal" step="${step}" min="${min}" max="${max}" value="${esc(F[k])}">${hint ? `<small>${hint}</small>` : ""}</label>`;
+    const indOpts = `<option value=""${F.ind ? "" : " selected"}>—</option>` + Object.keys(IND).map(k => `<option value="${k}"${String(F.ind) === k ? " selected" : ""}>${k} · ${esc(M1A.indName(k))}</option>`).join("")
+      + `<option value="fin"${F.ind === "fin" ? " selected" : ""}>${esc(M1A.lab("financials"))}</option>`;
+    const l = F.lf;
+    return `<div class="card m1a-intake" id="clForm"><h3>${TT("New listed company (client)", "บริษัทจดทะเบียนใหม่ (ลูกค้า)")}</h3>
+      <p class="desc">${TT("The six-group client check runs before anything is computed. Groups 1–3 are scored against the frozen REF-928; groups 4–5 go to Board Profile; group 6 is not applicable.", "ระบบตรวจกลุ่มลูกค้า 6 กลุ่มก่อนคำนวณ · กลุ่ม 1–3 ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ · กลุ่ม 4–5 ไปที่ Board Profile · กลุ่ม 6 ใช้ไม่ได้")}</p>
+      <div class="dt-form m1a-grid">
+        ${yn("listed", TT("Listed on the SET?", "จดทะเบียนใน SET หรือไม่"))}
+        <label class="dt-f" for="cl_ticker"><span>${TT("Ticker", "ชื่อย่อหลักทรัพย์ (ticker)")}</span><input id="cl_ticker" data-clf="ticker" list="clTk" autocomplete="off" value="${esc(F.ticker)}"><datalist id="clTk">${COMPS.map(c => `<option value="${esc(c.t)}">`).join("")}${M1A.clients().filter(x => !byT[x.ticker]).map(x => `<option value="${esc(x.ticker)}">`).join("")}</datalist>
+          <small>${co ? `${esc(co.t)} · ${TT("in REF-928", "อยู่ใน REF-928")}` : t ? TT("Not one of the 209 REF-928 firms — any listed ticker is accepted", "ไม่อยู่ใน 209 บริษัทของ REF-928 — รับชื่อย่อใดก็ได้ที่จดทะเบียน") : ""}</small></label>
+        <label class="dt-f" for="cl_name"><span>${TT("Company name", "ชื่อบริษัท")}</span><input id="cl_name" data-clf="name" value="${esc(F.name)}" placeholder="${co ? esc(co.n) : ""}"></label>
+        <label class="dt-f" for="cl_ind"><span>${TT("Industry (SET 1–7 or Financials)", "กลุ่มอุตสาหกรรม (SET 1–7 หรือกลุ่มธุรกิจการเงิน)")}</span><select id="cl_ind" data-clf="ind"${co ? " disabled" : ""}>${co ? `<option>${co.ind} · ${esc(M1A.indName(co.ind))}</option>` : indOpts}</select></label>
+        ${F.ind === "fin" ? `<label class="dt-f"><span>${TT("Financials-sector company?", "เป็นบริษัทกลุ่มธุรกิจการเงินหรือไม่")}</span><select disabled><option>${TT("Yes", "ใช่")}</option></select><small>${TT("set by the industry choice", "กำหนดจากกลุ่มอุตสาหกรรม")}</small></label>` : yn("fin", TT("Financials-sector company?", "เป็นบริษัทกลุ่มธุรกิจการเงินหรือไม่"))}
+        ${yn("letter", TT("English letter to shareholders?", "มีจดหมายถึงผู้ถือหุ้นภาษาอังกฤษหรือไม่"))}
+        ${yn("btab", TT("Board table (56-1 Part 2 Item 7)?", "มีตารางรายชื่อกรรมการ (56-1 ส่วนที่ 2 ข้อ 7) หรือไม่"))}
+        ${num("fy", TT("Fiscal year (C.E.)", "ปีบัญชี (ค.ศ.)"), 1, 2010, 2040, `${TT("helper", "เทียบ")}: ${TT("B.E.", "พ.ศ.")} ${Math.round(+F.fy) + 543 || "—"} · ${esc(isFinite(+F.fy) && +F.fy > 2000 ? M1A.fyText(Math.round(+F.fy)) : "")}`)}
+      </div>
+      <div class="note m1a-gline" id="clGroupLive" data-group="${g.group}">${TT("Client group", "กลุ่มลูกค้า")} <b>${g.group}</b> · ${esc(M1A.isEN() ? g.label_en : (g.label_th || g.label_en))}</div>
+      ${scoring ? `<div class="dt-form m1a-grid" style="margin-top:10px">
+        <label class="dt-f"><span>${TT("Promotion source", "ที่มาของค่า promotion")}</span><select id="cl_psrc" data-clf="psrc"><option value="liwc"${F.psrc !== "letter" ? " selected" : ""}>${TT("LIWC-22 value", "ค่า LIWC-22")}</option><option value="letter"${F.psrc === "letter" ? " selected" : ""}>${TT("English letter (.txt ≥ 2,000 words)", "จดหมายภาษาอังกฤษ (.txt ≥ 2,000 คำ)")}</option></select></label>
+        ${F.psrc === "letter" ? `<label class="dt-f" for="cl_lf"><span>${TT("English letter (.txt)", "จดหมายภาษาอังกฤษ (.txt)")}</span><input id="cl_lf" type="file" accept=".txt,text/plain"><small>${l ? (l.error ? `<b class="dt-bad">${esc(l.error)}</b>` : `${U(l.filename)} · ${fmt(l.words)} ${TT("words", "คำ")} · ${TT("server counter", "ตัวนับของเซิร์ฟเวอร์")} ${fmt(l.wordsSrv)} · promotion ${isFinite(l.promo) ? fmt(l.promo, 3) : "—"}`) : TT("no file selected", "ยังไม่ได้เลือกไฟล์")}</small></label>`
+          : num("liwc", TT("CEO promotion (LIWC-22)", "ค่า CEO promotion (LIWC-22)"), 0.0001, 0, 20, TT("e.g. 0.72", "เช่น 0.72"))}
+        ${num("bsize", TT("Board size (actual number of directors)", "จำนวนกรรมการจริง (คน)"), 1, 3, 30, TT("required before any What-if (D4)", "จำเป็นก่อน What-if (D4)"))}
+        ${num("women", TT("Women directors (people)", "กรรมการหญิง (คน)"), 1, 0, 30, +F.bsize >= 1 && F.women !== "" ? `${TT("share", "สัดส่วน")} ${pct1(+F.women / +F.bsize)}` : "")}
+        ${num("fam", TT("Family-director share (%)", "สัดส่วนกรรมการครอบครัว (%)"), 0.1, 0, 100, TT("context R6", "บริบท R6"))}
+        <label class="dt-f dt-tick"><span><input type="checkbox" id="cl_pol" data-clf="pol"${+F.pol ? " checked" : ""}> ${TT("Political ties", "มีความเชื่อมโยงทางการเมือง (political ties)")}</span><small>${TT("context R6", "บริบท R6")}</small></label>
+      </div>` : ""}
+      <ul class="dt-errs" id="clErrs"${errs.length ? "" : " hidden"}>${errs.map(e => `<li>${esc(e)}</li>`).join("")}</ul>
+      <div class="gx-row" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn p" id="clRun"${errs.length ? " disabled" : ""}>${TT("Run client check and score", "ตรวจกลุ่มลูกค้าและให้คะแนน")}</button>
+        <button class="btn g" id="clReset">${TT("Clear form", "ล้างฟอร์ม")}</button></div>
+      ${CL.msg ? `<div class="note ${CL.msg.k}" style="margin-top:10px" role="status">${esc(CL.msg.t)}</div>` : ""}</div>`;
+  }
+  async function clLetter(file) {
+    const F = clInit();
+    if (!file) { F.lf = null; return; }
+    if (!/\.txt$/i.test(file.name)) { F.lf = { filename: file.name, error: TT("The letter must be a .txt file", "จดหมายรับเฉพาะไฟล์ .txt") }; return; }
+    if (file.size > 2 * 1024 * 1024) { F.lf = { filename: file.name, error: TT("File larger than 2 MB", "ไฟล์ใหญ่เกิน 2 MB") }; return; }
+    const buf = await file.arrayBuffer(), text = new TextDecoder("utf-8").decode(buf), an = analyseText(text);
+    let promo = NaN; try { promo = promoAtPct(an.dp); } catch (e) { }
+    F.lf = { filename: file.name, words: wordsOf(text), wordsSrv: wordsSrv(text), dp: an.dp, promo, sha256: await sha256(buf) };
+  }
+  function wireClient(h) {
+    h.querySelectorAll("[data-clf]").forEach(el => {
+      const k = el.dataset.clf, ev = el.type === "checkbox" || el.tagName === "SELECT" || k === "ticker" ? "change" : "input";
+      el.addEventListener(ev, () => {
+        const F = clInit(); F[k] = el.type === "checkbox" ? (el.checked ? 1 : 0) : el.value;
+        if (k === "ind" && el.value === "fin") F.fin = 1;
+        if (ev === "change") { render(); return; }
+        const g = clGroupOf(F), errs = clErrs(F, g), b = h.querySelector("#clRun"), eb = h.querySelector("#clErrs");
+        if (b) b.disabled = errs.length > 0;
+        if (eb) { eb.innerHTML = errs.map(e => `<li>${esc(e)}</li>`).join(""); eb.hidden = !errs.length; }
+      });
+      if (ev === "input") el.addEventListener("change", () => render());
+    });
+    const lf = h.querySelector("#cl_lf"); if (lf) lf.onchange = async () => { await clLetter(lf.files[0]); render(); };
+    const rb = h.querySelector("#clRun"); if (rb) rb.onclick = () => { try { clRun(); } catch (e) { CL.msg = { k: "crit", t: String(e) }; render(); } };
+    const rs = h.querySelector("#clReset"); if (rs) rs.onclick = () => { clInit(true); CL.res = null; CL.msg = null; render(); };
+    h.querySelectorAll("[data-clev]").forEach(b => b.onclick = () => { const [t, y] = b.dataset.clev.split("|"); M1A.lsSet(M1A.EV_KEY, { ticker: t, fy: +y }); go("evidence"); });
+    h.querySelectorAll("[data-cldel]").forEach(b => b.onclick = () => confirm2(b, () => { const a = M1A.clients(); a.splice(+b.dataset.cldel, 1); M1A.lsSet(M1A.CL_KEY, a); render(); }, TT("Click again to remove", "กดอีกครั้งเพื่อลบ")));
+    h.querySelectorAll("[data-dtmode]").forEach(b => b.onclick = () => { CL.mode = b.dataset.dtmode; render(); });
+  }
+  const modeTabs = () => `<div class="m1a-tabs" role="tablist">
+      <button role="tab" data-dtmode="client" aria-selected="${CL.mode === "client"}" class="${CL.mode === "client" ? "on" : ""}" id="dtModeClient">① ${TT("New client company · client list (this browser only)", "บริษัทลูกค้าใหม่ · รายชื่อลูกค้า (เบราว์เซอร์นี้เท่านั้น)")}</button>
+      <button role="tab" data-dtmode="research" aria-selected="${CL.mode === "research"}" class="${CL.mode === "research" ? "on" : ""}" id="dtModeResearch">② ${TT("Research dataset submission · approval queue", "ส่งข้อมูลชุดวิจัย · คิวอนุมัติ")}</button></div>`;
+  const dtHead = () => pageHead(TT("Multi-year data", "ข้อมูลหลายปี"), TT("Import data · new client / new year", "นำเข้าข้อมูล · ลูกค้าใหม่ / ปีใหม่"),
+    TT("① Add a listed client company (six-group check, scored against the frozen REF-928, kept in this browser) or ② submit a verified research firm-year to the approval queue.",
+      "① เพิ่มบริษัทลูกค้าที่จดทะเบียน (ตรวจ 6 กลุ่ม · ให้คะแนนเทียบ REF-928 ที่ตรึงไว้ · เก็บในเบราว์เซอร์นี้) หรือ ② ส่งบริษัท-ปีของชุดวิจัยที่ตรวจแล้วเข้าคิวอนุมัติ"));
   /* ======================================================================= 5 · ลงทะเบียนหน้า · ห่อหน้าที่มีอยู่ · เมนู */
   VIEWS.dataupload = viewDataUpload; WIRES2.dataupload = wireUpload;
   VIEWS.dataadmin = viewDataAdmin; WIRES2.dataadmin = wireAdmin;
@@ -786,7 +991,8 @@
     return _r.apply(this, arguments); }; })();
   (() => {
     const add = (it, after) => { if (NAV.some(n => n.id === it.id)) return; const i = NAV.findIndex(n => n.id === after); if (i >= 0) NAV.splice(i + 1, 0, it); else NAV.push(it); };
-    add({ id: "dataupload", g: 3, ico: "⇪", lab: "นำเข้าข้อมูลปีใหม่" }, "datasets");
+    add({ id: "dataupload", g: 3, ico: "⇪", lab: "นำเข้าข้อมูล · ลูกค้าใหม่ / ปีใหม่" }, "datasets");
+    M1A.en({ "นำเข้าข้อมูล · ลูกค้าใหม่ / ปีใหม่": "Import data · new client / new year" });
     add({ id: "dataadmin", g: 3, ico: "☑", lab: "อนุมัติข้อมูล (ผู้ดูแล/อาจารย์)" }, "dataupload");
     buildNav();
     if (S.user) syncNavLocks();

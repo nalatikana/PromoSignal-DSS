@@ -482,3 +482,12 @@ if __name__ == "__main__":
             fn()
             print("PASS", name)
     print("ALL PASS")
+
+
+def test_mvp1_frozen_reference_is_edit9():
+    """MVP 1 (#16): every label of the frozen reference reads REF928-edit9-20261013 — the approval queue for research
+    submissions scores against it and never re-freezes; client entries (UC1) stay in the browser and never reach this API."""
+    v = D._ref_version()
+    assert v.startswith("REF928-edit9"), v
+    src = (ROOT / "server" / "data_api.py").read_text(encoding="utf-8")
+    assert "edit6-20260930\"" not in src.split("def _ref_version")[1].split("\n\n")[0]

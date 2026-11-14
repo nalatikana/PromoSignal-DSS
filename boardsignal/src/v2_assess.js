@@ -533,7 +533,7 @@ function bsAggCard(ticker) {
     if (g.indiv.length) { const a = bsAgg(g.indiv);
       out.push(`<div class="b5-bsg" data-role="indiv"><b>${esc(BS_ROLES.indiv)}</b> · ${L(`${a.n} evaluations (anonymous)`, `${a.n} แบบประเมิน (ไม่ระบุชื่อ)`)}
         <div class="tw"><table class="as-tbl b5-bsagg" id="bsAgg-${esc(fy)}"><thead><tr><th>${L("Evaluator", "ผู้ประเมิน")}</th><th>${L("Scale", "มาตราส่วน")}</th><th class="n">${L("Mean", "ค่าเฉลี่ย")}</th><th class="n">${L("% of full score", "% ของเต็ม")}</th></tr></thead><tbody>
-        ${a.per.map(p => `<tr><td>${L("Individual", "รายบุคคล")} #${p.i}</td><td>${esc(p.scale)}</td><td class="n">${fmt(p.mean, 2)}</td><td class="n">${fmt(p.pct, 1)}%</td></tr>`).join("")}
+        ${(window.PILOT_BUILD ? [] : a.per).map(p => `<tr><td>${L("Individual", "รายบุคคล")} #${p.i}</td><td>${esc(p.scale)}</td><td class="n">${fmt(p.mean, 2)}</td><td class="n">${fmt(p.pct, 1)}%</td></tr>`).join("")}
         <tr class="as-cur b5-bsagg-tot"><td colspan="2">${L(`<b>Aggregate = mean of ${a.n} evaluators</b> (equal weight per evaluation · computed on % of full score)`, `<b>ค่ารวม = ค่าเฉลี่ยของผู้ประเมิน ${a.n} คน</b> (น้ำหนักเท่ากันต่อแบบ · คิดบนร้อยละของคะแนนเต็ม)`)}</td>
           <td class="n">${a.same ? fmt(a.mean, 2) : "—"}</td><td class="n"><b>${fmt(a.pct, 1)}%</b></td></tr></tbody></table></div>
         ${a.same ? "" : `<div class="as-sm">${L(`The evaluations use different scales (${a.scales.map(esc).join(", ")}) — combined on % of full score only`, `แบบประเมินใช้มาตราส่วนต่างกัน (${a.scales.map(esc).join(", ")}) — รวมด้วยร้อยละของคะแนนเต็มเท่านั้น`)}</div>`}</div>`); }
@@ -762,6 +762,19 @@ function wireBodset(h) {
   };
 }
 /** ข้อความสำหรับตัวแทน {{ผลประเมิน BOD}} ในร่าง 56-1 — กระบวนการ + ผลรายด้าน (ระดับคณะ ไม่มีชื่อบุคคล) · null เมื่อไม่มีผล */
+/** MVP 1 · F6 — ผลแบบประเมิน SET ของ "ปีบัญชีเดียวกัน" เท่านั้น (ไม่ย้อนไปปีอื่น) · เฉพาะการประเมินทั้งคณะ (role board)
+ *  ไม่คืนผลรายบุคคลหรือชุดย่อย (ไม่มีคะแนนกรรมการรายบุคคลในรายงานรวม · PDPA ม.26)
+ *  fy รับ ค.ศ. หรือ พ.ศ. · คืน { ticker, fy_be, ev, calc: bsCalc(ev), scale, n_board } หรือ null */
+window.bodSetFor = function (ticker, fy) {
+  const f = bsFY(fy); if (!f) return null;
+  const E = BSE.evals.filter(e => e.ticker === ticker && e.fy === f && e.role === "board");
+  if (!E.length) return null;
+  const ev = E[E.length - 1];
+  return { ticker, fy_be: f, ev, calc: bsCalc(ev), scale: ev.scale, n_board: E.length,
+    others: BSE.evals.filter(e => e.ticker === ticker && e.fy === f && e.role !== "board").length };
+};
+/** ปีบัญชี (ค.ศ.) ที่มีผล SET ทั้งคณะของบริษัทนี้ */
+window.bodSetYears = ticker => [...new Set(BSE.evals.filter(e => e.ticker === ticker && e.role === "board").map(e => +e.fy - 543))].filter(y => y > 1900).sort();
 window.bodSetSummary = function (ticker, fy, lang) {
   ticker = ticker || S.t;
   const en = (lang || S.lang) === "EN";

@@ -225,8 +225,8 @@ def test_http():
 
 
 def test_plan_helpers():
-    assert R.tpl_plan(R.template("bank_rm")) == "max" and R.tpl_plan(R.template("investor_questions")) == "max"
-    assert all(R.tpl_plan(t) == "pro" for t in R.registry()["templates"] if t["id"] not in ("bank_rm", "investor_questions"))
+    assert R.tpl_plan(R.template("uc1_relationship")) == "max" and R.tpl_plan(R.template("investor_questions")) == "max"
+    assert all(R.tpl_plan(t) == "pro" for t in R.registry()["templates"] if t["id"] not in ("uc1_relationship", "investor_questions"))
 
 
 def test_plan_enforcement():
@@ -236,7 +236,7 @@ def test_plan_enforcement():
     env = {"APP_USERS": "alice:alicepw", "ADMIN_USER": "admin", "ADMIN_PASSWORD": "adminpw", "APP_PASSWORD": "test", "SECRET_KEY": "s",
            "ANTHROPIC_API_KEY": "dummy-key", "ANTHROPIC_BASE_URL": fake, "ANTHROPIC_MODEL": "claude-test", "OPENAI_API_KEY": ""}
     pro = {"template_id": "board_memo", "payload": PAYLOAD, "lang": "TH"}
-    mx = dict(pro, template_id="bank_rm")
+    mx = dict(pro, template_id="uc1_relationship")
     # (1) PLAN_SOURCE=server (ค่าเริ่มต้น) — แผนของบัญชีที่ผู้ดูแลตั้ง
     srv = Server(dict(env, DB_PATH=str(tmp / "p.db")), log_path=tmp / "p.log")
     try:
@@ -261,7 +261,7 @@ def test_plan_enforcement():
         assert al.json("POST", "/api/report/generate", data=mx, headers={"X-OIS-Plan": "max"})[0] == 403
         assert adm.json("POST", f"/api/admin/users/{uid}/plan", data={"plan": "max"})[0] == 200
         st, g = al.json("POST", "/api/report/generate", data=mx)
-        assert st == 200 and g["template_id"] == "bank_rm", (st, g)                              # Pro Max → ได้
+        assert st == 200 and g["template_id"] == "uc1_relationship", (st, g)                              # Pro Max → ได้
         assert adm.json("POST", f"/api/admin/users/{uid}/plan", data={"plan": "free"})[0] == 200
         assert adm.json("POST", "/api/report/generate", data=mx)[0] == 200                      # ผู้ดูแลผ่านทุกระดับ
         assert al.json("POST", "/api/report/generate", data=pro)[0] == 403
@@ -289,3 +289,22 @@ if __name__ == "__main__":
             fn()
             print("ok", name)
     print("ALL OK")
+
+
+def test_mvp1_uc1_template_wording_and_pilot_hidden():
+    """MVP 1 (F3, #12, #13): template 7 = "UC1 relationship note (supporting information)" with no bank/loan/credit wording;
+    template 8 (investor) is flagged pilot_hidden so the pilot build hides it; the registry stays identical to the client copy."""
+    reg = R.registry()
+    ids = [t["id"] for t in reg["templates"]]
+    assert ids[6] == "uc1_relationship" and ids[7] == "investor_questions"
+    t7 = R.template("uc1_relationship")
+    assert t7["name_en"] == "UC1 relationship note (supporting information)"
+    banned = re.compile(r"ธนาคาร|สินเชื่อ|วงเงิน|สถาบันการเงิน|\bbank|\bloan|credit|lending|financial institution", re.I)
+    visible = [t7["name_th"], t7["name_en"], t7["audience"], t7["purpose"], *t7["rules"],
+               *[s["heading_th"] for s in t7["sections"]], *[s["heading_en"] for s in t7["sections"]], *[s["instruction"] for s in t7["sections"]]]
+    assert not [v for v in visible if banned.search(v)], [v for v in visible if banned.search(v)]
+    assert R.template("investor_questions").get("pilot_hidden") is True
+    assert not any(t.get("pilot_hidden") for t in reg["templates"] if t["id"] != "investor_questions")
+    # ป้ายของกฎและคำอธิบายที่แสดงบนหน้า Prompt Designer ต้องไม่มีคำต้องห้าม (patterns ใช้ตรวจผลลัพธ์ จึงยกเว้น)
+    shown = [c["rule"] for c in reg["checks"]] + [c["th"] for c in reg["checks"]] + [r.get("th", "") for r in reg["system"]["rules"]] + [r.get("why_th", "") for r in reg["system"]["rules"]]
+    assert not [v for v in shown if banned.search(v) and "credit" not in v.lower()], [v for v in shown if banned.search(v)]

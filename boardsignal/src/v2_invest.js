@@ -43,8 +43,12 @@ window.b5H = b5H;
 const b5T = (en, th) => (typeof S === "object" && S.lang === "EN") ? en : th;
 /* แก้ไขครั้งที่ 2.4 · ที่มาของเกณฑ์ critical mass (ภาคผนวก ง ข้อ 19) — Table 4 ของบทความเป็นค่าเฉลี่ยกิจกรรมตาม tier × quadrant
    ไม่ใช่ผลเรื่องจำนวนกรรมการหญิง เกณฑ์ ≥ 3 คนจึงอ้างเป็น "เกณฑ์ที่ผู้วิจัยกำหนด" อิงแนวคิด critical mass ในวรรณกรรม */
-const CM_SRC = "เกณฑ์ที่ผู้วิจัยกำหนด อิงแนวคิด critical mass (Konrad, Kramer & Erkut, 2008)";
-const CM_SRC_EN = "a threshold set by the researcher, following the critical-mass literature (Konrad, Kramer & Erkut, 2008)";
+/* MVP 1 · D3: อ้าง Torchia, Calabrò & Huse (2011) เท่านั้น */
+const CM_SRC = "Torchia, Calabrò & Huse, 2011";
+const CM_SRC_EN = "Torchia, Calabrò & Huse, 2011";
+const CM_NOTE_TH = "Critical mass = กรรมการหญิงตั้งแต่ 3 คนขึ้นไป · Torchia, Calabrò & Huse (2011) รายงานว่าคณะกรรมการที่เปลี่ยนจากกรรมการหญิง 1–2 คนเป็นอย่างน้อย 3 คน สัมพันธ์กับนวัตกรรมเชิงองค์กรของบริษัทที่สูงขึ้น";
+const CM_NOTE_EN = "Critical mass = three or more women directors. Torchia, Calabrò & Huse (2011) report that boards moving from one or two women to at least three were associated with higher firm organizational innovation.";
+const CM_REF = "Torchia, M., Calabrò, A., & Huse, M. (2011). Women directors on corporate boards: From tokenism to critical mass. Journal of Business Ethics, 102(2), 299–317.";
 const CM_SHORT = "เกณฑ์ที่ผู้วิจัยกำหนด";
 /* ข้อความของ v2_app.js ที่อ้าง “Table 4” — เขียนทับจากไฟล์นี้ (ไม่แก้ไฟล์ต้นทาง) */
 critNote = function (c) {
@@ -341,7 +345,7 @@ function investBlock(c) {
           <div><div style="font-size:12.4px">${esc(f.l)}</div>
             <div style="font-size:10.8px;color:var(--ink-3);line-height:1.55">${esc(f.d)}</div></div></div>`).join("")}
         <div style="display:flex;gap:8px;margin-top:13px;flex-wrap:wrap">
-          <button class="btn p" data-goto="ic">เปิดโหมดที่ประชุม</button>
+
           <button class="btn s" data-memo="1">พิมพ์บันทึกหน้าเดียว</button>
           <button class="btn g" data-addport="${esc(c.t)}">เพิ่มเข้าพอร์ต</button>
         </div>
@@ -444,143 +448,220 @@ function tickVals(a, b) {
   return out;
 }
 
+/* ============================================================================
+   MVP 1 · F1 Portfolio Matrix (#15 #16 #17) — ตำแหน่งของบริษัทลูกค้าขององค์กรนำร่องบน 2×2 เดียวกับ Strategy Grid
+   ไม่ใช่เครื่องมือคัดเลือกหลักทรัพย์ · เรียงตามช่องแล้วตามตัวย่อ · รายชื่อที่วาง/อัปโหลดอ่านในเบราว์เซอร์ ไม่เก็บ ไม่ส่งออก
+   ============================================================================ */
+let M1_PASTE = [];            // รายชื่อที่วาง/อัปโหลด — อยู่ในหน่วยความจำเท่านั้น (รีโหลดแล้วหายตามข้อกำหนด)
+let M1_PASTE_MISS = [];
+const M1_QORD = { A: 0, B: 1, C: 2, D: 3 };
+/** แถวของ Portfolio Matrix — บริษัทใน S.port + รายชื่อที่วาง + ลูกค้าที่นำเข้า (ois_clients_v1) */
+function pmRows() {
+  const out = [], seen = new Set(), cls = typeof m1Clients === "function" ? m1Clients() : [];
+  const clBy = Object.fromEntries(cls.map(x => [String(x.ticker).toUpperCase(), x]));
+  const addRef = (t, src) => {
+    if (seen.has(t) || !byT[t] || !portSee(t)) return; seen.add(t);
+    const co = coOf(t), s = m1ScoreOf(co), fy = +(co.fy || FY_SHOWN);
+    out.push({ t, co, s, g: fy > 2023 ? 3 : 1, labels: fy > 2023 ? ["Not yet validated"] : [], fy, src, ref: true });
+  };
+  const addCl = (cl, src) => {
+    const t = String(cl.ticker).toUpperCase(); if (seen.has(t)) return; seen.add(t);
+    const co = m1ClientCo(cl), g = co._group.group, s = g <= 3 ? m1ScoreOf(co) : null;
+    const labels = (co._group.labels && co._group.labels.length) ? co._group.labels
+      : g === 2 ? ["Outside the reference sample"] : g === 3 ? ["Outside the reference sample", "Not yet validated"] : [];
+    out.push({ t, co, s, g, labels, fy: co.fy, src, client: true });
+  };
+  (S.port || []).forEach(t => addRef(t, "list"));
+  M1_PASTE.forEach(t => { if (byT[t]) addRef(t, "paste"); else if (clBy[t]) addCl(clBy[t], "paste"); });
+  cls.forEach(cl => addCl(cl, "client"));
+  return out;
+}
+/** เรียงตามช่อง (A → D) แล้วตามตัวย่อ · แถว Board Profile และแถวที่ใช้ไม่ได้อยู่ท้าย */
+function pmSorted(rows) {
+  const k = r => r.g >= 6 ? 9 : r.g >= 4 ? 8 : (M1_QORD[r.s && r.s.quad] ?? 7);
+  return rows.slice().sort((a, b) => k(a) - k(b) || String(a.t).localeCompare(String(b.t)));
+}
+const pmLabTxt = l => l === "Outside the reference sample" ? m1OutLab() : l === "Not yet validated" ? m1NyvLab() : l;
+const pmLabChips = r => r.labels.map(l => `<span class="pill ${/Not yet/.test(l) ? "mute" : "warn"} m1b-lab">${esc(pmLabTxt(l))}</span>`).join(" ");
+/** อ่านรายชื่อตัวย่อจากข้อความ (วาง / CSV / TSV) — คอลัมน์แรกของแต่ละบรรทัด หรือคำที่คั่นด้วยจุลภาค/ช่องว่าง */
+function pmParseList(txt) {
+  const lines = String(txt || "").split(/[\r\n]+/).filter(l => l.trim());
+  const toks = lines.flatMap(line => {
+    const cells = line.split(/[\t,;]/).map(x => x.trim().replace(/^"|"$/g, "")).filter(Boolean);
+    if (!cells.length) return [];
+    /* หลายบรรทัด = ตาราง (คอลัมน์แรก) · บรรทัดเดียว = รายการคั่นด้วยจุลภาค/ช่องว่าง */
+    return lines.length > 1 && cells.length > 1 ? [cells[0]] : cells.flatMap(x => x.split(/\s+/));
+  }).map(x => x.toUpperCase().replace(/[^A-Z0-9&.\-]/g, "")).filter(x => x && x.length <= 12 && !/^(TICKER|SYMBOL|SECURITY|NAME)$/.test(x));
+  return [...new Set(toks)];
+}
+/** อ่าน XLSX ในเบราว์เซอร์โดยไม่ใช้ไลบรารี — แตก zip ด้วย DecompressionStream("deflate-raw") แล้วอ่านคอลัมน์ A ของชีตแรก
+ *  เบราว์เซอร์ที่ไม่มี DecompressionStream → แจ้งให้บันทึกเป็น CSV */
+async function pmReadXlsx(buf) {
+  if (typeof DecompressionStream === "undefined") throw new Error("nodeflate");
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error("zip");
+  const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
+  const files = {}, dec = new TextDecoder();
+  for (let k = 0; k < n; k++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const meth = dv.getUint16(p + 10, true), csz = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true),
+      el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    files[dec.decode(u8.subarray(p + 46, p + 46 + nl))] = { meth, csz, off };
+    p += 46 + nl + el + cl;
+  }
+  const read = async name => {
+    const f = files[name]; if (!f) return null;
+    const lo = f.off, s0 = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true), raw = u8.subarray(s0, s0 + f.csz);
+    if (f.meth === 0) return dec.decode(raw);
+    const ds = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return await new Response(ds).text();
+  };
+  const ss = await read("xl/sharedStrings.xml"), shared = [];
+  if (ss) { const d = new DOMParser().parseFromString(ss, "application/xml");
+    d.querySelectorAll("si").forEach(si => shared.push([...si.querySelectorAll("t")].map(t => t.textContent).join(""))); }
+  const sheet = Object.keys(files).filter(f => /^xl\/worksheets\/sheet\d+\.xml$/.test(f)).sort()[0];
+  const sx = sheet ? await read(sheet) : null; if (!sx) throw new Error("sheet");
+  const d = new DOMParser().parseFromString(sx, "application/xml"), col = [];
+  d.querySelectorAll("sheetData row").forEach(row => {
+    const c = [...row.querySelectorAll("c")].find(x => /^A\d+$/.test(x.getAttribute("r") || "")) || row.querySelector("c"); if (!c) return;
+    const t = c.getAttribute("t"), v = c.querySelector("v"), is = c.querySelector("is t");
+    col.push(t === "s" && v ? shared[+v.textContent] || "" : is ? is.textContent : v ? v.textContent : "");
+  });
+  return col.join("\n");
+}
+function pmSetPaste(list) {
+  const cls = typeof m1Clients === "function" ? m1Clients() : [], clT = new Set(cls.map(x => String(x.ticker).toUpperCase()));
+  M1_PASTE = list.filter(t => byT[t] || clT.has(t));
+  M1_PASTE_MISS = list.filter(t => !byT[t] && !clT.has(t));
+}
+function pmKpis(rows) {
+  const pl = rows.filter(r => r.g <= 3 && r.s);
+  const cnt = q => pl.filter(r => r.s.quad === q).length;
+  const outN = rows.filter(r => r.g === 2 || (r.g === 3 && r.client)).length, nyv = rows.filter(r => r.g === 3 || (+r.fy > 2023 && r.g <= 3)).length;
+  const bp = rows.filter(r => r.g === 4 || r.g === 5).length;
+  const card = (k, v, l, u, cls) => `<div class="stat m1b-kpi${cls ? " " + cls : ""}" data-kpi="${k}"><div class="k">${esc(l)}</div><div class="v num">${v}</div><div class="u">${esc(u || "")}</div></div>`;
+  return `<div class="m1b-kpis">
+    ${["A", "B", "C", "D"].map(q => card(q, cnt(q), `${q} · ${ZONE_CFG[q].name}`, b5T(PLAYBOOK_UC1[q].name[0], PLAYBOOK_UC1[q].name[1]), "q" + q)).join("")}
+    ${card("out", outN, m1OutLab(), b5T("hollow markers · scored against the frozen REF-928, never added to it", "วงกลมโปร่ง · เทียบ REF-928 ที่ freeze แล้ว ไม่เพิ่มเข้าฐาน"))}
+    ${card("nyv", nyv, m1NyvLab(), b5T("fiscal year after 2023", "ปีบัญชีหลัง 2566"))}
+    ${bp ? card("bp", bp, b5T("Board Profile only", "Board Profile เท่านั้น"), b5T("no position (groups 4–5)", "ไม่มีตำแหน่ง (กลุ่ม 4–5)")) : ""}
+  </div>`;
+}
 function viewPort() {
-  const head = pageHead("พอร์ตลงทุน", "ดูหลายบริษัทพร้อมกัน",
-    b5T(`Portfolio companies are sorted by the <b>formula gap</b> and <b>structural risk flags</b> as supporting information on which points may be considered first (you decide) ·
-     the portfolio is stored only in your browser and is never sent anywhere`,
-    `เรียงบริษัทในพอร์ตตาม<b>ช่องว่างตามสูตร</b>และ<b>ธงความเสี่ยงเชิงโครงสร้าง</b> เพื่อเป็นข้อมูลประกอบว่ามีประเด็นใดที่อาจพิจารณาก่อน (ผู้ใช้ตัดสินใจเอง) ·
-     พอร์ตเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น ไม่ส่งออกไปที่ใด`));
+  const L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "credit";
+  const head = pageHead("Portfolio Matrix", b5T("Client positions on the 2×2", "ตำแหน่งของบริษัทลูกค้าบน 2×2"),
+    b5T(`Positions of the pilot organisation's client companies on the same 2×2 as the Strategy Grid — not a stock-selection tool ·
+     sorted by quadrant, then ticker · lists you paste or upload are read in this browser, never stored or sent`,
+    `ตำแหน่งของบริษัทลูกค้าขององค์กรนำร่องบน 2×2 เดียวกับ Strategy Grid — ไม่ใช่ระบบเลือกหุ้นเข้าพอร์ต ·
+     เรียงตามช่อง แล้วตามตัวย่อ · รายชื่อที่วางหรืออัปโหลดอ่านในเบราว์เซอร์นี้ ไม่เก็บและไม่ส่งออกไปที่ใด`))
+    + `<div class="m1b-lensline">${b5T("Lens", "มุมมอง")}: <b>${esc(typeof ucLab === "function" ? ucLab(L) : L.lab || "")}</b> · ${esc(m1Ver())}</div>`
+    + (uc1 ? m1SupBadge() : "");
   const rk = tierRank();
-  /* Basic: ดูได้เฉพาะบริษัทตนเอง → พอร์ตหลายบริษัทไม่เปิด · ไม่สร้างตาราง/ตัวเลือกบริษัทอื่นใน DOM และใช้เครดิตปลดไม่ได้ */
   if (rk < 1) return head + `<div class="card b5-portwall" id="b5PortWall" style="text-align:center;padding:36px 22px">
       <div style="font-size:30px;opacity:.4">🔒</div>
-      <h3 style="justify-content:center;margin-top:8px">${b5T("The investment portfolio is available from Pro", "พอร์ตลงทุนเป็นสิทธิ์ตั้งแต่ระดับ Pro")}</h3>
-      <p class="desc" style="max-width:52ch;margin:6px auto 14px">${b5T(`Basic shows data for your own company only${S.freeCo ? ` (<b>${esc(S.freeCo)}</b>)` : ""} · starter credits cannot unlock the portfolio ·
-        Pro: unlock once for ${PRICE.port} credits, listing only companies you can view (your own + unlocked) · Pro Max: all companies, included in the subscription ·
-        committee mode for your own company works at every level`, `ระดับ Basic ดูข้อมูลได้เฉพาะบริษัทของคุณเอง${S.freeCo ? ` (<b>${esc(S.freeCo)}</b>)` : ""} บริษัทเดียว · เครดิตเริ่มต้นใช้ปลดพอร์ตไม่ได้ ·
-        Pro: ปลดพอร์ตครั้งเดียว ${PRICE.port} เครดิต และใส่ได้เฉพาะบริษัทที่ดูได้ (บริษัทตนเอง + ที่ปลดล็อกรายบริษัท) · Pro Max: ทุกบริษัท รวมใน Subscription ·
-        โหมดที่ประชุมของบริษัทตนเองใช้ได้ทุกระดับ`)}</p>
+      <h3 style="justify-content:center;margin-top:8px">${b5T("Portfolio Matrix is available from Pro", "Portfolio Matrix เป็นสิทธิ์ตั้งแต่ระดับ Pro")}</h3>
+      <p class="desc" style="max-width:52ch;margin:6px auto 14px">${b5T(`Basic shows data for your own company only${S.freeCo ? ` (<b>${esc(S.freeCo)}</b>)` : ""} ·
+        Pro: unlock once for ${PRICE.port} credits, listing only companies you can view · Pro Max: all companies, included in the subscription`,
+        `ระดับ Basic ดูข้อมูลได้เฉพาะบริษัทของคุณเอง${S.freeCo ? ` (<b>${esc(S.freeCo)}</b>)` : ""} บริษัทเดียว ·
+        Pro: ปลดครั้งเดียว ${PRICE.port} เครดิต ใส่ได้เฉพาะบริษัทที่ดูได้ · Pro Max: ทุกบริษัท รวมใน Subscription`)}</p>
       <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
         <button class="btn p" data-setplan="pro">เปลี่ยนเป็น Pro (Pay-Per-Use)</button>
-        <button class="btn s" data-goto="ic">${b5T("Committee mode · my company", "โหมดที่ประชุม · บริษัทของฉัน")}</button>
         <button class="btn g" data-goto="billing">ดูตารางสิทธิ์</button></div></div>`;
   const hid = portHidden();
-  const hidNote = hid.length ? `<div class="note warn b5-porthid" style="margin-top:10px;font-size:11.5px">${b5T(`${hid.length} portfolio compan${hid.length > 1 ? "ies" : "y"} you cannot view yet (${hid.map(esc).join(", ")}) — no figures shown · unlock that company's report first (${PRICE.report} credit) or use Pro Max`, `บริษัทในพอร์ตที่ยังดูไม่ได้ ${hid.length} บริษัท (${hid.map(esc).join(", ")}) — ไม่แสดงตัวเลข · ปลดล็อกรายงานบริษัทนั้นก่อน (${PRICE.report} เครดิต) หรือใช้ Pro Max`)}</div>` : "";
+  const hidNote = hid.length ? `<div class="note b5-porthid" style="margin-top:10px;font-size:11.5px">${b5T(`${hid.length} compan${hid.length > 1 ? "ies" : "y"} you cannot view yet (${hid.map(esc).join(", ")}) — not shown`, `บริษัทที่ยังดูไม่ได้ ${hid.length} บริษัท (${hid.map(esc).join(", ")}) — ไม่แสดง`)}</div>` : "";
   const picker = `
-  <div class="card" style="margin-bottom:14px">
+  <div class="card m1b-pick" style="margin-bottom:14px">
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div style="flex:1;min-width:230px">
-        <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px">เพิ่มบริษัทเข้าพอร์ต</div>
+        <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px">${b5T("Add a company", "เพิ่มบริษัท")}</div>
         <select class="sel" id="pAdd" style="width:100%"></select></div>
-      <button class="btn p" id="pAddBtn">เพิ่ม</button>
-      <button class="btn s" id="pFill">${rk >= 2 ? b5T(`Auto-fill · first 10 by consideration-order index (${esc(S.ind === "all" ? "whole market" : IND[S.ind])})`, `เติมอัตโนมัติ · 10 บริษัทแรกตามดัชนีลำดับพิจารณา (${esc(S.ind === "all" ? "ทั้งตลาด" : IND[S.ind])})`) : b5T("Auto-fill · all companies you can view", "เติมอัตโนมัติ · บริษัทที่ดูได้ทั้งหมด")}</button>
-      <button class="btn g" id="pClear">ล้างพอร์ต</button>
-      <button class="btn g" id="pCsv">ดาวน์โหลด CSV</button>
+      <button class="btn p" id="pAddBtn">${b5T("Add", "เพิ่ม")}</button>
+      ${uc1 ? "" : `<button class="btn s" id="pFill">${b5T("Auto-fill · first 10 by ticker", "เติมอัตโนมัติ · 10 บริษัทแรกตามตัวย่อ")}</button>`}
+      <button class="btn g" id="pClear">${b5T("Clear list", "ล้างรายการ")}</button>
+      <button class="btn g" id="pCsv">${b5T("Download CSV", "ดาวน์โหลด CSV")}</button>
     </div>
+    <details class="blk m1b-paste" style="margin-top:12px"${M1_PASTE.length || M1_PASTE_MISS.length ? " open" : ""}><summary><b>${b5T("Paste or upload a ticker list", "วางหรืออัปโหลดรายชื่อตัวย่อ")}</b>
+        <span class="gx-sm">CSV · TSV · XLSX · ${b5T("processed in this browser, never stored or sent", "อ่านในเบราว์เซอร์นี้ ไม่เก็บ ไม่ส่งออก")}</span></summary>
+      <div class="bd"><textarea class="inp" id="pmPaste" rows="3" style="width:100%;font-size:12.5px" placeholder="${b5T("One ticker per line, or separated by commas — e.g. PTG, TSTH, BTS", "ตัวย่อบรรทัดละหนึ่งตัว หรือคั่นด้วยจุลภาค เช่น PTG, TSTH, BTS")}"></textarea>
+        <div class="gx-row" style="margin-top:8px"><button class="btn s" id="pmPasteGo">${b5T("Show on the matrix", "แสดงบน Matrix")}</button>
+          <button class="btn g" id="pmUpBtn">⬆ ${b5T("Upload CSV / XLSX", "อัปโหลด CSV / XLSX")}</button>
+          <input type="file" id="pmFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none">
+          ${M1_PASTE.length ? `<button class="btn g" id="pmPasteClear">${b5T("Clear pasted list", "ล้างรายชื่อที่วาง")}</button>` : ""}</div>
+        <p class="gx-sm" style="margin:6px 0 0">${b5T("The first column of each row is read as the ticker. The list stays in this page only — it is gone after a reload. If XLSX cannot be read in your browser, save the sheet as CSV.",
+          "อ่านคอลัมน์แรกของแต่ละแถวเป็นตัวย่อ · รายชื่ออยู่ในหน้านี้เท่านั้น รีโหลดแล้วหายไป · ถ้าเบราว์เซอร์อ่าน XLSX ไม่ได้ ให้บันทึกชีตเป็น CSV")}</p>
+        ${M1_PASTE.length ? `<div class="gx-sm m1b-pasted" style="margin-top:6px">${b5T("Pasted list", "รายชื่อที่วาง")} (${M1_PASTE.length}): ${M1_PASTE.map(esc).join(", ")}</div>` : ""}
+        ${M1_PASTE_MISS.length ? `<div class="note m1b-miss" style="margin-top:6px;font-size:11.5px">${b5T(`Not found in the reference data or in your client list: ${M1_PASTE_MISS.map(esc).join(", ")} — add a new listed firm on the Import page`, `ไม่พบในข้อมูลอ้างอิงหรือรายชื่อลูกค้า: ${M1_PASTE_MISS.map(esc).join(", ")} — เพิ่มเป็นบริษัทจดทะเบียนใหม่ได้ที่หน้านำเข้าข้อมูล`)}</div>` : ""}
+      </div></details>
     <div id="pChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px"></div>
     ${rk < 2 ? `<div class="gx-sm" style="margin-top:8px">${b5T("Pro lists only companies you can view (your own + unlocked) · sorted by ticker", "ระดับ Pro ใส่ได้เฉพาะบริษัทที่ดูได้ (บริษัทตนเอง + ที่ปลดล็อก) · รายชื่อเรียงตามตัวย่อ")}</div>` : ""}${hidNote}
   </div>`;
 
-  const rows = portRows();
+  const rows = pmRows();
   if (!rows.length) return head + picker + `<div class="card" style="text-align:center;padding:40px 20px">
     <div style="font-size:30px;opacity:.35">▤</div>
-    <h3 style="justify-content:center;margin-top:8px">${b5T("No companies in the portfolio yet", "ยังไม่มีบริษัทในพอร์ต")}</h3>
-    <p class="desc" style="max-width:44ch;margin:6px auto 0">${b5T("Add a company above or press “Auto-fill” to bring companies from the current view in together.", "เพิ่มบริษัทจากช่องด้านบน หรือกด “เติมอัตโนมัติ” เพื่อดึงบริษัทของมุมมองปัจจุบันเข้ามาดูพร้อมกัน")}</p></div>`;
+    <h3 style="justify-content:center;margin-top:8px">${b5T("No client companies on the matrix yet", "ยังไม่มีบริษัทลูกค้าบน Matrix")}</h3>
+    <p class="desc" style="max-width:44ch;margin:6px auto 0">${b5T("Add a company above, or paste / upload a ticker list.", "เพิ่มบริษัทจากช่องด้านบน หรือวาง / อัปโหลดรายชื่อตัวย่อ")}</p></div>`;
 
-  const sk = PSORT.find(s => s.k === (S.psort || "eng")) || PSORT[0];
-  const sorted = rows.slice().sort((a, b) => { const x = sk.f(a), y = sk.f(b); return x < y ? -1 : x > y ? 1 : 0; });
-  const crit = rows.filter(r => r.r.k === "crit"), warn = rows.filter(r => r.r.k === "warn");
-  const avgI = rows.reduce((s, r) => s + r.c.ipi, 0) / rows.length;
-  const avgU = rows.reduce((s, r) => s + r.u.delta, 0) / rows.length;
-  const topE = sorted.slice().sort((a, b) => b.e.score - a.e.score)[0];
-
-  const stats = `<div class="grid g4" style="margin-bottom:14px">
-    ${[[fmt(rows.length), "บริษัทในพอร์ต", (S.ind === "all" ? "ทุกอุตสาหกรรม" : IND[S.ind])],
-    [fmt(avgI), "OpenInnoScore เฉลี่ย", b5T(MKT_EN(), MKT_TH()) + " " + fmt(qstats(IPI_ALL).med)],
-    ["+" + fmt(avgU), "ช่องว่างเชิงโครงสร้างเฉลี่ย", "จุด (ตามสูตร, เชิงความสัมพันธ์) ถ้าบอร์ดไปถึงเพดานกลุ่ม"],
-    [fmt(crit.length + warn.length), "บริษัทที่มีธงเตือน", crit.length + " รายอยู่ในระดับสูง"]]
-      .map(([v, k, u], i) => `<div class="stat${i === 0 ? " hero" : ""}"><div class="k">${esc(k)}</div>
-        <div class="v num">${v}</div><div class="u">${esc(u)}</div></div>`).join("")}
-  </div>`;
-
+  const sorted = pmSorted(rows), plotted = sorted.filter(r => r.g <= 3 && r.s && isFinite(r.s.X) && isFinite(r.s.Y));
+  const selQ = S.pmSel && M1_QORD[S.pmSel] !== undefined ? S.pmSel : (plotted[0] ? plotted[0].s.quad : "A");
+  const pts = plotted.map(r => ({ x: r.s.X, y: r.s.Y, q: r.s.quad, t: r.t, n: r.co.n, i: fmt(r.s.ois, 0), hollow: !r.ref && r.g >= 2,
+    client: !r.ref, sub: r.labels.join(" · "), label: r.t }));
+  const chart = `<div class="card m1b-pmchart">
+      <h3>${b5T("Portfolio Matrix · 2×2", "Portfolio Matrix · 2×2")}</h3>
+      <p class="desc">${b5T("Same component as the Strategy Grid: X = CEO Promotion Focus percentile, Y = board-amplification percentile (B_EG), dividers P53.8 / P36.0, colour by quadrant · hollow circle = outside the reference sample · click a quadrant to see its programme card",
+        "ส่วนประกอบเดียวกับ Strategy Grid: แกนนอน = เปอร์เซ็นไทล์ CEO Promotion Focus · แกนตั้ง = เปอร์เซ็นไทล์ board amplification (B_EG) · เส้นแบ่ง P53.8 / P36.0 · สีตามช่อง · วงกลมโปร่ง = นอกกลุ่มอ้างอิง · คลิกช่องเพื่อดูการ์ดโปรแกรมของช่องนั้น")}</p>
+      <div class="gx-svgwrap">${m1GridSvg({ bg: m1BgPts(), pts, selQ, cornerSub: q => b5T(`${plotted.filter(r => r.s.quad === q).length} in this list`, `${plotted.filter(r => r.s.quad === q).length} บริษัทในรายการนี้`) })}</div>
+      <div class="legend">${["A", "B", "C", "D"].map(k => `<span><i style="background:${ZONES[k].c}"></i>${esc(ZONES[k].l)}</span>`).join("")}
+        <span><i style="background:transparent;border:2px solid var(--ink-2);border-radius:99px"></i>${esc(m1OutLab())}</span>
+        <span>${b5T("faint dots = REF-928 (anonymous)", "จุดจาง = REF-928 (ไม่ระบุชื่อ)")}</span></div>
+    </div>`;
+  const pb = `<div class="card m1b-pmpb"><h3>${b5T(`Relationship programme · ${ZONE_CFG[selQ].name} (${selQ})`, `โปรแกรมความสัมพันธ์ · ${ZONE_CFG[selQ].name} (${selQ})`)}</h3>
+      <div class="gx-qpick" style="margin:0 0 10px">${["A", "B", "D", "C"].map(k => `<button class="btn g${k === selQ ? " on" : ""}" data-pmq="${k}" style="--zc:${ZONES[k].c}">${k} · ${esc(ZONE_CFG[k].name)}</button>`).join("")}</div>
+      ${m1PlaybookCard(selQ, { sel: true })}
+      <p class="gx-sm" style="margin:8px 0 0">${b5T(`${plotted.filter(r => r.s.quad === selQ).length} client(s) in this quadrant: `, `ลูกค้าในช่องนี้ ${plotted.filter(r => r.s.quad === selQ).length} ราย: `)}${plotted.filter(r => r.s.quad === selQ).map(r => esc(r.t)).join(", ") || "—"}</p>
+      ${m1Wording()}
+    </div>`;
+  const tr = r => {
+    const pos = r.g <= 3 && r.s;
+    const qcell = r.g === 6 ? `<span class="pill mute">${b5T("Not applicable (unlisted)", "ใช้ไม่ได้ (ไม่จดทะเบียน)")}</span>`
+      : r.g >= 4 ? `<span class="pill mute m1b-bp">${b5T("Board Profile only", "Board Profile เท่านั้น")}</span>`
+      : `<span style="color:${ZONES[r.s.quad].c}">●</span> ${esc(ZONES[r.s.quad].l)}`;
+    const band = pos && Array.isArray(r.s.band90) ? ` <span class="gx-sm">[${fmt(r.s.band90[0], 1)}, ${fmt(r.s.band90[1], 1)}]</span>` : "";
+    return `<tr data-pmrow="${esc(r.t)}" data-g="${r.g}"${r.t === S.t ? ' class="hl"' : ""}>
+      <td>${r.ref ? `<button class="lnk" data-co="${esc(r.t)}"><b>${esc(r.t)}</b></button>` : `<b>${esc(r.t)}</b>`}
+        <div style="font-size:10.5px;color:var(--ink-3);max-width:26ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.co.n || "")}</div></td>
+      <td style="font-size:11.5px;color:var(--ink-2)">${esc(IND[r.co.ind] || (r.co.ind === 8 ? "Financials" : "—"))}</td>
+      <td>${m1FYChip(r.fy)}</td>
+      <td>${qcell} ${pmLabChips(r)}</td>
+      <td class="n">${pos ? fmt(r.s.X, 1) : "—"}</td><td class="n">${pos ? fmt(r.s.Y, 1) : "—"}</td>
+      <td class="n">${pos ? `<b>${fmt(r.s.ois, 1)}</b>${band}` : "—"}</td>
+      <td>${r.src !== "client" ? `<button class="btn g" data-rmport="${esc(r.t)}" style="padding:3px 8px;font-size:11px" title="${b5T("Remove from the list", "เอาออกจากรายการ")}">✕</button>` : `<span class="gx-sm">${b5T("imported client", "ลูกค้าที่นำเข้า")}</span>`}</td></tr>`;
+  };
   const table = `<div class="card" style="margin-top:14px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-      <div><h3>ตารางจัดอันดับ</h3><p class="desc" style="margin-bottom:0">คลิกชื่อบริษัทเพื่อเปิดรายงานของบริษัทนั้น</p></div>
-      <label style="font-size:11.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px">เรียงตาม
-        <select class="sel" id="pSort" style="font-size:12px;padding:5px 9px">
-          ${PSORT.map(s => `<option value="${s.k}"${s.k === sk.k ? " selected" : ""}>${esc(s.l)}</option>`).join("")}</select></label>
-    </div>
-    <div class="tw" style="margin-top:10px"><table><thead><tr>
-      <th>บริษัท</th><th>อุตสาหกรรม</th><th class="n">OIS</th><th class="n">เพดาน</th><th class="n">ช่องว่าง (ตามสูตร)</th>
-      <th class="n">ดัชนีลำดับพิจารณา</th><th>ความเสี่ยง</th><th>รูปแบบ</th><th></th></tr></thead><tbody>
-      ${sorted.map(r => `<tr${r.c.t === S.t ? ' class="hl"' : ""}>
-        <td><button class="lnk" data-co="${esc(r.c.t)}"><b>${esc(r.c.t)}</b></button>
-          <div style="font-size:10.5px;color:var(--ink-3);max-width:26ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.c.n)}</div></td>
-        <td style="font-size:11.5px;color:var(--ink-2)">${esc(IND[r.c.ind])}</td>
-        <td class="n"><b>${r.c.ipi}</b></td><td class="n">${fmt(r.u.best)}</td>
-        <td class="n" style="color:${r.u.delta >= 10 ? "var(--ok)" : "var(--ink-2)"}">${r.u.delta > 0 ? "+" + fmt(r.u.delta) : "—"}</td>
-        <td class="n"><b>${r.e.score}</b></td>
-        <td><span class="pill ${r.r.k}">${esc(r.r.l)}</span></td>
-        <td style="font-size:11.5px;color:${r.rec.c}">${esc(r.rec.l)}</td>
-        <td><button class="btn g" data-rmport="${esc(r.c.t)}" style="padding:3px 8px;font-size:11px" title="เอาออกจากพอร์ต">✕</button></td></tr>`).join("")}
-    </tbody></table></div></div>`;
-
-  const monitor = `<div class="card">
-    <h3>จอเฝ้าระวัง</h3>
-    <p class="desc">รวมทุกธงเตือนของบริษัทในพอร์ต เรียงจากรุนแรงที่สุด</p>
-    ${(crit.concat(warn)).length ? (crit.concat(warn)).map(r => `
-      <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)">
-        <span class="pill ${r.r.k}" style="flex:none;margin-top:1px">${r.r.k === "crit" ? "▲" : "△"}</span>
-        <div style="flex:1"><button class="lnk" data-co="${esc(r.c.t)}"><b>${esc(r.c.t)}</b></button>
-          <span style="font-size:11px;color:var(--ink-3)"> · ${esc(IND[r.c.ind])}</span>
-          ${r.F.filter(f => f.lv !== "ok").map(f => `<div style="font-size:11.4px;color:var(--ink-2);line-height:1.5">— ${esc(f.l)}</div>`).join("")}
-        </div></div>`).join("")
-      : `<div class="note ok">ไม่พบธงเตือนในพอร์ตนี้ — ทุกบริษัทอยู่ในช่วงปกติของอุตสาหกรรมตัวเอง</div>`}
-  </div>`;
-
-  const inner = stats + `<div class="card">
-      <h3>แผนภาพโอกาส</h3>
-      <p class="desc">มุมซ้ายบนคือบริษัทที่คะแนนวันนี้ยังไม่สูงและมีช่องว่างตามสูตรมาก — เป็นการบรรยายตำแหน่ง ไม่ใช่ข้อเสนอให้ดำเนินการ ·
-        เส้นประคือค่ากลางของพอร์ตเอง ไม่ใช่ค่าคงที่</p>
-      ${radarSvg(rows)}
-    </div>
-    <div class="grid g-side-r" style="margin-top:14px">
-      <div class="card">
-        <h3>ดัชนีลำดับพิจารณา (สูงสุดในพอร์ต)</h3>
-        <p class="desc">ดัชนีรวมจากช่องว่างตามสูตร ภาษาผู้นำ และระยะห่างจากผู้นำกลุ่ม — เป็นการเรียงข้อมูล ไม่ใช่คำแนะนำ</p>
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          <div style="font-size:34px;font-weight:500;letter-spacing:-.03em">${esc(topE.c.t)}</div>
-          <div><span class="pill ${topE.e.tier.k}">${b5T(`Index ${topE.e.score} · ${({ crit: "high", warn: "medium", ok: "low" })[topE.e.tier.k]}`, `ดัชนี ${topE.e.score} · ระดับ${topE.e.tier.l}`)}</span>
-            <div style="font-size:11px;color:var(--ink-3);margin-top:4px">${esc(topE.c.n)}</div></div>
-        </div>
-        <div class="note brand" style="margin-top:12px"><b style="color:${topE.rec.c}">${esc(topE.rec.l)}</b> — ${esc(topE.rec.d)}</div>
-        <div style="margin-top:12px">${bars(sorted.slice().sort((a, b) => b.e.score - a.e.score).slice(0, 8)
-          .map(r => ({ l: r.c.t, v: r.e.score, t: fmt(r.e.score), c: RISK_C[r.r.k], hl: r.c.t === S.t })), { lw: 78, max: 100 })}</div>
-        <div style="font-size:10.5px;color:var(--ink-3);margin-top:6px">สีของแท่ง = ระดับความเสี่ยงเชิงโครงสร้าง · ความยาวแท่ง = ดัชนีลำดับพิจารณา (ไม่ใช่การจัดอันดับว่าบริษัทใดดีกว่า)</div>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-          <button class="btn p" data-co="${esc(topE.c.t)}">เปิดรายงานของ ${esc(topE.c.t)}</button>
-          <button class="btn s" data-goto="ic">เข้าโหมดที่ประชุม</button></div>
-      </div>
-      ${monitor}
-    </div>` + table;
-
+    <h3>${b5T("Client list", "รายชื่อลูกค้า")}</h3>
+    <p class="desc" style="margin-bottom:0">${b5T("Sorted by quadrant, then ticker · groups 4–5 (no English letter / Financials) get the Board Profile only · unlisted companies are not applicable",
+      "เรียงตามช่อง แล้วตามตัวย่อ · กลุ่ม 4–5 (ไม่มีสารภาษาอังกฤษ / กลุ่มธุรกิจการเงิน) ได้เฉพาะ Board Profile · บริษัทที่ไม่จดทะเบียนใช้ไม่ได้")}</p>
+    <div class="tw" style="margin-top:10px"><table class="m1b-pmtbl"><thead><tr>
+      <th>${b5T("Company", "บริษัท")}</th><th>${b5T("Industry", "อุตสาหกรรม")}</th><th>${b5T("Fiscal year", "ปีบัญชี")}</th><th>${b5T("Quadrant", "ช่อง")}</th>
+      <th class="n">${b5T("CEO drive pct", "CEO pct")}</th><th class="n">${b5T("Board amp. pct", "Board amp. pct")}</th><th class="n">OIS [90%]</th><th></th></tr></thead><tbody>
+      ${sorted.map(tr).join("")}</tbody></table></div></div>`;
+  const inner = pmKpis(rows) + `<div class="grid g-side-r" style="margin-top:14px">${chart}${pb}</div>` + table;
   if (isUnlocked("port")) return head + picker + inner;
-  /* ยังไม่ปลด (Pro) — ไม่ใส่เนื้อหาจริงใต้ภาพเบลอ (ภาคผนวก ง ข้อ 10) */
   return head + picker + `<div class="lockwrap" id="b5PortLock">
     <div class="blurred" aria-hidden="true">${typeof trSkel === "function" ? trSkel(6) : ""}</div>
     <div class="paywall" style="align-items:flex-start;padding-top:64px"><div class="paycard">
       <div class="lk">🔒</div>
-      <h3 style="font-size:16px;margin-bottom:5px">พอร์ตลงทุน</h3>
+      <h3 style="font-size:16px;margin-bottom:5px">Portfolio Matrix</h3>
       <p style="font-size:12.3px;color:var(--ink-2);margin:0 0 15px;line-height:1.65">
-        ${b5T("Unlock once per account — applies to companies you can view (your own + unlocked one by one), never expires; includes the position chart, watch list and sortable table.",
-          "ปลดล็อกครั้งเดียวต่อบัญชี — ใช้กับบริษัทที่คุณดูได้ (บริษัทตนเอง + ที่ปลดล็อกรายบริษัท) ไม่หมดอายุ ได้แผนภาพตำแหน่ง จอเฝ้าระวัง และตารางเรียงข้อมูล")}</p>
+        ${b5T("Unlock once per account — applies to companies you can view, never expires; includes the 2×2 matrix, quadrant counts and the client list.",
+          "ปลดล็อกครั้งเดียวต่อบัญชี — ใช้กับบริษัทที่คุณดูได้ ไม่หมดอายุ ได้ Matrix 2×2 จำนวนต่อช่อง และรายชื่อลูกค้า")}</p>
       <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
-        <button class="btn p" id="pBuy">ปลดล็อก · ใช้ ${PRICE.port} เครดิต</button>
+        <button class="btn p" id="pBuy">${b5T(`Unlock · ${PRICE.port} credits`, `ปลดล็อก · ใช้ ${PRICE.port} เครดิต`)}</button>
         <button class="btn s" data-goto="billing">ดูแพ็กเกจเครดิต</button></div>
-      <div style="font-size:11px;color:var(--ink-3);margin-top:11px">${b5T(`You have <b style="color:var(--ink)">${S.credits}</b> credits · one payment per account · Pro Max is not charged`, `คุณมี <b style="color:var(--ink)">${S.credits}</b> เครดิต · จ่ายครั้งเดียวต่อบัญชี · Pro Max ใช้ได้โดยไม่ตัดเครดิต`)}</div>
     </div></div></div>`;
 }
-
 /* ============================================================================
    หน้า · โหมดที่ประชุมลงทุน — ตัวอักษรใหญ่ ข้อมูลน้อย บันทึกมติได้
    ============================================================================ */
@@ -852,54 +933,74 @@ function printMemo(c) {
    การผูกเหตุการณ์และการต่อเข้าระบบเดิม
    ============================================================================ */
 function wirePort(h) {
-  if (tierRank() < 1) return;                              // Basic: ผนังสิทธิ์เท่านั้น
-  const sel = h.querySelector("#pAdd");
-  const rk = tierRank();
-  /* ต่ำกว่า Pro Max: เฉพาะบริษัทที่ดูได้ และเรียงตามตัวย่อ (ไม่เปิดเผยอันดับคะแนนของบริษัทที่ยังดูไม่ได้) */
+  if (tierRank() < 1) return;
+  const sel = h.querySelector("#pAdd"), rk = tierRank();
   const pool = () => (S.ind === "all" ? COMPS : indComps(+S.ind)).filter(x => rk >= 2 || portSee(x.t));
   if (sel) {
-    const list = rk >= 2 ? pool().slice().sort((a, b) => b.ipi - a.ipi) : pool().slice().sort((a, b) => a.t.localeCompare(b.t));
-    const free = list.filter(x => !S.port.includes(x.t));
+    const free = pool().slice().sort((a, b) => a.t.localeCompare(b.t)).filter(x => !S.port.includes(x.t));
     sel.innerHTML = free.length ? free.map(x => `<option value="${esc(x.t)}">${esc(x.t)} · ${esc(x.n)}</option>`).join("")
-      : `<option value="">— อยู่ในพอร์ตครบทุกบริษัทในมุมมองนี้แล้ว —</option>`;
+      : `<option value="">${b5T("— every company in this view is already listed —", "— อยู่ในรายการครบทุกบริษัทในมุมมองนี้แล้ว —")}</option>`;
   }
   const chips = h.querySelector("#pChips");
   if (chips) chips.innerHTML = S.port.length
     ? S.port.map(t => `<span class="chip">${portSee(t) ? "" : "🔒 "}${esc(t)}<button class="btn g" data-rmport="${esc(t)}" style="padding:0 4px;font-size:11px;border:0;background:none">✕</button></span>`).join("")
-    : `<span style="font-size:11px;color:var(--ink-3)">พอร์ตว่าง</span>`;
-
-  const add = t => { if (t && !portSee(t)) return toast("ยังดูข้อมูลบริษัทนี้ไม่ได้ — ปลดล็อกรายงานบริษัทนั้นก่อน");
+    : `<span style="font-size:11px;color:var(--ink-3)">${b5T("No saved companies", "ยังไม่มีบริษัทในรายการ")}</span>`;
+  const add = t => { if (t && !portSee(t)) return toast(b5T("You cannot view this company yet", "ยังดูข้อมูลบริษัทนี้ไม่ได้ — ปลดล็อกรายงานบริษัทนั้นก่อน"));
     if (t && !S.port.includes(t)) { S.port.push(t); save(); render(); } };
   const ab = h.querySelector("#pAddBtn"); if (ab) ab.onclick = () => add(sel.value);
   const fl = h.querySelector("#pFill");
   if (fl) fl.onclick = () => {
-    const list = pool().slice().sort((a, b) => engagement(b).score - engagement(a).score).slice(0, 10);
-    list.forEach(x => { if (!S.port.includes(x.t)) S.port.push(x.t); });
-    save(); toast("เพิ่มแล้ว · พอร์ตมี " + S.port.length + " บริษัท"); render();
+    pool().slice().sort((a, b) => a.t.localeCompare(b.t)).slice(0, 10).forEach(x => { if (!S.port.includes(x.t)) S.port.push(x.t); });
+    save(); toast(b5T(`Added · ${S.port.length} companies`, "เพิ่มแล้ว · " + S.port.length + " บริษัท")); render();
   };
   const cl = h.querySelector("#pClear");
-  if (cl) cl.onclick = () => { if (!S.port.length) return; confirm2(cl, () => { S.port = []; save(); render(); }, "กดอีกครั้งเพื่อล้างพอร์ตทั้งหมด"); };
-  const so = h.querySelector("#pSort"); if (so) so.onchange = () => { S.psort = so.value; save(); render(); };
+  if (cl) cl.onclick = () => { if (!S.port.length && !M1_PASTE.length) return; confirm2(cl, () => { S.port = []; M1_PASTE = []; M1_PASTE_MISS = []; save(); render(); }, b5T("Click again to clear the list", "กดอีกครั้งเพื่อล้างรายการทั้งหมด")); };
   const by = h.querySelector("#pBuy");
-  if (by) by.onclick = () => { if (spend("port", "ALL", "พอร์ตลงทุน")) render(); };   // สิทธิ์/ราคาอยู่ที่ TR_PAID ใน v2_tiers.js (Basic ✕ · Pro 3 · Pro Max 0)
+  if (by) by.onclick = () => { if (spend("port", "ALL", "Portfolio Matrix")) render(); };
   h.querySelectorAll("[data-rmport]").forEach(b => b.onclick = e => {
-    e.stopPropagation(); S.port = S.port.filter(t => t !== b.dataset.rmport); save(); render();
+    e.stopPropagation(); const t = b.dataset.rmport;
+    S.port = S.port.filter(x => x !== t); M1_PASTE = M1_PASTE.filter(x => x !== t); save(); render();
   });
-  h.querySelectorAll(".opt").forEach(g => {
-    tipOn(g, el => `<div class="tk">ความเสี่ยง${el.dataset.r}</div><b>${el.dataset.t}</b> · ${el.dataset.n}<br>
-      OIS ${el.dataset.i} · ช่องว่างตามสูตร +${el.dataset.u} · ดัชนีลำดับพิจารณา ${el.dataset.e}<br>คลิกเพื่อเปิดรายงาน`);
-    g.onclick = () => { S.t = g.dataset.t; S.peers = []; S.wi = null; $("#selCo").value = S.t; syncChrome(); go("fit"); };
+  /* วาง / อัปโหลด — อ่านในเบราว์เซอร์ ไม่ส่งออก ไม่บันทึก */
+  const ta = h.querySelector("#pmPaste"), pg = h.querySelector("#pmPasteGo");
+  const apply = txt => { const list = pmParseList(txt); if (!list.length) return toast(b5T("No tickers found", "ไม่พบตัวย่อ"));
+    pmSetPaste(list); render(); toast(b5T(`${M1_PASTE.length} of ${list.length} tickers placed`, `แสดง ${M1_PASTE.length} จาก ${list.length} ตัวย่อ`)); };
+  if (pg && ta) pg.onclick = () => apply(ta.value);
+  const pc = h.querySelector("#pmPasteClear"); if (pc) pc.onclick = () => { M1_PASTE = []; M1_PASTE_MISS = []; render(); };
+  const ub = h.querySelector("#pmUpBtn"), fi = h.querySelector("#pmFile");
+  if (ub && fi) {
+    ub.onclick = () => fi.click();
+    fi.onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        if (/\.xlsx$/i.test(f.name)) {
+          try { apply(await pmReadXlsx(await f.arrayBuffer())); }
+          catch (err) { toast(b5T("This browser could not read the XLSX file — save the sheet as CSV and upload again", "เบราว์เซอร์อ่านไฟล์ XLSX ไม่ได้ — บันทึกชีตเป็น CSV แล้วอัปโหลดใหม่")); }
+        } else apply(await f.text());
+      } finally { fi.value = ""; }
+    };
+  }
+  const pick = q => { S.pmSel = q; render(); };
+  h.querySelectorAll("[data-pmq]").forEach(b => b.onclick = () => pick(b.dataset.pmq));
+  h.querySelectorAll(".m1b-pmchart .gx-q, .m1b-pmchart .gx-cl").forEach(r => r.addEventListener("click", () => pick(r.dataset.q)));
+  h.querySelectorAll(".m1b-pmchart .mk").forEach(g => {
+    tipOn(g, el => `<div class="tk">${esc(el.dataset.z)}</div><b>${esc(el.dataset.t)}</b> · ${esc(el.dataset.n)}<br>OIS ${esc(el.dataset.i)}${el.dataset.sub ? "<br>" + esc(el.dataset.sub) : ""}`);
+    g.addEventListener("click", e => { e.stopPropagation(); pick(g.dataset.q); });
   });
   const cv = h.querySelector("#pCsv");
   if (cv) cv.onclick = () => {
-    const rows = portRows();
-    if (!rows.length) return toast("พอร์ตว่าง");
-    const head = ["ตัวย่อ", "ชื่อบริษัท", "อุตสาหกรรม", "โซน", "OpenInnoScore", "เพดานเชิงโครงสร้าง", "ช่องว่างตามสูตร", "ดัชนีลำดับพิจารณา", "ความเสี่ยง", "รูปแบบ"].map(b5H).join(",");
-    const body = rows.map(r => [r.c.t, `"${r.c.n}"`, `"${IND[r.c.ind]}"`, `"${ZONES[zoneOf(r.c.promo, r.c.amp)].l}"`,
-      r.c.ipi, fmt(r.u.best), fmt(r.u.delta), r.e.score, `"${r.r.l}"`, `"${r.rec.l}"`].join(","));
+    const rows = pmSorted(pmRows());
+    if (!rows.length) return toast(b5T("The list is empty", "รายการว่าง"));
+    const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [q(m1Supporting()), q("OpenInnoScore Portfolio Matrix · " + m1Ver()),
+      ["ticker", "name", "client_group", "fiscal_year", "fy_status", "quadrant", "ceo_drive_pct", "board_amp_pct", "OIS", "OIS_band90_lo", "OIS_band90_hi", "labels"].join(",")];
+    rows.forEach(r => { const pos = r.g <= 3 && r.s, st = m1FY(r.fy);
+      lines.push([q(r.t), q(r.co.n), r.g, r.fy, q(st.label_en), q(pos ? r.s.quad : r.g >= 6 ? "not applicable" : "Board Profile only"),
+        pos ? fmt(r.s.X, 1) : "", pos ? fmt(r.s.Y, 1) : "", pos ? fmt(r.s.ois, 1) : "",
+        pos && r.s.band90 ? fmt(r.s.band90[0], 1) : "", pos && r.s.band90 ? fmt(r.s.band90[1], 1) : "", q(r.labels.join("; "))].join(",")); });
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob(["﻿" + [head, ...body].join("\n")], { type: "text/csv;charset=utf-8" }));
-    a.download = "openinnoscore_portfolio.csv"; a.click();
+    a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));
+    a.download = "openinnoscore_portfolio_matrix.csv"; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
 }
@@ -954,7 +1055,15 @@ function wireInvestCommon(h) {
 /* ---------------------------------------------------------------- ต่อเข้าระบบเดิม */
 PRICE.port = 3;
 S.port = []; S.dec = {}; S.psort = "eng";
-VIEWS.port = viewPort; VIEWS.ic = viewIC;
+VIEWS.port = viewPort;
+/* MVP 1 (X #2 #13): โหมดที่ประชุมไม่อยู่ในฉบับนำร่อง — ไม่มีเมนู · ลิงก์ตรง/ค่าที่จำไว้แสดงข้อความนี้แทน (viewIC เดิมเก็บไว้ ไม่ได้ใช้) */
+const M1_IC_HIDDEN = true;
+VIEWS.ic = M1_IC_HIDDEN ? function () {
+  return pageHead("OpenInnoScore", b5T("Not available in the pilot build", "ไม่อยู่ในฉบับนำร่อง"),
+    b5T("This screen is not part of the MVP 1 pilot build.", "หน้านี้ไม่อยู่ในฉบับนำร่อง MVP 1"))
+    + `<div class="card m1b-hidden" id="mvIcHidden"><p class="desc">${b5T("Use the Strategy Grid, Portfolio Matrix or What-if Studio.", "ใช้ Strategy Grid · Portfolio Matrix หรือ What-if Studio แทน")}</p>
+      <div class="gx-row"><button class="btn p" data-goto="matrix">Strategy Grid 2×2</button><button class="btn s" data-goto="port">Portfolio Matrix</button></div></div>`;
+} : viewIC;
 
 const _isUnlocked = isUnlocked;
 isUnlocked = function (what, t) { return what === "port" ? !!S.unlocked["port:ALL"] : _isUnlocked(what, t); };
@@ -977,7 +1086,7 @@ save = function () {
 const _viewFit = viewFit;   /* ชั้นแก้ไขครั้งที่ 1 จะห่อทับอีกชั้นในส่วนท้ายไฟล์ */
 
 const WIRES = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio,
-  sector: wireSector, billing: wireBilling, port: wirePort, ic: wireIC };
+  sector: wireSector, billing: wireBilling, port: wirePort, ic: M1_IC_HIDDEN ? () => { } : wireIC };
 render = function () {
   const host = $("#v-" + S.view);
   if (!host || typeof VIEWS[S.view] !== "function") return;
@@ -1032,10 +1141,14 @@ const IND_EN = { 1: "Agro & Food", 2: "Technology", 3: "Resources", 4: "Services
 const indL = i => S.lang === "EN" ? (IND_EN[i] || IND[i]) : IND[i];
 const LEVEL_EN = { "สูง": "High", "ปานกลาง": "Moderate", "ต่ำ–ปานกลาง": "Low–moderate", "ต่ำ": "Low" };
 const levelL = l => S.lang === "EN" ? (LEVEL_EN[l] || l) : l;
-const TONES = [
+const TONES_ALL = [
   { k: "investor", en: "Investor", th: "นักลงทุน" }, { k: "board", en: "Board", th: "คณะกรรมการ" },
   { k: "search", en: "Search Firm", th: "บริษัทสรรหา" }, { k: "iod", en: "IOD", th: "IOD" },
 ];
+/* MVP 1 (X #13): ซ่อนโทน Investor และ Search Firm ในฉบับนำร่อง */
+const TONES_HIDDEN = ["investor", "search"];
+const TONES = TONES_ALL.filter(t => !TONES_HIDDEN.includes(t.k));
+if (typeof S === "object" && TONES_HIDDEN.includes(S.tone)) S.tone = "board";
 /* แก้ไขครั้งที่ 2.4 — ข้อความต่อท้ายการ์ดไม่ชี้นำ: บอกว่าผู้อ่านแต่ละกลุ่มใช้ข้อมูลนี้ประกอบอะไรได้ ไม่บอกว่าต้องทำอะไร */
 const TONE_IMPL = {
   investor: {
@@ -1070,7 +1183,7 @@ const TONE_IMPL = {
     risk: ["Report it alongside the validity caveat.",
       "รายงานพร้อมข้อจำกัดด้านความแม่น"] },
 };
-const toneImpl = kind => { const t = (TONE_IMPL[S.tone] || TONE_IMPL.search)[kind]; return S.lang === "EN" ? t[0] : t[1]; };
+const toneImpl = kind => { const t = (TONE_IMPL[TONES_HIDDEN.includes(S.tone) ? "board" : S.tone] || TONE_IMPL.board)[kind]; return S.lang === "EN" ? t[0] : t[1]; };
 /** ธงความเสี่ยง — ใช้เกณฑ์จากชั้นคำนวณเดิมทุกข้อ แปลเฉพาะข้อความ */
 function flagsL(c) {
   const F = riskFlags(c);
@@ -1706,9 +1819,14 @@ function scenarioOf(c) {
   return { now: c.ipi, after: ipiAt(c, p), target: p, sel, all, hz };
 }
 
+/** MVP 1 · ประตู JN (G3) และสถานะปีบัญชี (G5) ของบริษัท — ใช้ร่วม Zone C / Studio */
+const m1GateOk = c => isFinite(+c.promo) && +c.promo >= (typeof M1_JN !== "undefined" ? M1_JN : 0.6858);
+const m1WithheldTxt = () => b5T("Score change withheld (G3) — board-amplification movement only", "ไม่แสดงการเปลี่ยนคะแนน (G3) — แสดงเฉพาะการเคลื่อนของ board amplification");
 function viewZoneC() {
   const flow = flowBar(2);
   const c = cur(), sc = scenarioOf(c), rec = recL(c), tg = optimalBoard(c), pool = indComps(c.ind);
+  const gate = m1GateOk(c), fySt = typeof m1FY === "function" ? m1FY(c.fy || FY_SHOWN) : { whatIfAllowed: true };
+  const numsOk = gate && fySt.whatIfAllowed !== false;
   const F = flagsL(c), e = engagement(c), w = waterfall(c);
   const fn = femaleN(c.fem, c.bsize);
   const b = { l: vL("fem"), now: c.fem * 100, tgt: tg.fem * 100, u: "%", scale: Math.max(c.fem, tg.fem, .4) * 100 };
@@ -1739,7 +1857,8 @@ function viewZoneC() {
         <b>${esc(S.lang === "EN" ? x.en : x.th)}</b>
         <div class="kw">${x.kw.map(k => `<span>${esc(S.lang === "EN" ? k[0] : k[1])}</span>`).join("")}</div>
         ${tr ? `<div class="b4-trade"><b>${T("Trade-off", "ข้อแลกเปลี่ยน")}</b> ${esc(tr)}</div>` : ""}</div>
-      <div class="imp">${sgn(x.d)}<div style="font-size:10.2px;font-weight:400;color:var(--ink-3)">${T("pts (formula, association)", "จุด (ตามสูตร, เชิงความสัมพันธ์)")}</div></div></div></div>`;
+      ${numsOk ? `<div class="imp">${sgn(x.d)}<div style="font-size:10.2px;font-weight:400;color:var(--ink-3)">${T("pts (formula, association)", "จุด (ตามสูตร, เชิงความสัมพันธ์)")}</div></div>`
+        : `<div class="imp m1b-withheld" style="font-size:11px;font-weight:400;max-width:16ch">${esc(fySt.whatIfAllowed === false ? b5T("Suspended (FAIL year · R3)", "ระงับ (ปี FAIL · R3)") : m1WithheldTxt())}</div>`}</div></div>`;
   }).join("") : `<div class="note">${T("Female representation already sits in the upper range of this industry and CEO language is in the top band — no further option is listed.",
     "สัดส่วนกรรมการหญิงอยู่ช่วงบนของอุตสาหกรรมนี้แล้ว และภาษา CEO อยู่กลุ่มบน — ไม่มีทางเลือกเพิ่มเติมในรายการ")}</div>`;
 
@@ -1747,6 +1866,8 @@ function viewZoneC() {
     T("Options for consideration for this company, each with its formula-based association and trade-off, in a fixed order. The engine does not say which option is better — associations, not predictions.",
       "ทางเลือกสำหรับการพิจารณาของบริษัทนี้ แต่ละข้อมีความสัมพันธ์กับคะแนนตามสูตรและข้อแลกเปลี่ยน เรียงลำดับคงที่ · ระบบไม่ชี้ว่าทางเลือกใดดีกว่า — เป็นความสัมพันธ์ ไม่ใช่การพยากรณ์"))
     + `<div style="display:flex;justify-content:flex-end;margin:-8px 0 12px">${toneBar()}</div>`
+    + (numsOk ? "" : `<div class="note warn m1b-g3" role="note"><b>${esc(fySt.whatIfAllowed === false ? b5T("What-if suspended in a FAIL year (R3, G5) — normal reading withheld", "ระงับ What-if ในปีที่ผล validity = FAIL (R3, G5) — งดการอ่านผลตามปกติ") : m1WithheldTxt())}</b>
+        ${fySt.whatIfAllowed === false ? "" : b5T(` · CEO promotion ${fmt(c.promo, 2)} is below the Johnson–Neyman bound 0.686 (P65.7)`, ` · promotion ของ CEO ${fmt(c.promo, 2)} ต่ำกว่าขอบ Johnson–Neyman 0.686 (P65.7)`)}</div>`)
     + flow + `<div class="grid gzc">
     <div class="stack">
       <div class="card"><h3>${T("Current vs industry p90", "ปัจจุบันเทียบกับ p90 ของอุตสาหกรรม")}</h3>
@@ -1763,7 +1884,7 @@ function viewZoneC() {
           <div class="seg" id="segHz" style="width:100%">${HORIZON.map(x => `<button type="button" data-hz="${x.k}"
             aria-selected="${S.horizon === x.k}" style="flex:1">${esc(S.lang === "EN" ? x.en : x.th)}</button>`).join("")}</div></div>
       </div>
-      <div class="card"><h3>${T("Structural risk flags", "ธงความเสี่ยงเชิงโครงสร้าง")}</h3>
+      <div class="card"><h3>${T("Structural observations", "ข้อสังเกตเชิงโครงสร้าง")}</h3>
         ${F.map(f => `<div style="display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)">
           <span class="pill ${f.lv}" style="flex:none;margin-top:1px">${f.lv === "crit" ? "▲" : f.lv === "warn" ? "△" : "✓"}</span>
           <div><div style="font-size:12.2px">${esc(f.l)}</div>
@@ -1788,13 +1909,13 @@ function viewZoneC() {
 
     <div class="stack">
       <div class="scn"><small>${T("Scenario (formula, association)", "ฉากทัศน์ (ตามสูตร, เชิงความสัมพันธ์)")}</small>
-        <div class="big">${sc.now} <span style="opacity:.5">→</span> <em>${fmt(sc.after)}</em></div>
-        <p>${sc.after > sc.now
+        ${numsOk ? `<div class="big">${sc.now} <span style="opacity:.5">→</span> <em>${fmt(sc.after)}</em></div>` : `<div class="m1b-withheld" style="font-size:13px;margin:6px 0">${esc(m1WithheldTxt())}</div>`}
+        <p>${!numsOk ? "" : sc.after > sc.now
       ? T(`With the ${sc.sel.length} selected action${sc.sel.length > 1 ? "s" : ""} within ${(HORIZON.find(h => h.k === S.horizon) || {}).en}, the formula associates the board with a score ${fmt(sc.after - sc.now)} points higher. CEO language is left untouched.`,
         `ทำ ${sc.sel.length} ข้อที่เลือกภายใน${(HORIZON.find(h => h.k === S.horizon) || {}).th} ตามสูตรสัมพันธ์กับคะแนนที่สูงขึ้น ${fmt(sc.after - sc.now)} จุด (เชิงความสัมพันธ์) โดยไม่แตะภาษาผู้บริหาร`)
       : T("No board option falls inside the selected horizon.", "ไม่มีทางเลือกเรื่องบอร์ดอยู่ในกรอบเวลาที่เลือก")}</p>
         <div style="display:flex;gap:5px;align-items:flex-end;height:66px;margin-top:13px">
-          ${(() => { let acc = w.base;
+          ${!numsOk ? "" : (() => { let acc = w.base;
         if (w.na) return [{ v: c.ipi, c: "rgba(255,255,255,.28)" }, { v: sc.after, c: "var(--mint)" }]      // ฉบับเซิร์ฟเวอร์: ไม่มีขั้นแยกส่วน
           .filter(b => isFinite(b.v)).map(b => `<i style="flex:1;display:block;border-radius:5px 5px 2px 2px;background:${b.c};height:${clamp(b.v, 4, 100)}%"></i>`).join("");
         return [{ v: w.base, c: "rgba(255,255,255,.28)" }]
@@ -1811,8 +1932,7 @@ function viewZoneC() {
         <p class="gx-sm" style="margin-top:6px">${T("A description, not advice — the user weighs the options above.", "เป็นคำบรรยายรูปแบบ ไม่ใช่ข้อเสนอให้ทำ — ผู้ใช้พิจารณาทางเลือกด้านบนเอง")}</p>
         <div style="display:grid;gap:7px;margin-top:12px">
           <button class="btn s" data-memo="1">${T("Export Board Memo", "ออกบันทึกวาระประชุม")}</button>
-          <button class="btn g" data-addport="${esc(c.t)}">${T("Add to portfolio", "เพิ่มเข้าพอร์ต")}</button>
-          <button class="btn g" data-goto="ic">${T("Open meeting mode", "เปิดโหมดที่ประชุม")}</button></div></div>
+          <button class="btn g" data-addport="${esc(c.t)}">${T("Add to Portfolio Matrix", "เพิ่มเข้า Portfolio Matrix")}</button></div></div>
     </div>
   </div>`;
 }
@@ -1897,8 +2017,8 @@ NAV.push(
   { id: "peer", g: 2, ico: "⇄", lab: "เทียบคู่แข่ง", lock: "peer" },
   { id: "studio", g: 2, ico: "⚗", lab: "What-if Studio", lock: "studio" },
   { id: "sector", g: 2, ico: "▦", lab: "ภาพรวมอุตสาหกรรม", lock: "sector" },
-  { id: "port", g: 2, ico: "▤", lab: "พอร์ตลงทุน", lock: "port" },
-  { id: "ic", g: 2, ico: "▶", lab: "โหมดที่ประชุม", lock: "report" },
+  { id: "port", g: 2, ico: "▤", lab: "Portfolio Matrix", lock: "port" },
+  /* MVP 1 (X #2 #13): โหมดที่ประชุมซ่อนในฉบับนำร่อง — ไม่มีเมนู และลิงก์ตรงแสดงข้อความแทน (โค้ดเดิมยังอยู่) */
   { id: "billing", g: 3, ico: "◈", lab: "Token และการชำระเงิน" },
   { id: "arch", g: 3, ico: "⌗", lab: "สถาปัตยกรรมข้อมูล" },
   { id: "valid", g: 3, ico: "✓", lab: "Validity" },
@@ -1930,7 +2050,7 @@ const WI_CTRL2 = [{ k: "fem", l: "สัดส่วนกรรมการห�
 const WARN_FAM = "ข้อมูลบริบท อ่านอย่างเดียว — ความสัมพันธ์ไม่ทนต่อการวิเคราะห์ fixed-effects ในงานวิจัย และไม่ใช่ตัวแปรจำลอง (R6)";
 const WARN_POL = "ข้อมูลบริบท อ่านอย่างเดียว — ไม่ใช้เป็นเหตุผลเชิงบวก ไม่ใช่เป้าการสรรหา และไม่ใช่ตัวแปรจำลอง (R6)";
 const CHIP_CTX = "ตัวแปรบริบท (ครอบครัว · political ties) อ่านอย่างเดียวในทุกมุมมอง";
-const LOCK_BANK = "มุมมองธนาคาร: ตัวแปรบริบทอ่านอย่างเดียว (เหมือนทุกมุมมอง) และไม่ใช้เป็นเหตุผลในการพิจารณาสินเชื่อ";
+const LOCK_BANK = "มุมมอง UC1: ตัวแปรบริบทอ่านอย่างเดียว (เหมือนทุกมุมมอง) และไม่ใช้เป็นเหตุผลในการตัดสินใจขององค์กรนำร่อง";
 const wiCtxMoved = () => false;                         // ตัวแปรบริบทไม่มีตัวควบคุมแล้ว
 const BS_DEFAULT = 11;                                   // ขนาดบอร์ดตั้งต้นเมื่อฐานข้อมูลไม่มีจำนวนกรรมการ
 const BS_MIN = 3, BS_MAX = 25;
@@ -1939,7 +2059,8 @@ const TEN_MIN = 0.5, TEN_MAX = 30, TEN_STEP = 0.5;
 const POL_TICK = "มีกรรมการอย่างน้อย 1 คนที่ (ก) มียศทหารหรือตำรวจที่เปิดเผย หรือ (ข) ดำรงหรือเคยดำรงตำแหน่งตามเกณฑ์บุคคลที่มีสถานภาพทางการเมือง (PEP) ของ ปปง. เช่น รัฐมนตรี ส.ส. ส.ว. ปลัดกระทรวง อธิบดี ผู้ว่าราชการจังหวัด";
 const tenQ = (ind, p) => qAt(indComps(ind).map(x => x.ten).filter(v => isFinite(v)), p);
 const roundTen = v => Math.round(v / TEN_STEP) * TEN_STEP;
-const wiBase = c => { const n = c.bsize || BS_DEFAULT; return { n, nf: Math.round(c.fem * n), nfam: Math.round(c.fam * n), assumed: !c.bsize, ten: c.ten }; };
+/* MVP 1 · D4: ไม่มีขนาดบอร์ดตั้งต้น — ใช้จำนวนที่ผู้ใช้กรอกใน Studio หรือค่าในฐานข้อมูลเท่านั้น (ไม่มีค่า → NaN) */
+const wiBase = c => { const n = +((S.m1Bs || {})["ref:" + c.t] || c.bsize || NaN); return { n, nf: Math.round(c.fem * n), nfam: Math.round(c.fam * n), assumed: false, ten: c.ten }; };
 
 /** OpenInnoScore หลัก (B_EG) ของสถานะจำลอง — อายุงานไม่เข้าสูตร · ใช้ค่าดิบจริงเมื่อ dp ไม่เปลี่ยน เพื่อให้ "ปัจจุบัน" ตรงกับทุกหน้า */
 function wiScore(c, w) {
@@ -1971,8 +2092,7 @@ function wiPresetState(c, k) {
   let nf = Math.abs(v.fem - c.fem) < 1e-9 ? wb.nf : Math.round(v.fem * wb.n);
   if (k === "reg") nf = Math.max(wb.nf, Math.ceil(.3 * wb.n - 1e-9));
   else if (v.fem > c.fem + 1e-9) nf = Math.max(nf, wb.nf);
-  else if (v.fem < c.fem - 1e-9) nf = Math.min(nf, wb.nf);
-  nf = clamp(nf, 0, wb.n);
+  nf = clamp(Math.max(nf, wb.nf), wb.nf, Math.max(wb.nf, Math.floor(.5 * wb.n + 1e-9)));     // G2 เพิ่มได้อย่างเดียว · G4 ≤ 50%
   const fem = nf === wb.nf ? c.fem : nf / wb.n;
   return { k, n: wb.n, nf, fem, ten: isFinite(v.ten) ? v.ten : c.ten, dp: c.dp, assumed: wb.assumed };
 }
@@ -2002,11 +2122,9 @@ function wiFull(c, w) {
 const WI_PRESETS = [
   { k: "cur", en: "Current", th: "ปัจจุบัน", f: c => ({ fem: c.fem, dp: c.dp, ten: c.ten }) },
   { k: "opt", en: "More women (industry p90)", th: "กรรมการหญิงที่ p90 อุตสาหกรรม", d: "สัดส่วนกรรมการหญิง → p90 ของอุตสาหกรรม", f: c => ({ fem: Math.max(c.fem, femQ(c.ind, .9)), dp: c.dp, ten: c.ten }) },
-  { k: "con", en: "Fewer women (industry p10)", th: "กรรมการหญิงที่ p10 อุตสาหกรรม", d: "สัดส่วนกรรมการหญิง → p10 ของอุตสาหกรรม", f: c => ({ fem: Math.min(c.fem, femQ(c.ind, .1)), dp: c.dp, ten: c.ten }) },
-  { k: "sq", en: "Status-quo", th: "คงเดิม", d: "= ปัจจุบัน", f: c => ({ fem: c.fem, dp: c.dp, ten: c.ten }) },
-  { k: "reg", en: "Regulatory-compliant minimum", th: "ขั้นต่ำตามแนวทางกำกับ", d: "สัดส่วนกรรมการหญิง → 30% ถ้าต่ำกว่า (แนวทาง ตลท.)", f: c => ({ fem: Math.max(c.fem, .30), dp: c.dp, ten: c.ten }) },
-  { k: "tenmed", en: "Tenure at industry median", th: "อายุงานเท่าค่ากลางอุตสาหกรรม", d: "อายุงานเฉลี่ย → ค่ากลางของอุตสาหกรรม (ไม่ขยับคะแนนหลัก)", f: c => ({ fem: c.fem, dp: c.dp, ten: roundTen(tenQ(c.ind, .5)) }) },
+  { k: "reg", en: "Minimum 30%", th: "ขั้นต่ำ 30%", d: "สัดส่วนกรรมการหญิง → 30% ถ้าต่ำกว่า", f: c => ({ fem: Math.max(c.fem, .30), dp: c.dp, ten: c.ten }) },
 ];
+/* MVP 1 (#1 #18 · G1 G2): ตัดฉากทัศน์ "กรรมการหญิงที่ p10" (ลดกรรมการหญิง) · "คงเดิม" (ซ้ำกับปัจจุบัน) · "อายุงานเท่าค่ากลาง" (อายุงาน) ออก */
 /** สถานะจำลองแบบจำนวนคน → สัดส่วนที่เข้าสูตร · ครอบครัว/political ties ตรึงที่ค่าจริงเสมอ */
 function wiSync(c, w) {
   const b = wiBase(c);
@@ -2019,6 +2137,13 @@ function wiSync(c, w) {
   return w;
 }
 function wiInit2(force) {
+  /* MVP 1: รายงาน What-if (v2_reports) อ่านสถานะนี้ — คืน null เมื่อยังไม่มีจำนวนกรรมการจริง (D4) · ไม่ผ่านประตู JN (G3) · ปี FAIL (G5)
+     เพื่อไม่ให้แสดงผลต่างคะแนนที่ Studio ไม่แสดง */
+  try { const st = window.M1_WI_STATE ? window.M1_WI_STATE() : null;
+    if (st && (!st.ready || st.withheld || st.suspended)) return null;
+    if (st && st.ready && (S.m1Subj || "").startsWith("cl:")) return null;
+    if (st && st.ready) { const c0 = cur(); S.wi = { t: c0.t, n: st.n, nf: st.target, fem: st.target / st.n, _fs: st.target / st.n, ten: c0.ten, dp: c0.dp, fam: c0.fam, pol: c0.pol, src: "ค่าจริงของบริษัท", preset: null }; return S.wi; }
+  } catch (e) { }
   const c = cur(), b = wiBase(c);
   if (!S.wi || S.wi.t !== c.t || force)
     S.wi = { t: c.t, fem: c.fem, ten: c.ten, dp: c.dp, src: "ค่าจริงของบริษัท", preset: "cur" };
@@ -2179,145 +2304,211 @@ function wiCeoCard(c, w) {
     </div>`;
 }
 
+/* ============================================================================
+   MVP 1 · F4 What-if Studio (#1–#5 #18 · G1–G6 · D3 · D4)
+   · ตัวแปรเดียว: จำนวนกรรมการหญิง (เพิ่มได้อย่างเดียวจากค่าปัจจุบัน G2 · เป้าหมาย ≤ 50% G4) — ไม่มีอายุงาน / B_FULL / แถวขาลง (G1)
+   · ต้องกรอกจำนวนกรรมการจริงก่อน What-if ทุกครั้ง ไม่มีค่าตั้งต้น 11 (D4)
+   · ประตู JN: promotion < 0.686 → ไม่แสดงการเปลี่ยนคะแนน (G3) · ปี FAIL → ระงับ What-if (G5 · R3)
+   · ผลจาก MVP_WHATIF ของ W1 (ช่วง 90% ของ OIS · ตัวคูณ e^ΔB และช่วง 90% · W*) — ไม่มี API → ค่าสำรองจากโมเดลในไฟล์ (ไม่มีช่วงของตัวคูณ)
+   ============================================================================ */
+const M1_BS_KEY = "ois_mvp1_bs";
+S.m1Bs = (() => { try { return JSON.parse(localStorage.getItem(M1_BS_KEY) || "{}") || {}; } catch (e) { return {}; } })();
+S.m1T = S.m1T || {};
+const m1BsSave = () => { try { localStorage.setItem(M1_BS_KEY, JSON.stringify(S.m1Bs)); } catch (e) { } };
+/** บริษัทที่จำลอง — บริษัทที่เลือกอยู่ (ชุดแสดงผล) หรือ ลูกค้าที่นำเข้า (ois_clients_v1) */
+function m1Subj() {
+  const key = S.m1Subj || "";
+  if (key.startsWith("cl:")) {
+    const cl = (typeof m1Clients === "function" ? m1Clients() : []).find(x => "cl:" + String(x.ticker).toUpperCase() === key);
+    if (cl) { const co = m1ClientCo(cl), inp = co._inp;
+      return { key, co, inp, client: true, g: co._group.group, labels: co._group.labels || [], nDb: +inp.board_size > 0 ? +inp.board_size : null,
+        nowDb: isFinite(+inp.women) && inp.women !== null && inp.women !== "" ? +inp.women : null, fy: co.fy, ind: co.ind }; }
+    S.m1Subj = "";
+  }
+  const c = cur(), fy = +(c.fy || FY_SHOWN);
+  return { key: "ref:" + c.t, co: c, inp: m1InpOf(c), client: false, g: fy > 2023 ? 3 : 1, labels: fy > 2023 ? ["Not yet validated"] : [],
+    nDb: c.bsize ? +c.bsize : null, nowDb: null, fy, ind: c.ind };
+}
+/** จำนวนกรรมการที่ใช้ — ค่าที่ผู้ใช้กรอก หรือค่าจริงในฐานข้อมูล · ไม่มีค่าตั้งต้น (D4) */
+const m1BoardN = sub => { const v = +(S.m1Bs[sub.key] || sub.nDb || 0); return v >= 3 && v <= 30 ? Math.round(v) : null; };
+const m1Now = (sub, n) => clamp(sub.nowDb !== null && sub.nowDb !== undefined ? Math.round(sub.nowDb) : Math.round(sub.co.fem * n), 0, n);
+const m1Cap = (n, now) => Math.max(now, Math.floor(0.5 * n + 1e-9));          // G4: เป้าหมาย ≤ 50%
+function m1PresetTarget(sub, n, now, k) {
+  const cap = m1Cap(n, now);
+  if (k === "opt") { const p90 = qAt((indComps(sub.ind).length ? indComps(sub.ind) : COMPS).map(x => x.fem).filter(v => isFinite(v)), .9);
+    return clamp(Math.max(now, Math.ceil(p90 * n - 1e-9)), now, cap); }
+  if (k === "reg") return clamp(Math.max(now, Math.ceil(.3 * n - 1e-9)), now, cap);
+  return now;
+}
+function m1Target(sub, n, now) {
+  const st = S.m1T[sub.key];
+  let t = st && st.n === n && isFinite(st.target) ? st.target : now;
+  if (S.wi && S.wi.preset === "zonec" && S.wi.t === sub.co.t && isFinite(S.wi.fem)) { t = Math.round(S.wi.fem * n); S.wi.preset = "zonec-done"; S.m1T[sub.key] = { n, target: t, preset: null }; }
+  return clamp(t, now, m1Cap(n, now));
+}
+/** ผล What-if — MVP_WHATIF ของ W1 หรือค่าสำรอง */
+function m1WhatIf(sub, n, now, target) {
+  const base = sub.client ? Object.assign(m1Pick(sub.inp), { board_size: n }) : m1InpOf(sub.co);
+  if (sub.client && !(sub.inp.female_share > 0 || sub.inp.female_share === 0)) delete base.female_share;
+  delete base.women;
+  if (typeof window.MVP_WHATIF === "function") {
+    try { const r = window.MVP_WHATIF({ base, board_size: n, women_now: now, women_target: target, mode: "replace" }); if (r) return Object.assign({ _api: true }, r); }
+    catch (e) { return { ok: false, error: String(e && e.message || e), _api: true }; }
+  }
+  return m1WhatIfLocal(sub, n, now, target);
+}
+function m1WhatIfLocal(sub, n, now, target) {
+  const co = sub.co, fyStatus = m1FY(sub.fy);
+  if (!isFinite(+co.promo)) return { ok: false, error: b5T("CEO promotion value is missing", "ไม่มีค่า promotion ของ CEO") };
+  const promo = +co.promo, W0 = now / n, W1 = target / n;
+  const sc = W => { const amp = ampOf(co.fam, co.pol, W, co.ten), ois = oisOf(signalB(promo, amp)); let band = null;
+    try { const b = band90(promo, co.fam, co.pol, W); if (Array.isArray(b)) band = b; } catch (e) { }
+    return { amp, X: promoPct(promo), Y: ampPct(amp), quad: zoneOf(promo, amp), ois, band90: band, tier: tierOf(ois), tier_uncertain: !!band && tierOf(band[0]) !== tierOf(band[1]) }; };
+  const cur0 = sc(W0), sim = sc(W1), cP = cpOf(promo);
+  const a1 = ampOf(co.fam, co.pol, W0 + .01, co.ten), slope = (a1 - cur0.amp) / .01;
+  const dW = W1 - W0, dB = cP * (sim.amp - cur0.amp), mult = Math.exp(dB);
+  const Ws = slope > 0 ? W0 - cur0.amp / slope : NaN;
+  const withheld = !(promo >= M1_JN), suspended = fyStatus.whatIfAllowed === false;
+  return { ok: true, _local: true, gate: { pass: !withheld, promotion: promo, bound: M1_JN }, fyStatus, cur: cur0, sim, dW, dB, multiplier: mult, multiplier_band90: null,
+    W_star: Ws, W_star_headcount: isFinite(Ws) ? Math.ceil(Ws * n - 1e-9) : null, withheld, suspended,
+    sentence_en: dW > 0 ? `In the reference data, a board with ${fmt(W1 * 100, 1)}% women and this level of CEO drive is associated with about ${fmt((mult - 1) * 100, 1)}% more expected open-innovation activity, other factors held constant.` : "",
+    sentence_th: dW > 0 ? `ในข้อมูลอ้างอิง คณะกรรมการที่มีกรรมการหญิง ${fmt(W1 * 100, 1)}% และแรงขับของ CEO ระดับนี้ สัมพันธ์กับกิจกรรม open innovation ที่คาดหมายสูงขึ้นราว ${fmt((mult - 1) * 100, 1)}% เมื่อปัจจัยอื่นคงที่` : "" };
+}
+const m1Band = b => Array.isArray(b) && b.length >= 2 ? `[${fmt(b[0], 1)}, ${fmt(b[1], 1)}]` : "";
+const m1MultTxt = r => `×${fmt(r.multiplier, 3)}${Array.isArray(r.multiplier_band90) ? ` [${fmt(r.multiplier_band90[0], 3)}, ${fmt(r.multiplier_band90[1], 3)}]` : ""}`;
+const m1Q = q => ZONES[q] ? `${esc(ZONES[q].l)}` : "—";
+/** สถานะ What-if ปัจจุบัน — ให้รายงาน What-if (v2_reports) อ่านต่อ */
+window.M1_WI_STATE = () => { const sub = m1Subj(), n = m1BoardN(sub); if (!n) return { ready: false };
+  const now = m1Now(sub, n), target = m1Target(sub, n, now), r = m1WhatIf(sub, n, now, target);
+  return { ready: !!r.ok, n, now, target, withheld: !!r.withheld, suspended: !!r.suspended, result: r }; };
+/** แถบ board amplification พร้อมเครื่องหมาย W* (ตำแหน่งที่ amp ข้ามเส้นแบ่ง P36.0) */
+function m1AmpBar(r, n) {
+  const dv = m1Div(), y0 = r.cur && r.cur.Y, y1 = r.sim && r.sim.Y;
+  const ws = isFinite(r.W_star) ? r.W_star : NaN, hc = r.W_star_headcount ?? (isFinite(ws) ? Math.ceil(ws * n - 1e-9) : null);
+  const wsTxt = isFinite(ws) ? (ws <= 0 ? b5T("W* ≤ 0% — above the divider at any share", "W* ≤ 0% — อยู่เหนือเส้นแบ่งที่ทุกสัดส่วน")
+    : `W* = ${fmt(ws * 100, 1)}% (≈ ${hc} ${b5T("of", "จาก")} ${n}${b5T(" directors", " คน")})`) : "W* —";
+  const pos = v => clamp(v, 0, 100).toFixed(1) + "%";
+  return `<div class="m1b-ampbar" id="m1AmpBar">
+    <div class="m1b-ampk">${b5T("Board amplification · percentile in REF-928 (B_EG)", "Board amplification · เปอร์เซ็นไทล์ใน REF-928 (B_EG)")}</div>
+    <div class="m1b-amptrack">
+      <span class="m1b-ampdiv" style="left:${pos(dv.y)}" title="P${fmt(dv.y, 1)}"></span>
+      <span class="m1b-wstar" id="mvWstarMark" style="left:${pos(dv.y)}"><b>${esc(wsTxt)}</b></span>
+      ${isFinite(y0) ? `<span class="m1b-ampdot now" style="left:${pos(y0)}" title="${b5T("current", "ปัจจุบัน")} P${fmt(y0, 1)}"></span>` : ""}
+      ${isFinite(y1) ? `<span class="m1b-ampdot sim" style="left:${pos(y1)}" title="${b5T("simulated", "จำลอง")} P${fmt(y1, 1)}"></span>` : ""}
+    </div>
+    <div class="m1b-ampleg"><span><i class="now"></i>${b5T("current", "ปัจจุบัน")} P${fmt(y0, 1)}</span><span><i class="sim"></i>${b5T("simulated", "จำลอง")} P${fmt(y1, 1)}</span>
+      <span>┆ ${b5T("divider", "เส้นแบ่ง")} P${fmt(dv.y, 1)} = W*</span></div>
+  </div>`;
+}
+function m1CritNote(target) {
+  return `<div class="m1b-cm${target < CRIT_N ? " below" : ""}" id="mvCrit">${b5T(`${target} women on the simulated board — ${target < CRIT_N ? `below the critical mass of ${CRIT_N}` : `critical mass of ${CRIT_N} reached`}`,
+    `กรรมการหญิง ${target} คนในสถานะจำลอง — ${target < CRIT_N ? `ต่ำกว่า critical mass ${CRIT_N} คน` : `ถึง critical mass ${CRIT_N} คน`}`)}
+    <div class="gx-sm">${esc(b5T(CM_NOTE_EN, CM_NOTE_TH))}</div></div>`;
+}
+function m1StudioBody(trial) {
+  const sub = m1Subj(), c = sub.co, L = typeof ucLens === "function" ? ucLens() : { id: "board" }, uc1 = L.id === "credit";
+  const cls = typeof m1Clients === "function" ? m1Clients() : [];
+  const fySt = m1FY(sub.fy), n = m1BoardN(sub);
+  const gateOk = isFinite(+c.promo) && +c.promo >= M1_JN;
+  const subjSel = `<select class="sel" id="m1Subj" aria-label="${b5T("Company to simulate", "บริษัทที่จำลอง")}">
+      <option value="">${esc(cur().t)} · ${esc(cur().n)} ${b5T("(selected company)", "(บริษัทที่เลือกอยู่)")}</option>
+      ${trial ? "" : cls.map(x => `<option value="cl:${esc(String(x.ticker).toUpperCase())}"${S.m1Subj === "cl:" + String(x.ticker).toUpperCase() ? " selected" : ""}>${esc(x.ticker)} · ${esc(x.name || "")} ${b5T("(imported client)", "(ลูกค้าที่นำเข้า)")}</option>`).join("")}</select>`;
+  const labs = (sub.labels || []).map(l => `<span class="pill ${/Not yet/.test(l) ? "mute" : "warn"} m1b-lab">${esc(l === "Not yet validated" ? m1NyvLab() : m1OutLab())}</span>`).join(" ");
+  const head = `<div class="card m1b-wisubj" style="margin-bottom:14px">
+      <div class="gx-row" style="align-items:center;flex-wrap:wrap;gap:10px">${subjSel} ${m1FYChip(sub.fy)} ${labs}
+        <span class="pill mute">B_EG · ${esc(m1Ver())}</span>
+        <span class="gx-sm">${b5T("Lens", "มุมมอง")}: <b>${esc(typeof ucLab === "function" ? ucLab(L) : "")}</b></span></div>
+      ${uc1 ? m1SupBadge() : ""}</div>`;
+  if (sub.g >= 4) return head + `<div class="note warn" id="mvNotApplicable">${b5T("This client gets the Board Profile only (groups 4–5) — no position, OIS, tier or What-if (R4, D2).", "ลูกค้ารายนี้ได้เฉพาะ Board Profile (กลุ่ม 4–5) — ไม่มีตำแหน่ง OIS tier หรือ What-if (R4, D2)")}</div>`;
+  const bsCard = `<div class="mv-steprow m1b-bsrow"><div><b>${b5T("Total number of directors (actual)", "จำนวนกรรมการทั้งหมด (ค่าจริง)")}</b> <span class="pill ${n ? "ok" : "warn"}" style="font-size:9.5px">${b5T("required (D4)", "ต้องกรอก (D4)")}</span>
+        <div class="mv-sub">${sub.nDb ? b5T(`database value ${sub.nDb}`, `ค่าในฐานข้อมูล ${sub.nDb} คน`) : b5T("The database has no director count for this firm — enter the actual number; there is no default.", "ฐานข้อมูลยังไม่มีจำนวนกรรมการของบริษัทนี้ — กรอกจำนวนจริง ระบบไม่มีค่าตั้งต้นให้")}</div></div>
+      <div class="m1b-bsin"><input type="number" class="inp" id="m1Bs" min="3" max="30" step="1" inputmode="numeric" value="${n || ""}" placeholder="${b5T("e.g. 11", "เช่น 11")}" aria-label="${b5T("Total number of directors", "จำนวนกรรมการทั้งหมด")}">
+        <button class="btn s" id="mvBsSet">${b5T("Set", "ตั้งค่า")}</button></div></div>`;
+  if (!n) return head + `<div class="card b4-wictl">${bsCard}
+      <div class="note warn" id="mvNeedBs" role="note"><b>${b5T("Enter the actual board size to start the What-if (D4).", "กรอกจำนวนกรรมการจริงก่อนเริ่ม What-if (D4)")}</b>
+        ${b5T("The female share, the W* headcount and the 50% cap (G4) all use this number.", "สัดส่วนกรรมการหญิง จำนวนคนของ W* และเพดาน 50% (G4) ใช้ตัวเลขนี้ทั้งหมด")}</div></div>`;
+  const now = m1Now(sub, n), cap = m1Cap(n, now), target = m1Target(sub, n, now);
+  const st = S.m1T[sub.key] || {};
+  const presets = [["cur", "Current", "ปัจจุบัน"], ["opt", "More women (industry p90)", "กรรมการหญิงที่ p90 อุตสาหกรรม"], ["reg", "Minimum 30%", "ขั้นต่ำ 30%"]];
+  const r = m1WhatIf(sub, n, now, target);
+  const ctx = uc1 ? `<div class="gx-sm m1b-ctxhid" id="mvCtxHidden">${b5T("Family-director and political-ties rows are hidden in the UC1 lens (D1).", "แถวกรรมการครอบครัวและ political ties ซ่อนในมุมมอง UC1 (D1)")}</div>`
+    : (sub.client ? "" : ctxRows(c));
+  const inputs = `<div class="card b4-wictl">
+      <h3>${b5T("Simulation variable: female directors", "ตัวแปรจำลอง: จำนวนกรรมการหญิง")}</h3>
+      <p class="desc">${b5T("Only the number of female directors moves · increase-only from today (G2) · target capped at 50% of the board (G4) · tenure is not simulated (G1) · figures are formula associations, not forecasts.",
+        "ขยับได้เฉพาะจำนวนกรรมการหญิง · เพิ่มได้อย่างเดียวจากค่าปัจจุบัน (G2) · เป้าหมายไม่เกิน 50% ของบอร์ด (G4) · ไม่จำลองอายุงาน (G1) · ตัวเลขเป็นความสัมพันธ์ตามสูตร ไม่ใช่การพยากรณ์")}</p>
+      ${bsCard}
+      <div class="gx-row m1b-presets" style="margin:4px 0 12px;flex-wrap:wrap">${presets.map(p => `<button class="btn ${(st.preset || "cur") === p[0] && m1PresetTarget(sub, n, now, p[0]) === target ? "p" : "g"}" data-mvpreset="${p[0]}" style="font-size:11.5px;padding:5px 11px">${esc(b5T(p[1], p[2]))}</button>`).join("")}</div>
+      <div class="mv-steprow"><div><b>${b5T("Female directors (people)", "จำนวนกรรมการหญิง (คน)")}</b>
+          <div class="mv-sub">${b5T(`today ${now} of ${n} (${fmt(now / n * 100, 1)}%) · simulated ${fmt(target / n * 100, 1)}% · cap ${cap} (50%)`, `ปัจจุบัน ${now} จาก ${n} คน (${fmt(now / n * 100, 1)}%) · จำลอง ${fmt(target / n * 100, 1)}% · สูงสุด ${cap} คน (50%)`)}</div></div>
+        ${mvStep("nf", target, now, cap, b5T("female directors", "จำนวนกรรมการหญิง"))}</div>
+      ${m1CritNote(target)}
+      ${ctx}
+      <div class="b4-ctxr" style="margin-top:10px"><span>${b5T("CEO promotion (actual · not simulated)", "promotion ของ CEO (ค่าจริง · ไม่ใช่ตัวแปรจำลอง)")}</span><b class="num" id="mvPromo">${fmt(c.promo, 2)}${isFinite(c.dp) ? ` · P${fmt(c.dp, 1)}` : ""}</b></div>
+      <div class="gx-sm"><span class="pill ${gateOk ? "ok" : "warn"}" id="mvGate">${gateOk ? b5T("JN gate passes (G3): promotion ≥ 0.686", "ผ่านประตู JN (G3): promotion ≥ 0.686") : b5T("Below the JN bound 0.686 (G3)", "ต่ำกว่าขอบ JN 0.686 (G3)")}</span></div>
+    </div>`;
+  let res;
+  if (!r.ok) res = `<div class="note warn" id="mvErr">${esc(r.error || b5T("What-if is not available for this company.", "ใช้ What-if กับบริษัทนี้ไม่ได้"))}</div>`;
+  else if (r.suspended) res = `<div class="note crit m1b-susp" id="mvSusp" role="note"><b>${b5T(`What-if suspended — FY${sub.fy} is a FAIL year (R3, G5)`, `ระงับ What-if — ปีบัญชี FY${sub.fy} มีผล validity = FAIL (R3, G5)`)}</b>
+      ${b5T("In this fiscal year the score did not separate firms with more open-innovation activity; the normal reading is withheld and no What-if is computed.", "ในปีบัญชีนี้คะแนนแยกบริษัทที่มีกิจกรรม open innovation มากกว่าไม่ได้ จึงงดการอ่านผลตามปกติและไม่คำนวณ What-if")}</div>`;
+  else {
+    const qch = r.cur.quad !== r.sim.quad;
+    const stats = r.withheld
+      ? `<div class="note warn m1b-withheld" id="mvWithheld" role="note"><b>${esc(m1WithheldTxt())}</b> ·
+          ${b5T(`CEO promotion ${fmt(c.promo, 2)} is below the Johnson–Neyman bound 0.686 (P65.7), so the female-share association with the score is not separated from zero here.`, `promotion ของ CEO ${fmt(c.promo, 2)} ต่ำกว่าขอบ Johnson–Neyman 0.686 (P65.7) ความสัมพันธ์ระหว่างสัดส่วนกรรมการหญิงกับคะแนนจึงยังแยกจากศูนย์ไม่ได้ในช่วงนี้`)}</div>
+        <div class="grid g2 tight" style="gap:10px;margin:10px 0">
+          <div class="stat"><div class="k">${b5T("Board amplification · current", "Board amplification · ปัจจุบัน")}</div><div class="v num">P${fmt(r.cur.Y, 1)}</div></div>
+          <div class="stat hero"><div class="k">${b5T("Board amplification · simulated", "Board amplification · จำลอง")}</div><div class="v num" id="mvY1">P${fmt(r.sim.Y, 1)}</div></div></div>`
+      : `<div class="grid g4 tight" style="gap:10px;margin:10px 0 12px">
+          <div class="stat"><div class="k">${b5T("Current", "ปัจจุบัน")}</div><div class="v num">${fmt(r.cur.ois, 1)}</div><div class="u">${m1Band(r.cur.band90)} · ${m1Q(r.cur.quad)}</div></div>
+          <div class="stat hero"><div class="k">${b5T("Simulated OIS · 90% band", "OIS จำลอง · ช่วง 90%")}</div><div class="v num" id="mvOis1">${fmt(r.sim.ois, 1)}</div><div class="u" id="mvBand1">${m1Band(r.sim.band90)} · Tier ${r.sim.tier}${r.sim.tier_uncertain ? ` <span class="pill warn">${b5T("tier uncertain (R8)", "tier ไม่แน่นอน (R8)")}</span>` : ""}</div></div>
+          <div class="stat"><div class="k">${b5T("Multiplier e^ΔB · 90% band", "ตัวคูณ e^ΔB · ช่วง 90%")}</div><div class="v num m1b-mult" id="mvMult">${esc(m1MultTxt(r))}</div><div class="u">${r._local ? b5T("band from the model layer — not available in this file", "ช่วงของตัวคูณมาจากชั้นโมเดล — ยังไม่มีในไฟล์นี้") : b5T("expected open-innovation activity, relative", "กิจกรรม open innovation ที่คาดหมาย (เชิงเปรียบเทียบ)")}</div></div>
+          <div class="stat"><div class="k">${b5T("2×2 quadrant", "ช่อง 2×2")}</div><div class="v" style="font-size:16px" id="mvQuad1">${qch ? `${r.cur.quad} → ${r.sim.quad}` : r.sim.quad}</div><div class="u">${m1Q(r.sim.quad)}</div></div></div>
+        ${r.dW > 0 ? `<div class="note m1b-g6" id="mvG6" role="note"><b>${b5T("Relational reading (G6)", "การอ่านเชิงความสัมพันธ์ (G6)")}</b> — ${esc(b5T(r.sentence_en || "", r.sentence_th || r.sentence_en || ""))}</div>` : ""}`;
+    res = stats + m1AmpBar(r, n) + `<p class="gx-sm" id="mvWstar">${(() => { const ws = r.W_star, hc = r.W_star_headcount ?? (isFinite(ws) ? Math.ceil(ws * n - 1e-9) : null);
+      return isFinite(ws) ? b5T(`W* (female share at which board amplification crosses the divider) = ${fmt(ws * 100, 1)}% — about ${hc} of ${n} directors on the board size entered.`,
+        `W* (สัดส่วนกรรมการหญิงที่ board amplification ข้ามเส้นแบ่ง) = ${fmt(ws * 100, 1)}% — ประมาณ ${hc} จาก ${n} คนตามจำนวนกรรมการที่กรอก`) : "W* —"; })()}${isFinite(r.W_star_T1) && uc1 ? ` · W*<sub>T1</sub> ${fmt(r.W_star_T1 * 100, 1)}% <span class="pill warn">CAUTION</span>` : ""}</p>`;
+  }
+  /* ทีละขั้น — เฉพาะการเพิ่มกรรมการหญิง (ไม่มีแถวลดหรืออายุงาน) */
+  const steps = [];
+  const pushS = (t, l) => { if (t > now && t <= cap && !steps.some(x => x.t === t)) steps.push({ t, l }); };
+  pushS(now + 1, b5T(`+1 woman (${now} → ${now + 1} of ${n})`, `+1 คน (${now} → ${now + 1} จาก ${n})`));
+  pushS(now + 2, b5T(`+2 women (${now} → ${now + 2} of ${n})`, `+2 คน (${now} → ${now + 2} จาก ${n})`));
+  pushS(Math.ceil(.3 * n - 1e-9), b5T(`${Math.ceil(.3 * n - 1e-9)} of ${n} (30%)`, `${Math.ceil(.3 * n - 1e-9)} จาก ${n} คน (30%)`));
+  const stepRows = r.ok && !r.suspended && steps.length ? steps.map(s => { const x = m1WhatIf(sub, n, now, s.t);
+    return `<tr data-mvrow="${s.t}"><td>${esc(s.l)}</td><td class="n">${fmt(s.t / n * 100, 1)}%</td><td class="n">P${fmt(x.sim && x.sim.Y, 1)}</td>
+      <td>${x.withheld ? "—" : m1Q(x.sim && x.sim.quad)}</td><td class="n">${x.withheld ? `<span class="gx-sm">${b5T("withheld (G3)", "ไม่แสดง (G3)")}</span>` : esc(m1MultTxt(x))}</td></tr>`; }).join("") : "";
+  const stepCard = stepRows ? `<div class="card" style="margin-top:14px"><h3>${b5T("Step by step (increase only)", "ทีละขั้น (เพิ่มได้อย่างเดียว)")}</h3>
+      <p class="desc">${b5T("From today's board · only additions of women are listed (G2) · fixed order, not ranked", "ตั้งต้นจากบอร์ดวันนี้ · แสดงเฉพาะการเพิ่มกรรมการหญิง (G2) · ลำดับคงที่ ไม่จัดอันดับ")}</p>
+      <div class="tw"><table class="tr-tbl m1b-steps"><thead><tr><th>${b5T("Change", "การเปลี่ยน")}</th><th class="n">${b5T("Female share", "สัดส่วนหญิง")}</th><th class="n">${b5T("Board amp. pct", "Board amp. pct")}</th><th>${b5T("Quadrant", "ช่อง")}</th><th class="n">${b5T("Multiplier [90%]", "ตัวคูณ [90%]")}</th></tr></thead>
+      <tbody>${stepRows}</tbody></table></div></div>` : "";
+  const result = `<div class="card"><h3>${b5T("Simulated result · B_EG", "ผลจำลอง · B_EG")} <span style="font-weight:300;color:var(--ink-3);font-size:12px">· ${b5T("formula association", "ตามสูตร เชิงความสัมพันธ์")}</span></h3>
+      <div class="mv-sub" style="margin-bottom:6px">${b5T(`Simulated state: ${n} directors · ${target} women (${fmt(target / n * 100, 1)}%)`, `สถานะจำลอง: กรรมการ ${n} คน · หญิง ${target} คน (${fmt(target / n * 100, 1)}%)`)}</div>${res}</div>`;
+  return head + `<div class="grid g2" style="margin-bottom:14px;align-items:start">${inputs}${result}</div>` + stepCard
+    + `<div class="note warn" style="margin-top:14px"><b>${b5T("Read honestly", "อ่านอย่างซื่อตรง")}</b> — ${b5T("figures are associations from a correlational model of the reference data, not a promise that changing the board will raise innovation · never use them to assess or select an individual (PDPA s.26).",
+      "ตัวเลขเป็นความสัมพันธ์จากแบบจำลองเชิงสหสัมพันธ์ของข้อมูลอ้างอิง ไม่ใช่การรับประกันว่าปรับบอร์ดแล้วนวัตกรรมจะเพิ่ม · ห้ามใช้ประเมินหรือคัดเลือกรายบุคคล (พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล มาตรา 26)")}
+      <div class="gx-sm" style="margin-top:4px">${esc(CM_REF)}</div></div>`;
+}
 function viewStudioPro() {
-  const c = cur(), w = wiInit2(), wb = wiBase(c);
-  const s1 = wiScore(c, w), ipi1 = s1.ipi, d = ipi1 - c.ipi;
-  const z0 = zoneOf(c.promo, c.amp), zone1 = s1.zone;
-  const q0 = indQuart(c.promo, c.amp, c.ind), q1 = indQuart(s1.promo, s1.amp, c.ind);
-  const t0 = tierOf(c.ois ?? c.ipi), t1 = tierOf(s1.ois);
-  const tenMoved = Math.abs(w.ten - c.ten) > 1e-9;
-  const quartBlock = `<div class="mv-quart" id="mvQuart">
-      <div class="mv-q hero"><div class="k">Quartile ในอุตสาหกรรม · สถานะจำลอง</div>
-        <div class="v" id="mvQ1">Q${q1.q}</div>
-        <div class="u">${esc(QUART_LAB[q1.q])} ในกลุ่ม${esc(q1.ind)} · OIS ในอุตสาหกรรม ${fmt(q1.oi, 0)}</div></div>
-      <div class="mv-q"><div class="k">Quartile ในอุตสาหกรรม · ปัจจุบัน</div><div class="v">Q${q0.q}</div>
-        <div class="u">${esc(QUART_LAB[q0.q])} · OIS ในอุตสาหกรรม ${fmt(q0.oi, 0)}</div></div>
-      <div class="mv-q"><div class="k">Tier ทั้งฐาน REF-928</div><div class="v">Tier ${t1}</div>
-        <div class="u">${t1 !== t0 ? `เปลี่ยนจาก Tier ${t0}` : "เท่าเดิม"} · ${q1.q !== q0.q ? `<b>ย้าย Quartile ในอุตสาหกรรม Q${q0.q} → Q${q1.q}</b>` : "อยู่ Quartile เดิมในอุตสาหกรรม"}</div></div>
-    </div>
-    <p class="mv-sub" style="margin:4px 0 12px">Quartile ในอุตสาหกรรม = ตำแหน่งเทียบเฉพาะบริษัท-ปีในอุตสาหกรรมเดียวกันของ REF-928 (Q1 = บนสุด 25%) — เป็นการจำลองว่าจะอยู่ Quartile ใด ไม่ใช่การพยากรณ์ผลนวัตกรรม</p>`;
-  const inner = `
-  <div class="card" style="margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div><h3 style="margin:0">ฉากทัศน์สำเร็จรูป</h3>
-        <p class="desc" style="margin:2px 0 0">ขยับเฉพาะกรรมการหญิงหรืออายุงาน · คืนขนาดบอร์ดเป็นค่าตั้งต้น · ภาษา CEO และตัวแปรบริบทใช้ค่าจริง</p></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${WI_PRESETS.map(p => `<button class="btn ${w.preset === p.k ? "p" : "g"}" data-preset="${p.k}"
-        title="${esc(p.d || "")}" style="font-size:11.5px;padding:5px 11px">${esc(T(p.en, p.th))}</button>`).join("")}</div></div>
-  </div>
-  <div class="grid g2" style="margin-bottom:14px">
-    <div class="card b4-wictl">
-      <h3>ตัวแปรที่จำลองได้ (2 ตัวแปร)</h3>
-      <p class="desc">ตามที่ประชุมตกลง: <b>จำนวนกรรมการหญิง</b> และ<b>อายุงานเฉลี่ยของบอร์ด</b> · ขนาดบอร์ดใช้เป็นตัวหารของจำนวนกรรมการหญิง ·
-        ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตร ไม่ใช่การพยากรณ์</p>
-      <div class="mv-steprow"><div><b>จำนวนกรรมการทั้งหมด (คน)</b> <span class="pill mute" style="font-size:9.5px">ตัวหาร</span>
-          <div class="mv-sub">${wb.assumed ? `ฐานข้อมูลยังไม่มีจำนวนกรรมการของบริษัทนี้ — ตั้งต้นที่ ${BS_DEFAULT} คน (กรอกจำนวนจริงได้ใน Zone A)` : `ค่าจริง ${wb.n} คน (จาก Zone A)`} · ช่วงใน REF-928 คือ 3–18 คน</div></div>
-        ${mvStep("n", w.n, BS_MIN, BS_MAX, "จำนวนกรรมการทั้งหมด")}</div>
-      <div class="mv-steprow"><div><b>① จำนวนกรรมการหญิง (คน)</b>
-          <div class="mv-sub">สัดส่วนที่เข้าสูตร <b>${pct1(w.fem)}</b> · เดิม ${pct1(c.fem)} (≈ ${wb.nf} คน จาก ${wb.n})</div></div>
-        ${mvStep("nf", w.nf, 0, w.n, "จำนวนกรรมการหญิง")}</div>
-      <div class="mv-sub" style="margin:-2px 0 12px;color:${w.nf < CRIT_N ? "var(--warn)" : "var(--ink-3)"}">กรรมการหญิง ${w.nf} คน — ${w.nf < CRIT_N ? `ต่ำกว่าเกณฑ์ critical mass ${CRIT_N} คน (${CM_SRC})` : `ถึงเกณฑ์ critical mass ${CRIT_N} คน (${CM_SRC})`}</div>
-      <div class="mv-steprow"><div><b>② อายุงานเฉลี่ยของบอร์ด (ปี)</b> <span class="pill mute" style="font-size:9.5px">ไม่เข้าคะแนนหลัก</span>
-          <div class="mv-sub">เดิม ${fmt(c.ten, 1)} ปี · ค่ากลางอุตสาหกรรม ${fmt(tenQ(c.ind, .5), 1)} ปี · ปรับครั้งละ ${TEN_STEP} ปี · ผลแสดงในการ์ด “การวิเคราะห์ความไว (B_FULL)”</div></div>
-        ${mvStep("ten", w.ten, TEN_MIN, TEN_MAX, "อายุงานเฉลี่ย", false, "ปี", TEN_STEP)}</div>
-      ${ctxRows(c)}
-      <button class="btn s" id="btnWiReset" style="width:100%;justify-content:center;margin-top:10px">↺ กลับไปใช้โครงสร้างบอร์ดจริง</button>
-    </div>
-    ${wiCeoCard(c, w)}
-  </div>
-
-  <div class="card" style="margin-bottom:14px">
-    <h3>ผลลัพธ์จำลอง · คะแนนหลัก (B_EG) <span style="font-weight:300;color:var(--ink-3);font-size:12px">· ตามสูตร เชิงความสัมพันธ์</span></h3>
-    <div class="mv-sub" style="margin-bottom:8px" id="b4WiState">สถานะจำลอง: กรรมการ ${w.n} คน · หญิง ${w.nf} คน (${pct1(w.fem)}) · อายุงาน ${fmt(w.ten, 1)} ปี · ครอบครัว ${pct1(c.fam)} และ political ties ${c.pol} (ค่าจริง อ่านอย่างเดียว) · CEO Promotion Focus ${w.dp}</div>
-    ${tenMoved ? `<div class="note b4-tennote" role="note">อายุงานถูกปรับเป็น ${fmt(w.ten, 1)} ปี — <b>คะแนนหลักไม่เปลี่ยน</b> เพราะสูตรหลักตัดอายุงานออก (δT = 0) · ดูผลความไวในการ์ด B_FULL ด้านล่าง</div>` : ""}
-    ${quartBlock}
-    <div class="grid g4 tight" style="gap:10px;margin:10px 0 14px">
-      <div class="stat"><div class="k">OpenInnoScore ปัจจุบัน</div><div class="v num">${c.ipi}</div><div class="u">${esc(ZONES[z0].l)}</div></div>
-      <div class="stat hero"><div class="k">OpenInnoScore จำลอง</div><div class="v num" id="mvSimOis">${ipi1}</div><div class="u">${esc(ZONES[zone1].l)}</div></div>
-      <div class="stat"><div class="k">ต่างกัน (ตามสูตร)</div>
-        <div class="v num">${d > 0 ? "+" : ""}${d}</div>
-        <div class="u">${d > 0 ? "▲ สูงขึ้น" : d < 0 ? "▼ ต่ำลง" : "เท่าเดิม"}</div></div>
-      <div class="stat"><div class="k">ย้ายช่อง 2×2 หรือไม่</div>
-        <div class="v" style="font-size:17px">${zone1 !== z0 ? "ย้าย" : "อยู่ช่องเดิม"}</div>
-        <div class="u">${zone1 !== z0 ? esc(ZONES[z0].l) + " → " + esc(ZONES[zone1].l) : esc(ZONES[z0].l)}</div></div>
-    </div>
-    <div style="margin-bottom:6px;font-size:11.5px;color:var(--ink-3)">ตำแหน่งบนการกระจายตัว · บริษัทจดทะเบียน ${COMPS.length} บริษัท ปีบัญชี ${FY_SHOWN + 543} (คะแนนแต่ละบริษัทเทียบฐาน REF-928)</div>
-    ${boxplot(IPI_ALL, ipi1, `OpenInnoScore · ${COMPS.length} บริษัท ปีบัญชี ${FY_SHOWN + 543}`)}
-    <div class="legend"><span><i class="dia" style="background:var(--ink)"></i>ค่าจำลอง ${ipi1}</span>
-      <span style="color:var(--ink-3)">เดิม ${c.ipi}</span></div>
-    ${bars([
-      { l: "CEO Promotion Focus", v: w.dp, t: `${c.dp} → ${w.dp}`, c: rampAt(w.dp), hl: 1 },
-      { l: "Board Amplification", v: ampPct(s1.amp), t: `${ampPct(c.amp)} → ${ampPct(s1.amp)}`, c: rampAt(ampPct(s1.amp)), hl: 1 },
-    ], { lw: 175, h: 10, max: 100 })}
-  </div>
-  ${wiFullCard(c, w)}
-  ${downsideBlock(c)}
-  <div class="grid g-side-r">
-    <div class="card">
-      <h3>เปรียบเทียบการเปลี่ยนแปลงทีละข้อ</h3>
-      <p class="desc">คำนวณจากสถานะจำลองปัจจุบัน · ตารางเรียงตามชื่อตัวแปร ไม่จัดอันดับตามคะแนน</p>
-      ${wiScenarios2(c, w)}
-    </div>
-    <div class="card">
-      <h3>ข้อสังเกตเชิงโครงสร้าง</h3>
-      <p class="desc">บรรยายสถานะจำลองในระดับคณะ (เชิงความสัมพันธ์)</p>
-      ${persona2(c, w, ipi1)}
-    </div>
-  </div>
-  ${typeof b4SrcNote === "function" ? b4SrcNote() : ""}
-  <div class="note warn" style="margin-top:14px">
-    <b>อ่านอย่างซื่อตรง</b> — ตัวเลขที่ขยับเป็นความสัมพันธ์ตามสูตรของแบบจำลองเชิงสหสัมพันธ์ เป็น “ฉากทัศน์เพื่อการออกแบบบอร์ด”
-    ไม่ใช่การรับประกันว่าปรับแล้วนวัตกรรมจะเพิ่มจริง · <b>กรรมการครอบครัวและ political ties เป็นข้อมูลบริบท อ่านอย่างเดียว</b> ·
-    <b>ห้ามใช้ผลนี้ประเมินหรือคัดเลือกรายบุคคล</b> เพราะเพศและความเชื่อมโยงทางการเมืองเป็นข้อมูลอ่อนไหวตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล มาตรา 26</div>`;
-  return pageHead("จำลองสถานการณ์", "What-if Studio",
-    `จำลองได้ 2 ตัวแปร — จำนวนกรรมการหญิง และอายุงานเฉลี่ยของบอร์ด — แล้วดูว่าบริษัทจะอยู่ Quartile ใดในอุตสาหกรรม (ตามสูตร เชิงความสัมพันธ์) · อายุงานไม่ขยับคะแนนหลัก และแสดงผลแยกเป็นการวิเคราะห์ความไว`) + inner;
+  return pageHead(b5T("Simulation", "จำลองสถานการณ์"), "What-if Studio",
+    b5T("Female-director share only, with guardrails G1–G6 · the result is a formula association against the frozen REF-928, not a forecast",
+      "จำลองเฉพาะจำนวนกรรมการหญิง พร้อมกติกา G1–G6 · ผลเป็นความสัมพันธ์ตามสูตรเทียบ REF-928 ที่ freeze แล้ว ไม่ใช่การพยากรณ์")) + m1StudioBody(false);
 }
 function wireStudioPro(h) {
-  const c = cur(), w = wiInit2();
-  h.querySelectorAll("[data-mvstep]").forEach(b => b.onclick = () => {
-    const k = b.dataset.mvstep, d = +b.dataset.d;
-    if (k === "n") w.n = clamp(w.n + d, BS_MIN, BS_MAX);           // จำนวนหญิงคงเดิม (ไม่เกินขนาดบอร์ด)
-    else if (k === "nf") w.nf = clamp((w.nf || 0) + d, 0, w.n);
-    else if (k === "ten") w.ten = clamp(roundTen((w.ten || c.ten) + d * TEN_STEP), TEN_MIN, TEN_MAX);
-    else return;
-    w.preset = null; wiSync(c, w); render();
-  });
-  h.querySelectorAll("[data-preset]").forEach(b => b.onclick = () => {
-    const p = WI_PRESETS.find(x => x.k === b.dataset.preset); if (!p) return;
-    const v = wiPresetState(c, p.k);                       // ฟังก์ชันเดียวกับรายงาน What-if
-    w.n = v.n; w.preset = p.k; w.ten = v.ten; w.nf = v.nf; wiSync(c, w);
-    if (p.k === "cur") { w.dp = c.dp; w.src = "ค่าจริงของบริษัท"; S.ceo = null; _ceoBuf = ""; }
-    toast(`ฉากทัศน์ · ${T(p.en, p.th)}`); render();
-  });
-  const rs = h.querySelector("#btnWiReset");
-  if (rs) rs.onclick = () => { const k = wiInit2(true); k.dp = w.dp; k.src = w.src; render(); };
-  const cr = h.querySelector("#btnCeoReset");
-  if (cr) cr.onclick = () => { w.dp = c.dp; w.src = "ค่าจริงของบริษัท"; w.preset = null; S.ceo = null; _ceoBuf = ""; render(); };
-  const ta = h.querySelector("#ceoTxt");
-  if (ta && S.ceo && _ceoBuf && typeof renderCeoOut === "function") { ta.value = _ceoBuf; try { renderCeoOut(_ceoBuf, S.ceo.r); } catch (e) { } }
-  const runIt = (txt, name) => {
-    const n = wordCount(txt);
-    if (n < CEO_MIN_WORDS) return toast(`ข้อความมี ${fmt(n)} คำ — สาร CEO ต้องยาวอย่างน้อย ${fmt(CEO_MIN_WORDS)} คำ จึงยังไม่วิเคราะห์`);
-    const r = analyseText(txt);
-    /* ฉบับเซิร์ฟเวอร์: คะแนนจากภาษา CEO ที่วัดเอง (promoAtPct) ไม่มีเส้นทางบนเซิร์ฟเวอร์ → ไม่เปลี่ยน dp (ไม่ให้ได้ NaN) · ใช้ได้ในไฟล์ออฟไลน์ */
-    if (b5Srv()) { toast(b5T(`CEO language measured from your file is offline-only — percentile ${r.dp} is shown but not applied to the score`,
-      `การใช้ภาษา CEO ที่วัดจากไฟล์ใช้ได้เฉพาะไฟล์ออฟไลน์ — วัดได้เปอร์เซ็นไทล์ ${r.dp} แต่ไม่นำไปคำนวณคะแนนในฉบับเซิร์ฟเวอร์`)); S._b5CeoSrv = r.dp; return render(); }
-    S.ceo = { r, name: name || "" }; _ceoBuf = txt; w.dp = r.dp; w.src = `วัดจาก${name ? " " + name : "ข้อความ"} (${fmt(n)} คำ)`; w.preset = null;
-    render();
-  };
-  const an = h.querySelector("#btnAnalyse");
-  if (an && ta) an.onclick = () => runIt(ta.value, "ข้อความที่วาง");
-  const up = h.querySelector("#btnUp"), fi = h.querySelector("#ceoFile");
-  if (up && fi) {
-    up.onclick = () => fi.click();
-    fi.onchange = async e => {
-      const f = e.target.files[0]; if (!f) return;
-      try {
-        const r = await ceoTxtRead(f);
-        if (!r.ok) return toast(r.msg);
-        runIt(r.text.slice(0, 120000), f.name);
-      } catch (err) { toast("อ่านไฟล์ไม่สำเร็จ — " + err.message); }
-    };
-  }
+  const sub = m1Subj();
+  const ss = h.querySelector("#m1Subj"); if (ss) ss.onchange = () => { S.m1Subj = ss.value; render(); };
+  const bi = h.querySelector("#m1Bs"), bb = h.querySelector("#mvBsSet");
+  const setBs = () => { const v = Math.round(+bi.value);
+    if (!(v >= 3 && v <= 30)) return toast(b5T("Enter the actual number of directors (3–30)", "กรอกจำนวนกรรมการจริง (3–30 คน)"));
+    S.m1Bs[sub.key] = v; m1BsSave(); render(); };
+  if (bb && bi) { bb.onclick = setBs; bi.addEventListener("keydown", e => { if (e.key === "Enter") setBs(); }); }
+  const n = m1BoardN(sub); if (!n) return;
+  const now = m1Now(sub, n), cap = m1Cap(n, now);
+  h.querySelectorAll('[data-mvstep="nf"]').forEach(b => b.onclick = () => {
+    const t = clamp(m1Target(sub, n, now) + (+b.dataset.d), now, cap);
+    S.m1T[sub.key] = { n, target: t, preset: null }; render(); });
+  h.querySelectorAll("[data-mvpreset]").forEach(b => b.onclick = () => {
+    S.m1T[sub.key] = { n, target: m1PresetTarget(sub, n, now, b.dataset.mvpreset), preset: b.dataset.mvpreset }; render(); });
 }
 
 /* ---------------------------------------------------------------- โหมดทดลองสำหรับผู้ใช้ Basic
@@ -2466,13 +2657,17 @@ function wireTeaser(h) {
 viewStudio = function () {
   if (isUnlocked("studio")) return viewStudioPro();
   const c = cur();
+  /* MVP 1: โหมดทดลองใช้ส่วนประกอบเดียวกับ Studio (กติกา G1–G6 · D4 ครบ) เฉพาะบริษัทที่เลือกอยู่ — studioTeaser เดิมเก็บไว้ ไม่ได้ใช้ */
+  S.m1Subj = "";
   return pageHead(T("Simulation", "จำลองสถานการณ์"), "What-if Studio",
-    T("Simulate two variables — the number of female directors and average board tenure — and see where OpenInnoScore lands per the formula. The Basic level tries the first variable.",
-      "จำลองได้ 2 ตัวแปร — จำนวนกรรมการหญิง และอายุงานเฉลี่ยของบอร์ด — แล้วดูว่า OpenInnoScore ตามสูตรอยู่ตรงไหน · ระดับ Basic ทดลองตัวแปรแรกได้"))
-    + studioTeaser(c);
+    T("Female-director share only, with guardrails G1–G6. The Basic level tries the selected company.", "จำลองเฉพาะจำนวนกรรมการหญิง พร้อมกติกา G1–G6 · ระดับ Basic ทดลองกับบริษัทที่เลือกอยู่"))
+    + `<div class="note brand m1b-trial" style="margin-bottom:12px"><b>${T("Live trial · real engine", "โหมดทดลอง · ใช้เอนจินตัวจริง")}</b> ·
+      ${tierRank() >= 1 ? `<button class="btn s" data-unlock="studio">${T(`Unlock What-if Studio for ${esc(c.t)} · ${PRICE.studio} credits`, `ปลดล็อก What-if Studio ของ ${esc(c.t)} · ใช้ ${PRICE.studio} เครดิต`)}</button>`
+        : `<button class="btn s" data-pro="1">${T("Switch to Pro", "เปลี่ยนเป็นระดับ Pro")}</button>`}</div>`
+    + m1StudioBody(true);
 };
 VIEWS.studio = viewStudio;
-wireStudio = function (h) { return isUnlocked("studio") ? wireStudioPro(h) : wireTeaser(h); };
+wireStudio = function (h) { return wireStudioPro(h); };
 
 /* ---------------------------------------------------------------- เทียบคู่แข่ง · สรุปความต่าง (แก้ไขครั้งที่ 2.4)
    เขียนทับ peerVerdict ของ v2_app.js — ปัดทศนิยมทุกตัวเลข (ภาคผนวก ง ข้อ 30: “20.299999999999997”) และใช้ถ้อยคำบรรยาย ไม่ชี้นำ */
@@ -2530,9 +2725,9 @@ viewPeer = function () {
   const tog = tierRank() >= 2
     ? `<button class="btn ${S.peerAll ? "p" : "g"}" id="btnPeerAll" style="font-size:12px;padding:6px 12px" title="เลือกบริษัทจากทุกอุตสาหกรรม / ข้ามประเภทธุรกิจ">${S.peerAll ? "✓ " : ""}ข้ามอุตสาหกรรม</button>`
     : `<button class="btn g tr-locked" id="btnPeerAllLk" style="font-size:12px;padding:6px 12px" aria-disabled="true"
-        title="เทียบข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ เป็นสิทธิ์ Pro Max">🔒 ข้ามอุตสาหกรรม · Pro Max</button>
-      <button class="btn g" id="btnPeerAuto"`;
-  h = h.replace('<button class="btn g" id="btnPeerAuto"', tog);
+        title="เทียบข้ามอุตสาหกรรม / ข้ามประเภทธุรกิจ เป็นสิทธิ์ Pro Max">🔒 ข้ามอุตสาหกรรม · Pro Max</button>`;
+  /* F5 #9: ต่อหัวปุ่ม "เลือกอัตโนมัติ" กลับทุกระดับสิทธิ์ — เดิมระดับ Pro Max ตัดหัวปุ่มทิ้ง เหลือข้อความ style="…">Auto-select ดิบบนหน้าจอ */
+  h = h.replace('<button class="btn g" id="btnPeerAuto"', tog + '\n      <button class="btn g" id="btnPeerAuto"');
   if (S.peerAll) {
     const note = `<div class="note" style="margin-top:10px;font-size:11px"><b>เทียบข้ามอุตสาหกรรม</b> — percentile ใช้ฐานรวม (OIS) ไม่ใช้ OIS ในอุตสาหกรรม · ค่าอ้างอิงรายอุตสาหกรรมของแต่ละบริษัทต่างกัน จึงอ่านผลเทียบเป็นภาพรวมเท่านั้น</div>
   </div>`;
@@ -2578,7 +2773,7 @@ function copyText(txt) {
 }
 
 const WIRES2 = { fit: wireFit, matrix: wireMatrix, peer: wirePeer, studio: wireStudio, sector: wireSector,
-  billing: wireBilling, port: wirePort, ic: wireIC, docs: wireDocs, zonec: wireZoneC };
+  billing: wireBilling, port: wirePort, ic: M1_IC_HIDDEN ? () => { } : wireIC, docs: wireDocs, zonec: wireZoneC };
 render = function () {
   const host = $("#v-" + S.view);
   if (!host || typeof VIEWS[S.view] !== "function") return;
